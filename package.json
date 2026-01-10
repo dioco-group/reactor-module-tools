@@ -1,0 +1,29 @@
+{
+  "name": "reactor-module-tools",
+  "version": "1.0.0",
+  "description": "Tools for creating and converting language learning modules for Language Reactor",
+  "type": "module",
+  "scripts": {
+    "convert": "node module-convert/convert-course.cjs",
+    "convert:fsi-french": "node module-convert/convert-course.cjs --config courses/fsi-french/config.json",
+    "convert:alc-english": "node module-convert/convert-course.cjs --config courses/alc-english/config.json",
+    "extract": "node pdf-extract/extract-markdown.js",
+    "generate-images": "node pdf-extract/generate-images.js"
+  },
+  "keywords": [
+    "language-learning",
+    "gemini",
+    "module-converter",
+    "pdf-extraction"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "dotenv": "^16.0.0",
+    "pdf-lib": "^1.17.1"
+  }
+}

@@ -1,0 +1,195 @@
+(* 
+ * EBNF Grammar for .module File Format
+ * Language Course Module Specification v1.0
+ * 
+ * This grammar describes the input format for language learning modules.
+ * Files following this format are parsed by src/modules/lc_parser.ts
+ *)
+
+(* ==========================================================================
+   TOP-LEVEL STRUCTURE
+   ========================================================================== *)
+
+module              = module_header , { voice_config } , { lesson } ;
+
+(* ==========================================================================
+   MODULE HEADER
+   ========================================================================== *)
+
+module_header       = "$MODULE" , newline ,
+                      dioco_doc_id ,
+                      title_field ,
+                      [ description_field ] ,
+                      [ image_field ] ,
+                      target_lang_field ,
+                      home_lang_field ;
+
+dioco_doc_id        = "DIOCO_DOC_ID:" , whitespace , identifier , newline ;
+title_field         = "TITLE:" , whitespace , text_value , newline ;
+description_field   = "DESCRIPTION:" , whitespace , text_value , newline ;
+image_field         = "IMAGE:" , whitespace , filename , newline ;
+target_lang_field   = "TARGET_LANG_G:" , whitespace , lang_code , newline ;
+home_lang_field     = ( "HOME_LANG_G:" | "USER_LANG_G:" ) , whitespace , lang_code , newline ;
+
+(* ==========================================================================
+   VOICE CONFIGURATION
+   ========================================================================== *)
+
+voice_config        = voice_default | voice_intro | voice_prompt | voice_response | voice_speaker ;
+
+voice_default       = "VOICE_DEFAULT:" , whitespace , voice_spec , newline ;
+voice_intro         = "VOICE_INTRO:" , whitespace , voice_spec , newline ;
+voice_prompt        = "VOICE_PROMPT:" , whitespace , voice_spec , newline ;
+voice_response      = "VOICE_RESPONSE:" , whitespace , voice_spec , newline ;
+voice_speaker       = "VOICE_SPEAKER:" , whitespace , speaker_name , whitespace , "=" , whitespace , voice_spec , newline ;
+
+voice_spec          = voice_name , [ whitespace , "|" , whitespace , voice_style_prompt ] ;
+voice_name          = letter , { letter | digit } ;  (* case-insensitive, no spaces *)
+voice_style_prompt  = text_value ;
+speaker_name        = text_value ;
+
+(* ==========================================================================
+   LESSONS
+   ========================================================================== *)
+
+lesson              = "$LESSON" , whitespace , lesson_title , newline ,
+                      { activity } ;
+
+lesson_title        = text_value ;
+
+(* ==========================================================================
+   ACTIVITIES
+   ========================================================================== *)
+
+activity            = dialogue_activity 
+                    | grammar_activity 
+                    | exercise_activity 
+                    | chat_activity ;
+
+(* --------------------------------------------------------------------------
+   DIALOGUE ACTIVITY
+   -------------------------------------------------------------------------- *)
+
+dialogue_activity   = "$DIALOGUE" , whitespace , activity_title , newline ,
+                      [ intro_field ] ,
+                      [ instruction_field ] ,
+                      { vocab_entry } ,
+                      { dialogue_line } ;
+
+activity_title      = text_value ;
+
+intro_field         = "INTRO:" , whitespace , text_value , newline ;
+instruction_field   = "INSTRUCTION:" , whitespace , text_value , newline ;
+
+vocab_entry         = "VOCAB:" , whitespace , text_value , newline ,
+                      "VOCAB_T:" , whitespace , text_value , newline ;
+
+dialogue_line       = [ speaker_field ] ,
+                      { vocab_entry } ,
+                      line_field ,
+                      [ line_translation ] ,
+                      [ notes_field ] ;
+
+speaker_field       = "SPEAKER:" , whitespace , speaker_name , newline ;
+line_field          = "LINE:" , whitespace , text_value , newline ;
+line_translation    = ( "LINE_T:" | "TRANSLATION:" ) , whitespace , text_value , newline ;
+notes_field         = "NOTES:" , whitespace , text_value , newline ;
+
+(* --------------------------------------------------------------------------
+   GRAMMAR ACTIVITY
+   -------------------------------------------------------------------------- *)
+
+grammar_activity    = "$GRAMMAR" , whitespace , activity_title , newline ,
+                      [ intro_field ] ,
+                      markdown_content ;
+
+markdown_content    = { markdown_line } ;
+markdown_line       = ( ? any text not starting with "$" or known field ? ) , newline ;
+
+(* --------------------------------------------------------------------------
+   EXERCISE ACTIVITY
+   -------------------------------------------------------------------------- *)
+
+exercise_activity   = "$EXERCISE" , whitespace , activity_title , newline ,
+                      [ intro_field ] ,
+                      [ instruction_field ] ,
+                      { exercise_item } ;
+
+exercise_item       = [ example_marker ] ,
+                      prompt_field ,
+                      [ prompt_translation ] ,
+                      response_field ,
+                      [ response_translation ] ,
+                      [ cue_field ] ;
+
+example_marker      = "EXAMPLE" , newline ;
+prompt_field        = ( "PROMPT:" | "CUE:" ) , whitespace , text_value , newline ;
+prompt_translation  = "PROMPT_T:" , whitespace , text_value , newline ;
+response_field      = "RESPONSE:" , whitespace , text_value , newline ;
+response_translation = "RESPONSE_T:" , whitespace , text_value , newline ;
+cue_field           = "CUE:" , whitespace , text_value , newline ;
+
+(* --------------------------------------------------------------------------
+   CHAT ACTIVITY
+   -------------------------------------------------------------------------- *)
+
+chat_activity       = "$CHAT" , whitespace , activity_title , newline ,
+                      [ intro_field ] ,
+                      scenario_field ,
+                      initial_prompt_field ;
+
+scenario_field      = "SCENARIO:" , whitespace , text_value , newline ;
+initial_prompt_field = "INITIAL_PROMPT:" , whitespace , text_value , newline ;
+
+(* ==========================================================================
+   TERMINALS
+   ========================================================================== *)
+
+identifier          = letter , { letter | digit | "_" | "-" } ;
+lang_code           = letter , letter , [ "-" , letter , letter ] ;  (* e.g., "en", "fr", "pt-BR" *)
+filename            = { letter | digit | "_" | "-" | "." } ;
+text_value          = { ? any character except newline ? } ;
+
+letter              = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" 
+                    | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" 
+                    | "U" | "V" | "W" | "X" | "Y" | "Z"
+                    | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
+                    | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
+                    | "u" | "v" | "w" | "x" | "y" | "z" ;
+
+digit               = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+whitespace          = { " " | "\t" } ;
+newline             = "\n" | "\r\n" ;
+
+(* ==========================================================================
+   NOTES
+   ==========================================================================
+   
+   1. Section markers ($MODULE, $LESSON, $DIALOGUE, etc.) must start at 
+      column 0 with NO colon after the marker name.
+   
+   2. Field names (TITLE:, SPEAKER:, LINE:, etc.) must start at column 0
+      and include the colon as part of the field marker.
+   
+   3. Voice names are case-insensitive and must not contain spaces.
+      Examples: aoede, Achernar, ACHIRD
+   
+   4. Comments are lines starting with # (after optional whitespace).
+      They are ignored by the parser.
+   
+   5. Blank lines are permitted anywhere and are ignored.
+   
+   6. The EXAMPLE marker applies to the immediately following exercise item.
+   
+   7. VOCAB/VOCAB_T pairs before a LINE are attached to that line.
+   
+   8. Grammar content is free-form markdown. Images should use standard
+      markdown syntax: ![alt](filename.png)
+   
+   9. Legacy support:
+      - TRANSLATION: is accepted as alias for LINE_T:
+      - USER_LANG_G: is accepted as alias for HOME_LANG_G:
+   
+   ========================================================================== *)
+
