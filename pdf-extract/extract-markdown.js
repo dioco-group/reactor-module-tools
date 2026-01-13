@@ -190,11 +190,17 @@ ${buildSplitInstructions(CONFIG.SPLIT_ENABLED, CONFIG.SPLIT_INSTRUCTIONS)}
 
 CONTENT FORMATTING:
 - Use proper markdown: # for headings, - for lists, **bold**, *italic*
-- For underlines text, use <u>...</u>
+- For underlined text, use <u>...</u>.
 - Preserve dialogues with speaker labels
 - Maintain exercise numbering and structure
 - Follow natural reading order (left-to-right, top-to-bottom)
 - Skip footnotes and header/footer content (book title, page numbers, running headers)
+
+UNDERLINED TEXT:
+For underlined text, use <u>...</u>. 
+Underlined text is often used to mark the prompt part of the sentence in a drill.
+For example: Mon <u>frère</u> va bien.
+IT IS CRUCIAL TO RELIABLY AND ACCURATELY MARK THE UNDERLINED PORTION OF THE TEXT.
 
 TABLE FORMATTING:
 - Convert tables to proper Markdown table format
@@ -205,9 +211,10 @@ TABLE FORMATTING:
 
 IMPORTANT:
 - Return ONLY the markdown text content
-- Do not generate or include any images in your response
-- No explanations or commentary before or after the markdown
-- Use PDF page numbers (${pdfPageStart}-${pdfPageEnd}) for image filenames
+- Do not generate any images in your response, only image references.
+- No explanations or commentary before or after the markdown.
+- Use PDF page numbers (${pdfPageStart}-${pdfPageEnd}) for image filenames.
+- Pay particular attention to marking underlined text.
 ${CONFIG.EXTRA_PROMPT ? `\n---\n\nADDITIONAL COURSE/BOOK-SPECIFIC INSTRUCTIONS:\n${CONFIG.EXTRA_PROMPT.trim()}\n` : ''}
 `;
 
