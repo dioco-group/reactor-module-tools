@@ -59,6 +59,19 @@ The exercises that require the student to write down something in French are use
 ### Review drills
 Convert as `$EXERCISE` (group these under a Review lesson section).
 
+### GENERAL NOTE ABOUT UNDERLINES:
+
+The underline is often used to mark the prompt part of the sentence in an exercise. It appears like this in the source material: 
+
+Mon <u>frère</u> va bien.
+
+This should be converted to:
+
+PROMPT: frère
+RESPONSE: Mon frère va bien.
+
+The marking of underlines in the source material is not always reliable however. They may be absent in some cases, or mark the wrong words. Use your judgement.
+
 ## Breaking into Lessons
 
 An FSI unit has a lot of material. The dialogue and follow up material makes a good lesson. The grammar sections with associated exercises also group well.
