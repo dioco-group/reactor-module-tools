@@ -4,11 +4,13 @@
   "description": "Tools for creating and converting language learning modules for Language Reactor",
   "type": "module",
   "scripts": {
-    "convert": "node module-convert/convert-course.cjs",
-    "convert:fsi-french": "node module-convert/convert-course.cjs --config courses/fsi-french/config.json",
-    "convert:alc-english": "node module-convert/convert-course.cjs --config courses/alc-english/config.json",
-    "extract": "node pdf-extract/extract-markdown.js",
-    "generate-images": "node pdf-extract/generate-images.js"
+    "convert": "node module-convert/convert-course.js",
+    "convert:fsi-french": "node module-convert/convert-course.js --config configs/fsi-french/module-convert.json",
+    "convert:alc-english": "node module-convert/convert-course.js --config configs/alc-english/module-convert.json",
+    "extract:fsi-french": "node pdf-extract/extract-markdown.js configs/fsi-french/pdf-extract.json",
+    "extract:alc-english": "node pdf-extract/extract-markdown.js configs/alc-english/pdf-extract.json",
+    "generate-images:fsi-french": "node pdf-extract/generate-images.js configs/fsi-french/pdf-extract.json",
+    "generate-images:alc-english": "node pdf-extract/generate-images.js configs/alc-english/pdf-extract.json"
   },
   "keywords": [
     "language-learning",

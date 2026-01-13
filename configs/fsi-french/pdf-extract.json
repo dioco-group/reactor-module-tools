@@ -1,0 +1,12 @@
+{
+  "_comment": "FSI French: PDF → Markdown extraction config. Paths are resolved relative to this file.",
+  "inputPdf": "../../data/fsi-french/source.pdf",
+  "outputDir": "../../data/fsi-french/pdf-extract",
+  "splitOutputDir": "../../data/fsi-french/md",
+  "splitEnabled": true,
+  "splitInstructions": "- For FSI materials, treat top-level UNIT boundaries as the split points. There are 12 UNITs in total.",
+  "prompt": "Remove the 'tape 1.1', 'end of tape 1.1, end of tape 1.2, etc.' references.",
+  "_comment_split": "split marker is a fixed line: <<<< SPLIT HERE >>>>"
+}
+
+

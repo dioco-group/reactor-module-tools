@@ -11,18 +11,18 @@ PDF → [extract-markdown.js] → Markdown + Page PNGs → [generate-images.js] 
 ## Stage 1: Markdown Extraction
 
 ```bash
-node pdf-extract/extract-markdown.js --input /path/to/textbook.pdf --output ./output
+node pdf-extract/extract-markdown.js configs/fsi-french/pdf-extract.json
 ```
 
 **Options:**
-- `--input` - Path to input PDF file (required)
-- `--output` - Output directory (default: `./output`)
+- First argument: path to JSON config file (required)
 
 **What it does:**
 1. Converts all PDF pages to PNG (300 DPI) for later use
 2. Splits PDF into 20-page chunks
 3. Sends each chunk to Gemini for OCR
 4. Outputs markdown with image placeholders (detailed descriptions)
+5. If `splitOutputDir` is set in the config, also splits the combined markdown on the fixed marker `<<<< SPLIT HERE >>>>` and writes per-unit `.md` files to that directory (for `module-convert`).
 
 **Output:**
 ```
@@ -46,11 +46,11 @@ output/{pdfName}/
 ## Stage 2: Image Generation
 
 ```bash
-node pdf-extract/generate-images.js --input ./output/textbook
+node pdf-extract/generate-images.js configs/fsi-french/pdf-extract.json
 ```
 
 **Options:**
-- `--input` - Path to extracted output directory from Stage 1 (required)
+- First argument: path to the same JSON config used for extraction (required)
 
 **What it does:**
 1. Parses markdown for `![...](images/page_XXX_YYY.png)` references

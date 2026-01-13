@@ -8,6 +8,10 @@ node_modules/
 *.module
 *.error.txt
 
+# Local course data (PDFs + extracted assets + generated outputs)
+data/**
+!data/**/.gitkeep
+
 # OS files
 .DS_Store
 *Zone.Identifier
@@ -20,4 +24,5 @@ node_modules/
 
 # Logs
 *.log
+
 

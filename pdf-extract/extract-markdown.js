@@ -50,69 +50,114 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 // ============================================================================
-// CLI ARGUMENTS
+// CONFIG (positional arg)
 // ============================================================================
+
+// Fixed marker used in extracted markdown to indicate split points.
+// The LLM is instructed to emit this exact line when a new unit/module/lesson starts.
+const SPLIT_MARKER = '<<<< SPLIT HERE >>>>';
+
+// Non-PDF-specific defaults belong here (not in the JSON config).
+const DEFAULTS = {
+  // Gemini settings
+  MODEL: 'gemini-3-pro-preview',
+  TEMPERATURE: 1.0,
+  MAX_OUTPUT_TOKENS: 32768,
+
+  // Processing settings
+  PAGES_PER_CHUNK: 20,
+  DPI: 300,
+
+  // Rate limiting / retries
+  DELAY_BETWEEN_CHUNKS: 10000, // 10 seconds
+  MAX_RETRIES: 3,
+  RETRY_DELAY_MULTIPLIER: 3000,
+  RATE_LIMIT_DELAY_MULTIPLIER: 5000,
+
+  // Resume
+  SKIP_EXISTING: true,
+};
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const getArg = (name) => {
-    const idx = args.indexOf(name);
-    return idx !== -1 && args[idx + 1] ? args[idx + 1] : null;
-  };
-  
-  const inputPdf = getArg('--input');
-  const outputDir = getArg('--output');
-  
-  if (!inputPdf) {
-    console.error('Usage: node extract-markdown.js --input <pdf-path> [--output <output-dir>]');
-    console.error('');
-    console.error('Options:');
-    console.error('  --input   Path to input PDF file (required)');
-    console.error('  --output  Output directory (default: ./output)');
+
+  const configPath = args[0];
+  if (!configPath) {
+    console.error('Usage: node pdf-extract/extract-markdown.js <config.json>');
     console.error('');
     console.error('Example:');
-    console.error('  node extract-markdown.js --input /path/to/textbook.pdf --output ./extracted');
+    console.error('  node pdf-extract/extract-markdown.js configs/fsi-french/pdf-extract.json');
     process.exit(1);
   }
-  
-  return { inputPdf, outputDir: outputDir || './output' };
+
+  return { configPath };
 }
 
-const ARGS = parseArgs();
+function readJsonFile(filePath) {
+  const text = fs.readFileSync(filePath, 'utf8');
+  return JSON.parse(text);
+}
+
+function loadConfig(args) {
+  const absoluteConfigPath = path.resolve(args.configPath);
+  const configDir = path.dirname(absoluteConfigPath);
+  const cfg = readJsonFile(absoluteConfigPath);
+
+  if (!cfg.inputPdf) {
+    console.error(`\nERROR: Missing required field "inputPdf" in config: ${absoluteConfigPath}`);
+    process.exit(1);
+  }
+  if (!cfg.outputDir) {
+    console.error(`\nERROR: Missing required field "outputDir" in config: ${absoluteConfigPath}`);
+    process.exit(1);
+  }
+
+  const extraPrompt = typeof cfg.prompt === 'string' ? cfg.prompt : '';
+
+  return {
+    // PDF-dependent config
+    INPUT_PDF: path.resolve(configDir, cfg.inputPdf),
+    OUTPUT_DIR: path.resolve(configDir, cfg.outputDir),
+    SPLIT_ENABLED: cfg.splitEnabled === true,
+    SPLIT_INSTRUCTIONS: typeof cfg.splitInstructions === 'string' ? cfg.splitInstructions : '',
+    EXTRA_PROMPT: extraPrompt,
+    SPLIT_OUTPUT_DIR: cfg.splitOutputDir ? path.resolve(configDir, cfg.splitOutputDir) : null,
+
+    // Hard-coded defaults
+    ...DEFAULTS,
+
+    // Environment
+    API_KEY: process.env.GEMINI_API_KEY || '',
+  };
+}
+
+const CONFIG = loadConfig(parseArgs());
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
-const CONFIG = {
-  // Input/Output (from CLI)
-  INPUT_PDF: path.resolve(ARGS.inputPdf),
-  OUTPUT_DIR: path.resolve(ARGS.outputDir),
-  
-  // Gemini settings
-  MODEL: 'gemini-2.5-pro',
-  API_KEY: process.env.GEMINI_API_KEY || '',
-  
-  // Processing settings
-  // Research: 20-30 pages optimal for historical docs, we use 20 to be conservative
-  PAGES_PER_CHUNK: 20,
-  
-  // Research: 300 DPI minimum for scanned documents, 400-600 for small fonts
-  DPI: 300,
-  
-  // Rate limiting
-  DELAY_BETWEEN_CHUNKS: 10000,  // 10 seconds
-  MAX_RETRIES: 3,
-  RETRY_DELAY_MULTIPLIER: 3000,
-  RATE_LIMIT_DELAY_MULTIPLIER: 5000,
-  
-  // Resume: skip chunks that already have markdown files
-  SKIP_EXISTING: true,
-};
+// NOTE: runtime config is loaded above (JSON config, positional arg).
 
 // ============================================================================
 // PROMPTS
 // ============================================================================
+
+function buildSplitInstructions(splitEnabled, splitInstructions) {
+  if (!splitEnabled) return '';
+  const rules = (splitInstructions || '').trim();
+  return `
+SPLIT MARKERS:
+- Detect when a NEW top-level unit begins (course-specific definition below).
+- When a new unit begins, insert this marker on its own line IMMEDIATELY BEFORE the first content of that unit:
+  ${SPLIT_MARKER}
+- Do NOT insert split markers for subsections inside a unit.
+- If the first page you see in this chunk begins a new unit, include the marker at the very top of this chunk (before any other content on that page).
+
+COURSE-SPECIFIC SPLIT RULES:
+${rules}
+`;
+}
 
 /**
  * Prompt for markdown extraction.
@@ -126,11 +171,6 @@ const EXTRACTION_PROMPT = (pdfPageStart, pdfPageEnd) => `
 You are processing PDF pages ${pdfPageStart}-${pdfPageEnd} of a language learning textbook.
 
 TASK: Convert all content to clean Markdown format.
-
-PAGE MARKERS:
-- At each new page, insert a marker using the PRINTED page number visible on the page
-- Format: #page1, #page2, etc. (use the number printed on the page, not PDF index)
-- If no printed number is visible, skip the marker
 
 IMAGE REFERENCES:
 - For each illustration/drawing, insert a markdown image reference
@@ -146,12 +186,15 @@ IMAGE REFERENCES:
 - Example: ![Two men in business suits shaking hands in an office, one says "Nice to meet you" while the other responds "The pleasure is mine"](images/page_005_001.png)
 - Example: ![A family of four sitting at a dinner table with plates of food, labels point to: father, mother, son, daughter](images/page_012_001.png)
 
+${buildSplitInstructions(CONFIG.SPLIT_ENABLED, CONFIG.SPLIT_INSTRUCTIONS)}
+
 CONTENT FORMATTING:
 - Use proper markdown: # for headings, - for lists, **bold**, *italic*
+- For underlines text, use <u>...</u>
 - Preserve dialogues with speaker labels
 - Maintain exercise numbering and structure
 - Follow natural reading order (left-to-right, top-to-bottom)
-- Skip footnotes and header/footer content (page numbers, running headers)
+- Skip footnotes and header/footer content (book title, page numbers, running headers)
 
 TABLE FORMATTING:
 - Convert tables to proper Markdown table format
@@ -160,16 +203,12 @@ TABLE FORMATTING:
 - Keep headers in first row
 - For merged cells, repeat content across merged columns
 
-TITLE HANDLING:
-- Keep the course/book title on the title page only
-- Remove subsequent repetitions of the course/book title throughout the document
-
 IMPORTANT:
-- Return ONLY the markdown text content - no images, no other content
+- Return ONLY the markdown text content
 - Do not generate or include any images in your response
 - No explanations or commentary before or after the markdown
 - Use PDF page numbers (${pdfPageStart}-${pdfPageEnd}) for image filenames
-- Use PRINTED page numbers for #pageXX markers
+${CONFIG.EXTRA_PROMPT ? `\n---\n\nADDITIONAL COURSE/BOOK-SPECIFIC INSTRUCTIONS:\n${CONFIG.EXTRA_PROMPT.trim()}\n` : ''}
 `;
 
 // ============================================================================
@@ -188,6 +227,35 @@ function ensureDir(dirPath) {
 
 function zeroPad(num, length = 3) {
   return String(num).padStart(length, '0');
+}
+
+function sanitizeFilenamePart(s) {
+  return String(s || '')
+    .trim()
+    .replace(/[\s\/\\]+/g, ' ')
+    .replace(/[^a-zA-Z0-9 _.-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80);
+}
+
+function getChunkTitle(markdown) {
+  const lines = markdown.split(/\r?\n/);
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    if (t === '---') continue;
+    if (t.startsWith('#page')) continue;
+    if (t.startsWith('![')) continue;
+    const m = t.match(/^(#{1,6})\s+(.*)$/);
+    if (m) return m[2].trim();
+  }
+  return '';
+}
+
+function splitMarkdownByMarker(fullMarkdown) {
+  const parts = fullMarkdown.split(new RegExp(`^\\s*${SPLIT_MARKER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm'));
+  return parts.map(p => p.trim()).filter(p => p.length > 0);
 }
 
 // ============================================================================
@@ -403,8 +471,8 @@ class MarkdownExtractor {
         ],
         config: {
           // Research: low temperature improves consistency for transcription
-          temperature: 0.2,
-          maxOutputTokens: 32768,
+          temperature: CONFIG.TEMPERATURE,
+          maxOutputTokens: CONFIG.MAX_OUTPUT_TOKENS,
         },
       }),
       CONFIG.MAX_RETRIES
@@ -458,6 +526,7 @@ async function main() {
   }
   
   const pdfBaseName = path.basename(CONFIG.INPUT_PDF, '.pdf');
+  // Keep per-PDF subfolder for resume + generate-images compatibility.
   const outputDir = path.join(CONFIG.OUTPUT_DIR, pdfBaseName);
   const chunksDir = path.join(outputDir, 'chunks');
   const pagesDir = path.join(outputDir, 'temp', 'pages');
@@ -546,6 +615,33 @@ async function main() {
   // Step 4: Save combined markdown
   const completeMdPath = path.join(outputDir, `${pdfBaseName}_complete.md`);
   await fs.promises.writeFile(completeMdPath, combinedMarkdown, 'utf8');
+
+  // Step 5 (optional): Split combined markdown into per-unit files for module-convert
+  if (CONFIG.SPLIT_ENABLED && CONFIG.SPLIT_OUTPUT_DIR) {
+    console.log('\n[Step 5] Splitting combined markdown into per-unit files...');
+    ensureDir(CONFIG.SPLIT_OUTPUT_DIR);
+
+    const chunks = splitMarkdownByMarker(combinedMarkdown);
+    console.log(`  Found ${chunks.length} section(s) to write`);
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const title = getChunkTitle(chunk);
+      const slug = sanitizeFilenamePart(title);
+      const fileBase = `${String(i + 1).padStart(3, '0')}${slug ? ` - ${slug}` : ''}.md`;
+      const outPath = path.join(CONFIG.SPLIT_OUTPUT_DIR, fileBase);
+
+      // Resume behavior: do not overwrite existing files (protect manual edits)
+      if (fs.existsSync(outPath)) {
+        continue;
+      }
+
+      await fs.promises.writeFile(outPath, chunk.trim() + '\n', 'utf8');
+    }
+
+    console.log(`  Wrote split markdown to: ${CONFIG.SPLIT_OUTPUT_DIR}`);
+    console.log(`  (Marker line is fixed: ${SPLIT_MARKER})`);
+  }
   
   console.log('\n' + '='.repeat(60));
   console.log('Extraction Complete!');

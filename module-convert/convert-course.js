@@ -60,9 +60,10 @@ function loadConfig(configPath) {
     courseName: config.courseName,
     inputDir: path.resolve(configDir, config.inputDir),
     outputDir: path.resolve(configDir, config.outputDir),
-    model: config.model || 'gemini-2.5-pro',
+    model: config.model || 'gemini-3-pro-preview',
     maxTokens: config.maxTokens || 32000,
-    temperature: config.temperature || 0.3,
+    temperature: config.temperature || 1.0,
+    thinkingBudget: typeof config.thinkingBudget === 'number' ? config.thinkingBudget : 4096,
     delayBetweenRequests: config.delayBetweenRequests || 3000,
     configDir: configDir,
   };
@@ -91,6 +92,46 @@ ${moduleFormat}
 ${coursePrompt ? '---\n\n# Course-Specific Instructions\n\n' + coursePrompt : ''}`;
 
   return systemPrompt;
+}
+
+function validateModuleOutput(text) {
+  const warnings = [];
+  const t = String(text || '');
+
+  if (!t.match(/^\s*\$MODULE/m)) warnings.push('Missing $MODULE header');
+  if (!t.match(/^\s*DIOCO_DOC_ID:\s*\S+/m)) warnings.push('Missing DIOCO_DOC_ID in header');
+  if (!t.match(/^\s*TITLE:\s*\S+/m)) warnings.push('Missing TITLE in header');
+  if (!t.match(/^\s*TARGET_LANG_G:\s*\S+/m)) warnings.push('Missing TARGET_LANG_G in header');
+  if (!t.match(/^\s*HOME_LANG_G:\s*\S+/m)) warnings.push('Missing HOME_LANG_G in header');
+
+  // No-colon rule for section markers
+  const colonMarkers = t.match(/^\s*\$(LESSON|DIALOGUE|EXERCISE|GRAMMAR|CHAT)\s*:/gm);
+  if (colonMarkers && colonMarkers.length > 0) warnings.push('Found section markers with colon (must be `$LESSON Title`, not `$LESSON: Title`)');
+
+  // Speaker labels in VOICE_SPEAKER mappings should not contain spaces
+  const voiceSpeakerLines = t.match(/^\s*VOICE_SPEAKER:\s*.+$/gm) || [];
+  const speakerLabelCaseMap = new Map(); // lower -> firstSeenOriginal
+  for (const line of voiceSpeakerLines) {
+    const m = line.match(/^\s*VOICE_SPEAKER:\s*([^=]+?)\s*=\s*([^\s|]+)\b/);
+    if (m) {
+      const speakerLabel = m[1].trim();
+      if (/\s/.test(speakerLabel)) {
+        warnings.push(`VOICE_SPEAKER label contains spaces ("${speakerLabel}"). Use a no-spaces label like "M_Lelong".`);
+        break;
+      }
+
+      // Case-insensitive: warn if the same label appears with different casing
+      const key = speakerLabel.toLowerCase();
+      const prev = speakerLabelCaseMap.get(key);
+      if (prev && prev !== speakerLabel) {
+        warnings.push(`VOICE_SPEAKER label casing differs ("${prev}" vs "${speakerLabel}"). Labels are case-insensitive; use consistent casing.`);
+        break;
+      }
+      if (!prev) speakerLabelCaseMap.set(key, speakerLabel);
+    }
+  }
+
+  return warnings;
 }
 
 // ============================================================================
@@ -159,16 +200,16 @@ async function convertCourse() {
         model: config.model,
         systemPrompt: systemPrompt,
         temperature: config.temperature,
-        maxTokens: config.maxTokens
+        maxTokens: config.maxTokens,
+        thinkingBudget: config.thinkingBudget,
       });
 
       // Strip markdown code blocks if present
       const cleanModule = stripMarkdownCodeBlocks(moduleResponse);
 
-      // Basic validation - check if it starts with $MODULE
-      if (!cleanModule.match(/^\s*\$MODULE/)) {
-        progress.logWarning('Output may not be in correct format - missing $MODULE header');
-      }
+      // Validation warnings (format rules live in shared module_format.md)
+      const warnings = validateModuleOutput(cleanModule);
+      for (const w of warnings) progress.logWarning(w);
       
       // Save the module file
       writeTextFile(outputPath, cleanModule);

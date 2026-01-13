@@ -6,38 +6,12 @@ This guide explains how to convert American Language Course (ALC) DLI English un
 
 ---
 
-## Key Format Rules
-
-- Use `$LESSON Title` (no colon) - title on same line
-- Use `$DIALOGUE Title`, `$EXERCISE Title`, `$GRAMMAR Title` (no colons)
-- Use `LINE_T` for translations
-- Use `VOCAB` and `VOCAB_T` for vocabulary items
-- Voice names are case-insensitive and must not contain spaces (e.g., `aoede`, `achernar`)
-
----
-
-## INTRO vs INSTRUCTION
-
-**INTRO**: Shown/read to the student *before* the activity starts. Frames what they will do and why. Keep concise - a few sentences max.
-
-**INSTRUCTION**: Shown at the top of screen *during* the activity. Brief reminder of what to do. Keep short for mobile screens.
-
-Example:
-```
-$DIALOGUE Basic Sentences
-INTRO: These sentences introduce common greetings in English. Listen carefully to the pronunciation.
-INSTRUCTION: Listen and repeat each line.
-```
-
----
-
 ## Important Conversion Rules
 
-1. **Start with $MODULE** and required header fields
-2. **Use "MODULE" instead of "UNIT"** in titles (e.g., "MODULE 1105" not "UNIT 1105")
-3. **Preserve the unit structure/outline** at the beginning of the module
-4. **Divide into lessons** based on the structure outline - each major topic should be a separate lesson
-5. **Start every module from Lesson 1** (even if it's module 1105)
+1. **Use "MODULE" instead of "UNIT"** in titles (e.g., "MODULE 1105" not "UNIT 1105")
+2. **Preserve the unit structure/outline** at the beginning of the module
+3. **Divide into lessons** based on the structure outline - each major topic should be a separate lesson
+4. **Start every module from Lesson 1** (even if it's module 1105)
 
 ---
 
@@ -157,3 +131,5 @@ Review drills covering multiple modules should be organized as a separate lesson
 - Include meta-commentary about learning strategies
 - Skip any drills or exercises
 - Combine separate drills into one
+
+

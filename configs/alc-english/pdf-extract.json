@@ -1,0 +1,12 @@
+{
+  "_comment": "ALC DLI English: PDF → Markdown extraction config. Paths are resolved relative to this file.",
+  "inputPdf": "../../data/alc-english/source.pdf",
+  "outputDir": "../../data/alc-english/pdf-extract",
+  "splitOutputDir": "../../data/alc-english/md",
+  "splitEnabled": true,
+  "splitInstructions": "- For ALC/DLI-style textbooks, treat the highest-level MODULE/UNIT boundaries as split points.\n- Start a new split when you see a prominent module/unit title page or a clear \"MODULE ####\" / \"UNIT ####\" heading.\n- Do NOT split for minor sections like \"Vocabulary\", \"Exercises\", \"Review\" unless the book clearly treats them as top-level.",
+  "prompt": "",
+  "_comment_split": "split marker is a fixed line: <<<< SPLIT HERE >>>>"
+}
+
+

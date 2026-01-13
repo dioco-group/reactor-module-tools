@@ -55,30 +55,49 @@ import fs from 'fs';
 import path from 'path';
 
 // ============================================================================
-// CLI ARGUMENTS
+// CONFIG (positional arg)
 // ============================================================================
 
 function parseArgs() {
   const args = process.argv.slice(2);
-  const getArg = (name) => {
-    const idx = args.indexOf(name);
-    return idx !== -1 && args[idx + 1] ? args[idx + 1] : null;
-  };
-  
-  const inputDir = getArg('--input');
-  
-  if (!inputDir) {
-    console.error('Usage: node generate-images.js --input <extracted-dir>');
-    console.error('');
-    console.error('Options:');
-    console.error('  --input   Path to extracted output directory (from extract-markdown.js)');
+
+  const configPath = args[0];
+  if (!configPath) {
+    console.error('Usage: node pdf-extract/generate-images.js <pdf-extract-config.json>');
     console.error('');
     console.error('Example:');
-    console.error('  node generate-images.js --input ./output/textbook');
+    console.error('  node pdf-extract/generate-images.js configs/fsi-french/pdf-extract.json');
     process.exit(1);
   }
-  
-  return { inputDir };
+
+  return { configPath };
+}
+
+function readJsonFile(filePath) {
+  const text = fs.readFileSync(filePath, 'utf8');
+  return JSON.parse(text);
+}
+
+function loadInputDirFromConfig(configPath) {
+  const absoluteConfigPath = path.resolve(configPath);
+  const configDir = path.dirname(absoluteConfigPath);
+  const cfg = readJsonFile(absoluteConfigPath);
+
+  if (!cfg.inputPdf) {
+    console.error(`\nERROR: Missing required field "inputPdf" in config: ${absoluteConfigPath}`);
+    process.exit(1);
+  }
+  if (!cfg.outputDir) {
+    console.error(`\nERROR: Missing required field "outputDir" in config: ${absoluteConfigPath}`);
+    process.exit(1);
+  }
+
+  const inputPdfAbs = path.resolve(configDir, cfg.inputPdf);
+  const outputDirAbs = path.resolve(configDir, cfg.outputDir);
+  const pdfBaseName = path.basename(inputPdfAbs, '.pdf');
+
+  // extract-markdown.js writes to: <outputDir>/<pdfBaseName>/...
+  return path.join(outputDirAbs, pdfBaseName);
 }
 
 const ARGS = parseArgs();
@@ -88,12 +107,13 @@ const ARGS = parseArgs();
 // ============================================================================
 
 const CONFIG = {
-  // Input directory (from CLI - output from extract-markdown.js)
-  INPUT_DIR: path.resolve(ARGS.inputDir),
+  // Input directory (derived from pdf-extract config)
+  INPUT_DIR: loadInputDirFromConfig(ARGS.configPath),
   
   // Gemini settings
   MODEL: 'gemini-3-pro-image-preview',
   API_KEY: process.env.GEMINI_API_KEY || '',
+  TEMPERATURE: 1.0,
   
   // Image settings
   IMAGE_SIZE: 1024,  // Request 1:1 at this size
@@ -297,7 +317,7 @@ class ImageGenerator {
         contents: [{ parts }],
         config: {
           responseModalities: ['IMAGE'],
-          temperature: 0.4,
+          temperature: CONFIG.TEMPERATURE,
         },
       }),
       CONFIG.MAX_RETRIES

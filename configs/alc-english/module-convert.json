@@ -1,0 +1,15 @@
+{
+  "courseName": "ALC DLI English",
+
+  "_comment": "Paths are resolved relative to this config file (recommended: data/<course>/...).",
+  "inputDir": "../../data/alc-english/md",
+  "outputDir": "../../data/alc-english/module",
+
+  "model": "gemini-3-pro-preview",
+  "maxTokens": 32000,
+  "temperature": 1.0,
+  "thinkingBudget": 4096,
+  "delayBetweenRequests": 3000
+}
+
+

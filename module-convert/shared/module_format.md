@@ -48,15 +48,18 @@ HOME_LANG_G: en
 
 ## Voice Configuration (Optional, in header)
 
-Configure voices for TTS. Voice names are **case-insensitive** and must **not contain spaces**.
+Configure voices for TTS.
+
+- Voice names are **case-insensitive** and must **not contain spaces**.
+- Speaker labels used in `VOICE_SPEAKER:` mappings are **case-insensitive** and must **not contain spaces** (use e.g. `M_Lelong`, `Mme_Durand`, `SpeakerA`).
 
 ```
 VOICE_DEFAULT: aoede | Speak clearly and naturally
 VOICE_INTRO: aoede | Speak like a friendly narrator
 VOICE_PROMPT: achernar | For exercise prompts
 VOICE_RESPONSE: achird | For exercise responses
-VOICE_SPEAKER: Mme Durand = aoede | Speak warmly in French
-VOICE_SPEAKER: M. Lelong = achernar | Speak formally
+VOICE_SPEAKER: Mme_Durand = aoede | Speak warmly in French
+VOICE_SPEAKER: M_Lelong = achernar | Speak formally
 VOICE_SPEAKER: Narrator = aoede | Clear narration
 ```
 
