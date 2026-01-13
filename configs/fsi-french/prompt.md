@@ -72,6 +72,12 @@ RESPONSE: Mon frère va bien.
 
 The marking of underlines in the source material is not always reliable however. They may be absent in some cases, or mark the wrong words. Use your judgement.
 
+The first 1-2 lines in a drill may be example sentences, without underlines. These should have the full line for both PROMPT and RESPONSE and be annotated with EXAMPLE. If they are not examples, then generally a part of the line is the PROMPT, and the full line is the RESPONSE. Use the context and your judgement to decide.
+
+## Naming activities
+
+Try to give a TITLE to the activities that matches or corresponds to the titles given in the source material. Don't change them for change sake.
+
 ## Breaking into Lessons
 
 An FSI unit has a lot of material. The dialogue and follow up material makes a good lesson. The grammar sections with associated exercises also group well.

@@ -14,11 +14,11 @@ Understanding the student experience helps create better modules:
 - Each lesson should take **15-45 minutes** to complete
 
 ### Key UX Patterns
-- **Translations are blurred by default** — students tap to reveal (prevents over-reliance on reading)
+- **In $EXERCISE, prompts and translations are blurred by default** — students tap to reveal (prevents over-reliance on reading)
 - **Audio plays automatically** — tap to replay
 - **Dictionary lookups** — tap any word in target language text to see definition
 - **INTRO is spoken** before the activity starts (by narrator voice)
-- **INSTRUCTION stays on screen** during the activity (brief reminder)
+- **INSTRUCTION stays at the top of the screen** during the activity (brief reminder)
 
 ---
 
@@ -94,9 +94,9 @@ $CHAT Practice Conversation
 Divides the module into study sessions. Each lesson should be completable in **15-45 minutes**.
 
 ```
-$LESSON Lesson 1 Dialogue and Vocabulary
-$LESSON Lesson 2 Lexical Drills
-$LESSON Lesson 3 Grammar - Noun Markers
+$LESSON Dialogue and Vocabulary
+$LESSON Grammar - Noun Markers
+$LESSON Grammar - Adjectives
 ```
 
 ---
@@ -160,17 +160,15 @@ LINE_T: Fine, thanks.
 
 ### Lines Without Speaker (Vocabulary Lists)
 
-For vocabulary lists or example sentences without a speaker, use `Narrator` as the speaker or omit SPEAKER:
+For vocabulary lists or example sentences without a speaker, omit SPEAKER:
 
 ```
 $DIALOGUE Useful Words
 INSTRUCTION: Study these expressions.
 
-SPEAKER: Narrator
 LINE: Mon frère va bien.
 LINE_T: My brother feels fine.
 
-SPEAKER: Narrator
 LINE: Ma soeur va bien.
 LINE_T: My sister feels fine.
 ```
@@ -186,7 +184,7 @@ LINE_T: My sister feels fine.
 - Each item is a card with **PROMPT** and **RESPONSE**
 - **Translations are blurred** to prevent reading reliance
 - Student advances to reveal the correct response
-- **EXAMPLE items** are NOT blurred and show "Example" label in UI
+- **EXAMPLE items** are NOT blurred and show "Example" label in UI. Examples show the model that the student should follow.
 
 ### Philosophy
 These are audio-lingual drills, not flashcards. The student should:
@@ -206,7 +204,6 @@ These are audio-lingual drills, not flashcards. The student should:
 | `PROMPT_T` | No | Translation of prompt (blurred) |
 | `RESPONSE` | **Yes** | Expected answer in target language |
 | `RESPONSE_T` | No | Translation of response (blurred) |
-| `CUE` | No | Additional hint for the student |
 
 ### Example Items
 
@@ -228,35 +225,6 @@ RESPONSE: Voilà les classes.
 
 PROMPT: Voilà le livre.
 RESPONSE: Voilà les livres.
-```
-
-### Listen and Repeat Drills
-
-For repetition drills where PROMPT = RESPONSE:
-
-```
-$EXERCISE Lexical A-1 Subject Substitution
-INTRO: Practice these sentences with different subjects.
-INSTRUCTION: Listen and repeat.
-
-PROMPT: Je suis heureux de faire votre connaissance.
-RESPONSE: Je suis heureux de faire votre connaissance.
-
-PROMPT: Il est heureux de faire votre connaissance.
-RESPONSE: Il est heureux de faire votre connaissance.
-```
-
-### Question-Answer Drills
-
-```
-$EXERCISE Questions on the Dialogue
-INSTRUCTION: Answer these questions about the dialogue.
-
-PROMPT: Comment va Janine?
-RESPONSE: Elle va bien.
-
-PROMPT: Où est le frère de Janine?
-RESPONSE: Il est à Lyon.
 ```
 
 ---
@@ -354,7 +322,7 @@ INITIAL_PROMPT: You are a friendly French shop owner. Respond naturally and warm
 
 When generating module format output:
 
-- Return ONLY the module format text (no markdown code blocks around it)
+- Return ONLY the module format text
 - Start with `$MODULE` and required header fields
 - Use section markers with NO colon (`$LESSON Title` not `$LESSON: Title`)
 - Put titles on the same line as section markers
