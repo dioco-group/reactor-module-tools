@@ -161,6 +161,27 @@ Just re-run the same command to resume.
 
 ---
 
+## Review: Module Preview (`module-preview/`)
+
+After generating `.module` files, use the preview tool to quickly review conversion accuracy.
+
+**Features:**
+- Uses the real `lc_parser` logic (copied from `dioco-base`)
+- **Dense review UI** for Dialogue/Exercise (no “study mode” hiding)
+- **Grammar renders as real markdown**
+- **EBNF-driven diagnostics** with line numbers + inline source snippets
+- Per-activity **Raw** toggles (e.g. show raw `$EXERCISE` block)
+
+```bash
+# Build the static preview page
+npm run preview:build
+
+# Open in a browser (no server required):
+module-preview/dist/index.html
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -177,6 +198,7 @@ reactor-module-tools/
     └── shared/
         ├── module_format.md      # Format specification
         └── module_format.ebnf    # Formal grammar
+└── module-preview/               # Review tool: preview + diagnostics for .module output
 ```
 
 ## License
