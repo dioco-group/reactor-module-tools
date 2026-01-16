@@ -2,8 +2,6 @@
 
 This document defines the format for `.module` files used by the language learning platform.
 
----
-
 ## How the App Works
 
 Understanding the student experience helps create better modules:
@@ -19,8 +17,6 @@ Understanding the student experience helps create better modules:
 - **Dictionary lookups** — tap any word in target language text to see definition
 - **INTRO is spoken** before the activity starts (by narrator voice)
 - **INSTRUCTION stays at the top of the screen** during the activity (brief reminder)
-
----
 
 ## Module Header (Required)
 
@@ -44,22 +40,20 @@ HOME_LANG_G: en
 | `TARGET_LANG_G` | **Yes** | Language being taught (`fr`, `es`, `en`, `de`, etc.) |
 | `HOME_LANG_G` | **Yes** | Instruction/translation language |
 
----
-
 ## Voice Configuration (Optional, in header)
 
 Configure voices for TTS.
 
 - Voice names are **case-insensitive** and must **not contain spaces**.
-- Speaker labels used in `VOICE_SPEAKER:` mappings are **case-insensitive** and must **not contain spaces** (use e.g. `MLelong`, `MmeDurand`, `SpeakerA`).
+- Speaker labels used in `VOICE_SPEAKER:` mappings are **case-insensitive** and must **not contain spaces** (use e.g. `M_Lelong`, `Mme_Durand`, `SpeakerA`).
 
 ```
 VOICE_DEFAULT: aoede | Speak clearly and naturally
 VOICE_INTRO: aoede | Speak like a friendly narrator
 VOICE_PROMPT: achernar | For exercise prompts
 VOICE_RESPONSE: achird | For exercise responses
-VOICE_SPEAKER: MmeDurand = aoede | Speak warmly in French
-VOICE_SPEAKER: MLelong = achernar | Speak formally
+VOICE_SPEAKER: Mme_Durand = aoede | Speak warmly in French
+VOICE_SPEAKER: M_Lelong = achernar | Speak formally
 VOICE_SPEAKER: Narrator = aoede | Clear narration
 ```
 
@@ -73,8 +67,6 @@ VOICE_SPEAKER: Narrator = aoede | Clear narration
 
 **Format:** `VoiceName | Optional style instruction`
 
----
-
 ## Section Markers
 
 Section markers have **NO colon** and the title goes on the **same line**:
@@ -87,8 +79,6 @@ $EXERCISE Lexical A-1 Subject Substitution
 $CHAT Practice Conversation
 ```
 
----
-
 ## $LESSON Marker
 
 Divides the module into study sessions. Each lesson should be completable in **15-45 minutes**.
@@ -98,8 +88,6 @@ $LESSON Dialogue and Vocabulary
 $LESSON Grammar - Noun Markers
 $LESSON Grammar - Adjectives
 ```
-
----
 
 ## $DIALOGUE Activity
 
@@ -123,7 +111,7 @@ $LESSON Grammar - Adjectives
 | `SPEAKER` | No | Speaker name (connects to VOICE_SPEAKER for TTS) |
 | `LINE` | **Yes** | The dialogue text in target language |
 | `LINE_T` | No | Translation (blurred until tapped) |
-| `VOCAB` | No | Vocabulary word/phrase for this line |
+| `VOCAB` | No | Vocabulary word/phrase (place immediately before the LINE it belongs to) |
 | `VOCAB_T` | No | Translation/definition of vocabulary |
 | `NOTES` | No | Cultural context, grammar tips, or explanations for this line |
 
@@ -143,17 +131,26 @@ VOCAB: tiens
 VOCAB_T: (exclamation indicating surprise)
 VOCAB: voilà
 VOCAB_T: here is, here are
-
-SPEAKER: MmeDurand
+SPEAKER: Mme Durand
 LINE: Tiens, voilà Mademoiselle Courtois.
 LINE_T: Well, there's Miss Courtois.
 
-SPEAKER: MlleCourtois
+VOCAB: Madame
+VOCAB_T: Madam (Mrs.)
+VOCAB: comment
+VOCAB_T: how
+SPEAKER: Mlle Courtois
 LINE: Bonjour, Madame. Comment allez-vous?
 LINE_T: Hello, Mrs. Durand. How are you?
 NOTES: "Comment allez-vous" is the formal way to ask "how are you"
 
-SPEAKER: MmeDurand
+VOCAB: très
+VOCAB_T: very
+VOCAB: bien
+VOCAB_T: well
+VOCAB: merci
+VOCAB_T: thank you
+SPEAKER: Mme Durand
 LINE: Très bien, merci.
 LINE_T: Fine, thanks.
 ```
@@ -172,8 +169,6 @@ LINE_T: My brother feels fine.
 LINE: Ma soeur va bien.
 LINE_T: My sister feels fine.
 ```
-
----
 
 ## $EXERCISE Activity
 
@@ -226,8 +221,6 @@ RESPONSE: Voilà les classes.
 PROMPT: Voilà le livre.
 RESPONSE: Voilà les livres.
 ```
-
----
 
 ## $GRAMMAR Activity
 
@@ -288,8 +281,6 @@ In French, nouns are marked for gender and number.
 ![Article usage diagram](articles_diagram.png)
 ```
 
----
-
 ## $CHAT Activity
 
 **Goal:** Practice open-ended conversation with an AI character.
@@ -315,8 +306,6 @@ INTRO: Now you'll practice a real conversation.
 SCENARIO: You are leaving a shop after making a purchase. Say goodbye to the shop owner.
 INITIAL_PROMPT: You are a friendly French shop owner. Respond naturally and warmly when the customer says goodbye. Keep responses short and appropriate for a beginner learner.
 ```
-
----
 
 ## Output Requirements for Converters
 
