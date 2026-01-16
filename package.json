@@ -10,7 +10,8 @@
     "extract:fsi-french": "node pdf-extract/extract-markdown.js configs/fsi-french/pdf-extract.json",
     "extract:alc-english": "node pdf-extract/extract-markdown.js configs/alc-english/pdf-extract.json",
     "generate-images:fsi-french": "node pdf-extract/generate-images.js configs/fsi-french/pdf-extract.json",
-    "generate-images:alc-english": "node pdf-extract/generate-images.js configs/alc-english/pdf-extract.json"
+    "generate-images:alc-english": "node pdf-extract/generate-images.js configs/alc-english/pdf-extract.json",
+    "preview:build": "node module-preview/build.mjs"
   },
   "keywords": [
     "language-learning",
@@ -26,6 +27,10 @@
   "dependencies": {
     "@google/genai": "^1.0.0",
     "dotenv": "^16.0.0",
+    "marked": "^12.0.2",
     "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.2"
   }
 }

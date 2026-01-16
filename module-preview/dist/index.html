@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Module Preview</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="brand">
+        <div class="brandName">Module Preview</div>
+        <div class="brandSub">Parse + review `.module` output using the real `lc_parser` logic</div>
+      </div>
+
+      <div class="controls">
+        <label class="fileBtn">
+          <input id="file" type="file" accept=".module,.txt" />
+          Select .module…
+        </label>
+        <button id="demo" class="ghost" type="button">Load demo</button>
+        <div class="filename mono" id="filename">No file loaded</div>
+      </div>
+    </div>
+
+    <div id="drop" class="drop">
+      Drag & drop a <span class="mono">.module</span> file here (or use the button above)
+    </div>
+
+    <div id="output" class="output"></div>
+
+    <script src="./bundle.js"></script>
+  </body>
+</html>
+
+

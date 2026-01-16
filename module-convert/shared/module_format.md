@@ -51,15 +51,15 @@ HOME_LANG_G: en
 Configure voices for TTS.
 
 - Voice names are **case-insensitive** and must **not contain spaces**.
-- Speaker labels used in `VOICE_SPEAKER:` mappings are **case-insensitive** and must **not contain spaces** (use e.g. `M_Lelong`, `Mme_Durand`, `SpeakerA`).
+- Speaker labels used in `VOICE_SPEAKER:` mappings are **case-insensitive** and must **not contain spaces** (use e.g. `MLelong`, `MmeDurand`, `SpeakerA`).
 
 ```
 VOICE_DEFAULT: aoede | Speak clearly and naturally
 VOICE_INTRO: aoede | Speak like a friendly narrator
 VOICE_PROMPT: achernar | For exercise prompts
 VOICE_RESPONSE: achird | For exercise responses
-VOICE_SPEAKER: Mme_Durand = aoede | Speak warmly in French
-VOICE_SPEAKER: M_Lelong = achernar | Speak formally
+VOICE_SPEAKER: MmeDurand = aoede | Speak warmly in French
+VOICE_SPEAKER: MLelong = achernar | Speak formally
 VOICE_SPEAKER: Narrator = aoede | Clear narration
 ```
 
@@ -144,16 +144,16 @@ VOCAB_T: (exclamation indicating surprise)
 VOCAB: voilà
 VOCAB_T: here is, here are
 
-SPEAKER: Mme Durand
+SPEAKER: MmeDurand
 LINE: Tiens, voilà Mademoiselle Courtois.
 LINE_T: Well, there's Miss Courtois.
 
-SPEAKER: Mlle Courtois
+SPEAKER: MlleCourtois
 LINE: Bonjour, Madame. Comment allez-vous?
 LINE_T: Hello, Mrs. Durand. How are you?
 NOTES: "Comment allez-vous" is the formal way to ask "how are you"
 
-SPEAKER: Mme Durand
+SPEAKER: MmeDurand
 LINE: Très bien, merci.
 LINE_T: Fine, thanks.
 ```
