@@ -110,10 +110,12 @@ $LESSON Grammar - Adjectives
 | `INSTRUCTION` | No | Brief text shown at top of screen during activity |
 | `SPEAKER` | No | Speaker name (connects to VOICE_SPEAKER for TTS) |
 | `LINE` | **Yes** | The dialogue text in target language |
-| `LINE_T` | No | Translation (blurred until tapped) |
+| `LINE_T` | No | Translation (blurred until tapped) — place after LINE |
 | `VOCAB` | No | Vocabulary word/phrase (place immediately before the LINE it belongs to) |
-| `VOCAB_T` | No | Translation/definition of vocabulary |
+| `VOCAB_T` | No | Translation/definition of vocabulary — place after VOCAB |
 | `NOTES` | No | Cultural context, grammar tips, or explanations for this line |
+
+**Translation Order:** `LINE_T` should follow `LINE`, and `VOCAB_T` should follow `VOCAB`.
 
 ### INTRO vs INSTRUCTION
 
@@ -196,9 +198,11 @@ These are audio-lingual drills, not flashcards. The student should:
 | `INSTRUCTION` | No | Brief reminder shown during activity |
 | `EXAMPLE` | No | Marks next item as example (shown unblurred with "Example" label) |
 | `PROMPT` | **Yes** | The stimulus in target language |
-| `PROMPT_T` | No | Translation of prompt (blurred) |
+| `PROMPT_T` | No | Translation of prompt (blurred) — place after PROMPT |
 | `RESPONSE` | **Yes** | Expected answer in target language |
-| `RESPONSE_T` | No | Translation of response (blurred) |
+| `RESPONSE_T` | No | Translation of response (blurred) — place after RESPONSE |
+
+**Translation Order:** `PROMPT_T` should follow `PROMPT`, and `RESPONSE_T` should follow `RESPONSE`.
 
 ### Example Items
 

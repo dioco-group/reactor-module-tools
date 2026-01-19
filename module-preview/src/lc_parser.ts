@@ -500,15 +500,33 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
     const lines: DialogueLine[] = [];
     let currentLine: Partial<DialogueLine> = {};
     let pendingVocab: { word: string; definition: string }[] = [];
+    // For translations that may arrive before their parent fields (robust parsing)
+    let pendingVocabDefinition: string | null = null;
+    let pendingLineTranslation: string | null = null;
 
     for (const item of buffer) {
         if (item.startsWith('VOCAB:')) {
             // Start a new vocab item
-            pendingVocab.push({ word: item.slice(6).trim(), definition: '' });
+            const word = item.slice(6).trim();
+            // If we have a pending definition from an earlier VOCAB_T, use it
+            pendingVocab.push({ word, definition: pendingVocabDefinition || '' });
+            pendingVocabDefinition = null;
         } else if (item.startsWith('VOCAB_T:')) {
-            // Add definition to the last vocab item
+            const definition = item.slice(8).trim();
+            // Add definition to the last vocab item, or store for next VOCAB
             if (pendingVocab.length > 0) {
-                pendingVocab[pendingVocab.length - 1].definition = item.slice(8).trim();
+                pendingVocab[pendingVocab.length - 1].definition = definition;
+            } else {
+                // VOCAB_T came before VOCAB - store for later
+                pendingVocabDefinition = definition;
+            }
+        } else if (item.startsWith('LINE_T:')) {
+            const translation = item.slice(7).trim();
+            // Attach to current line if it has text, otherwise store for next LINE
+            if (currentLine.text) {
+                currentLine.translation = translation;
+            } else {
+                pendingLineTranslation = translation;
             }
         } else if (item.startsWith('SPEAKER:')) {
             // If we have a pending line, save it
@@ -545,13 +563,16 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
                 currentLine = { speaker: currentLine.speaker }; // Keep speaker for subsequent lines
             }
             currentLine.text = item.slice(5).trim();
+            // Apply any pending translation that arrived before LINE
+            if (pendingLineTranslation) {
+                currentLine.translation = pendingLineTranslation;
+                pendingLineTranslation = null;
+            }
             // Attach pending vocab to this line
             if (pendingVocab.length > 0) {
                 currentLine.vocab = pendingVocab;
                 pendingVocab = [];
             }
-        } else if (item.startsWith('LINE_T:')) {
-            currentLine.translation = item.slice(7).trim();
         } else if (item.startsWith('NOTES:')) {
             currentLine.notes = item.slice(6).trim();
         }
@@ -582,6 +603,9 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
     const items: ExerciseItem[] = [];
     let currentItem: Partial<ExerciseItem> = {};
     let isExample = false;  // Tracks if current/next item is an example
+    // For translations that may arrive before their parent fields (robust parsing)
+    let pendingPromptTranslation: string | null = null;
+    let pendingResponseTranslation: string | null = null;
 
     for (const item of buffer) {
         if (item.startsWith('EXAMPLE:')) {
@@ -605,18 +629,37 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
             currentItem = { 
                 prompt: item.slice(7).trim(),
                 isExample: isExample,
+                // Apply any pending translation that arrived before PROMPT
+                promptTranslation: pendingPromptTranslation || undefined,
             };
+            pendingPromptTranslation = null;
             // Reset example flag after applying to an item
             // (each EXAMPLE marker applies to the immediately following PROMPT)
             isExample = false;
         } else if (item.startsWith('PROMPT_T:')) {
-            // Translation of the prompt (home language)
-            currentItem.promptTranslation = item.slice(9).trim();
+            const translation = item.slice(9).trim();
+            // If we have a current prompt, attach to it; otherwise store for later
+            if (currentItem.prompt) {
+                currentItem.promptTranslation = translation;
+            } else {
+                pendingPromptTranslation = translation;
+            }
         } else if (item.startsWith('RESPONSE:')) {
-            currentItem.response = item.slice(9).trim();
+            const response = item.slice(9).trim();
+            currentItem.response = response;
+            // Apply any pending response translation that arrived before RESPONSE
+            if (pendingResponseTranslation) {
+                currentItem.responseTranslation = pendingResponseTranslation;
+                pendingResponseTranslation = null;
+            }
         } else if (item.startsWith('RESPONSE_T:')) {
-            // Translation of the response (home language)
-            currentItem.responseTranslation = item.slice(11).trim();
+            const translation = item.slice(11).trim();
+            // If we have a current response, attach to it; otherwise store for later
+            if (currentItem.response) {
+                currentItem.responseTranslation = translation;
+            } else {
+                pendingResponseTranslation = translation;
+            }
         }
     }
 
