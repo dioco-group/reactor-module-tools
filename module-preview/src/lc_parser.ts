@@ -500,9 +500,8 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
     const lines: DialogueLine[] = [];
     let currentLine: Partial<DialogueLine> = {};
     let pendingVocab: { word: string; definition: string }[] = [];
-    // For translations that may arrive before their parent fields (robust parsing)
+    // For VOCAB_T that may arrive before VOCAB (order matters for vocab pairing)
     let pendingVocabDefinition: string | null = null;
-    let pendingLineTranslation: string | null = null;
 
     for (const item of buffer) {
         if (item.startsWith('VOCAB:')) {
@@ -521,13 +520,11 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
                 pendingVocabDefinition = definition;
             }
         } else if (item.startsWith('LINE_T:')) {
-            const translation = item.slice(7).trim();
-            // Attach to current line if it has text, otherwise store for next LINE
-            if (currentLine.text) {
-                currentLine.translation = translation;
-            } else {
-                pendingLineTranslation = translation;
-            }
+            // Accumulate - order within item block doesn't matter
+            currentLine.translation = item.slice(7).trim();
+        } else if (item.startsWith('NOTES:')) {
+            // Accumulate - order within item block doesn't matter
+            currentLine.notes = item.slice(6).trim();
         } else if (item.startsWith('SPEAKER:')) {
             // If we have a pending line, save it
             if (currentLine.text) {
@@ -563,18 +560,11 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
                 currentLine = { speaker: currentLine.speaker }; // Keep speaker for subsequent lines
             }
             currentLine.text = item.slice(5).trim();
-            // Apply any pending translation that arrived before LINE
-            if (pendingLineTranslation) {
-                currentLine.translation = pendingLineTranslation;
-                pendingLineTranslation = null;
-            }
             // Attach pending vocab to this line
             if (pendingVocab.length > 0) {
                 currentLine.vocab = pendingVocab;
                 pendingVocab = [];
             }
-        } else if (item.startsWith('NOTES:')) {
-            currentLine.notes = item.slice(6).trim();
         }
     }
 
@@ -603,9 +593,6 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
     const items: ExerciseItem[] = [];
     let currentItem: Partial<ExerciseItem> = {};
     let isExample = false;  // Tracks if current/next item is an example
-    // For translations that may arrive before their parent fields (robust parsing)
-    let pendingPromptTranslation: string | null = null;
-    let pendingResponseTranslation: string | null = null;
 
     for (const item of buffer) {
         if (item.startsWith('EXAMPLE:')) {
@@ -629,37 +616,18 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
             currentItem = { 
                 prompt: item.slice(7).trim(),
                 isExample: isExample,
-                // Apply any pending translation that arrived before PROMPT
-                promptTranslation: pendingPromptTranslation || undefined,
             };
-            pendingPromptTranslation = null;
             // Reset example flag after applying to an item
             // (each EXAMPLE marker applies to the immediately following PROMPT)
             isExample = false;
         } else if (item.startsWith('PROMPT_T:')) {
-            const translation = item.slice(9).trim();
-            // If we have a current prompt, attach to it; otherwise store for later
-            if (currentItem.prompt) {
-                currentItem.promptTranslation = translation;
-            } else {
-                pendingPromptTranslation = translation;
-            }
+            // Accumulate - order within item block doesn't matter
+            currentItem.promptTranslation = item.slice(9).trim();
         } else if (item.startsWith('RESPONSE:')) {
-            const response = item.slice(9).trim();
-            currentItem.response = response;
-            // Apply any pending response translation that arrived before RESPONSE
-            if (pendingResponseTranslation) {
-                currentItem.responseTranslation = pendingResponseTranslation;
-                pendingResponseTranslation = null;
-            }
+            currentItem.response = item.slice(9).trim();
         } else if (item.startsWith('RESPONSE_T:')) {
-            const translation = item.slice(11).trim();
-            // If we have a current response, attach to it; otherwise store for later
-            if (currentItem.response) {
-                currentItem.responseTranslation = translation;
-            } else {
-                pendingResponseTranslation = translation;
-            }
+            // Accumulate - order within item block doesn't matter
+            currentItem.responseTranslation = item.slice(11).trim();
         }
     }
 
