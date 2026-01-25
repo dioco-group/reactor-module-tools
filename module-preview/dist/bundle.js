@@ -103,6 +103,7 @@
       targetLang_G: mod.targetLang_G,
       homeLang_G: mod.homeLang_G,
       voiceConfig: state.voiceConfig,
+      ttsPrompt: mod.ttsPrompt ?? null,
       lessons: mod.lessons || []
     };
   }
@@ -182,6 +183,9 @@
         case "USER_LANG_G":
           state.module.homeLang_G = value;
           return;
+        case "TTS_PROMPT":
+          state.module.ttsPrompt = value;
+          return;
         case "VOICE_DEFAULT": {
           const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
           if (match) {
@@ -232,11 +236,31 @@
             };
           }
           return;
+        case "VOICE": {
+          const parts = value.split("|").map((s) => s.trim());
+          if (parts.length >= 3) {
+            const speakerId = parts[0];
+            const displayName = parts[1] || null;
+            const voiceName = parts[2];
+            const prompt = parts.slice(3).join(" | ") || null;
+            state.voiceConfig.speakers[speakerId] = {
+              voice: voiceName,
+              prompt,
+              displayName
+            };
+          }
+          return;
+        }
       }
     }
     if (state.currentActivity) {
       const activity = state.currentActivity;
       switch (field) {
+        case "TTS_PROMPT":
+          if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
+            activity.ttsPrompt = value;
+          }
+          return;
         case "INSTRUCTION":
           if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
             activity.instruction = value;
@@ -307,12 +331,14 @@
       state.currentActivity = {
         ...baseActivity,
         instruction: null,
+        ttsPrompt: null,
         lines: []
       };
     } else if (type === "EXERCISE") {
       state.currentActivity = {
         ...baseActivity,
         instruction: null,
+        ttsPrompt: null,
         items: []
       };
     } else if (type === "GRAMMAR") {
@@ -364,13 +390,23 @@
     const lines = [];
     let currentLine = {};
     let pendingVocab = [];
+    let pendingVocabDefinition = null;
     for (const item of buffer) {
       if (item.startsWith("VOCAB:")) {
-        pendingVocab.push({ word: item.slice(6).trim(), definition: "" });
+        const word = item.slice(6).trim();
+        pendingVocab.push({ word, definition: pendingVocabDefinition || "" });
+        pendingVocabDefinition = null;
       } else if (item.startsWith("VOCAB_T:")) {
+        const definition = item.slice(8).trim();
         if (pendingVocab.length > 0) {
-          pendingVocab[pendingVocab.length - 1].definition = item.slice(8).trim();
+          pendingVocab[pendingVocab.length - 1].definition = definition;
+        } else {
+          pendingVocabDefinition = definition;
         }
+      } else if (item.startsWith("LINE_T:")) {
+        currentLine.translation = item.slice(7).trim();
+      } else if (item.startsWith("NOTES:")) {
+        currentLine.notes = item.slice(6).trim();
       } else if (item.startsWith("SPEAKER:")) {
         if (currentLine.text) {
           lines.push({
@@ -411,10 +447,6 @@
           currentLine.vocab = pendingVocab;
           pendingVocab = [];
         }
-      } else if (item.startsWith("LINE_T:")) {
-        currentLine.translation = item.slice(7).trim();
-      } else if (item.startsWith("NOTES:")) {
-        currentLine.notes = item.slice(6).trim();
       }
     }
     if (currentLine.text) {
@@ -2531,9 +2563,11 @@ ${content}</tr>
       "IMAGE",
       "TARGET_LANG_G",
       "TITLE",
+      "TTS_PROMPT",
       "USER_LANG_G"
     ],
     "voiceFields": [
+      "VOICE",
       "VOICE_DEFAULT",
       "VOICE_INTRO",
       "VOICE_PROMPT",
@@ -2571,7 +2605,7 @@ ${content}</tr>
 
   // module-preview/src/diagnostics.ts
   var sectionNames = new Set(ebnfSpec.markers);
-  var idNoSpacesRe = /^[A-Za-z][A-Za-z0-9]*$/;
+  var idNoSpacesRe = /^[A-Za-z][A-Za-z0-9_]*$/;
   var headerFields = /* @__PURE__ */ new Set([...ebnfSpec.headerFields, ...ebnfSpec.voiceFields]);
   var voiceFields = new Set(ebnfSpec.voiceFields);
   var dialogueFields = new Set(ebnfSpec.dialogueFields);
@@ -2668,13 +2702,14 @@ ${content}</tr>
           if (!headerFields.has(field)) {
             push("warning", lineNo, `Unknown header field: ${field}`, "unknown-header-field");
           } else {
-            if (field !== "VOICE_SPEAKER") {
+            if (field !== "VOICE_SPEAKER" && field !== "VOICE") {
               if (seenHeader[field])
                 push("warning", lineNo, `Duplicate header field: ${field}`, "dup-header-field");
               seenHeader[field] = lineNo;
             }
           }
           if (field === "VOICE_SPEAKER") {
+            push("warning", lineNo, "VOICE_SPEAKER is deprecated; use VOICE: SpeakerId | Display Name | VoiceName | Optional prompt.", "voice_speaker-deprecated");
             const m = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
             if (!m) {
               push("error", lineNo, "VOICE_SPEAKER must be `VOICE_SPEAKER: SpeakerName = VoiceName | Optional prompt`.", "voice_speaker-format");
@@ -2705,6 +2740,22 @@ ${content}</tr>
                   "voice_speaker-case"
                 );
               }
+            }
+          }
+          if (field === "VOICE") {
+            const parts = value.split("|").map((s) => s.trim());
+            if (parts.length < 3) {
+              push("error", lineNo, "VOICE must be `VOICE: SpeakerId | Display Name | VoiceName | Optional prompt`.", "voice-format");
+            } else {
+              const speakerId = parts[0];
+              const displayName = parts[1];
+              const voiceName = parts[2];
+              if (!idNoSpacesRe.test(speakerId))
+                push("warning", lineNo, `VOICE speakerId must be alnum/_ only (no spaces): "${speakerId}"`, "voice-speaker-id");
+              if (!displayName)
+                push("warning", lineNo, "VOICE display name is empty; provide a display name for readable speaker labels.", "voice-display-empty");
+              if (!idNoSpacesRe.test(voiceName))
+                push("warning", lineNo, `Voice name must be alnum/_ only (no spaces): "${voiceName}"`, "voice_name");
             }
           }
           if (voiceFields.has(field) && field !== "VOICE_SPEAKER") {
@@ -3071,7 +3122,8 @@ ${content}</tr>
               { class: "speakerList mono" },
               Object.entries(mod.voiceConfig.speakers).map(([speaker, voice2]) => {
                 const vv = typeof voice2 === "string" ? voice2 : `${voice2.voice}${voice2.prompt ? ` | ${voice2.prompt}` : ""}`;
-                return el("li", {}, [`${speaker} = ${vv}`]);
+                const display = typeof voice2 === "object" && voice2.displayName ? ` (${voice2.displayName})` : "";
+                return el("li", {}, [`${speaker}${display} = ${vv}`]);
               })
             )
           ] : [el("span", { class: "muted" }, ["\u2014"])]

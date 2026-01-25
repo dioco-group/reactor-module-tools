@@ -32,9 +32,11 @@ export const ebnfSpec: EbnfSpec = {
     "IMAGE",
     "TARGET_LANG_G",
     "TITLE",
+    "TTS_PROMPT",
     "USER_LANG_G"
   ],
   "voiceFields": [
+    "VOICE",
     "VOICE_DEFAULT",
     "VOICE_INTRO",
     "VOICE_PROMPT",

@@ -44,17 +44,18 @@ HOME_LANG_G: en
 
 Configure voices for TTS.
 
-- Voice names are **case-insensitive** and must **not contain spaces**.
-- Speaker labels used in `VOICE_SPEAKER:` mappings are **case-insensitive** and must **not contain spaces** (use e.g. `M_Lelong`, `Mme_Durand`, `SpeakerA`).
+- Voice names are **case-insensitive** and must **not contain spaces** (recommended: `A-Za-z0-9_`).
+- Speaker IDs used for mappings are **case-insensitive** and must **not contain spaces** (use e.g. `M_Lelong`, `Mme_Durand`, `SpeakerA`).
 
 ```
 VOICE_DEFAULT: aoede | Speak clearly and naturally
 VOICE_INTRO: aoede | Speak like a friendly narrator
 VOICE_PROMPT: achernar | For exercise prompts
 VOICE_RESPONSE: achird | For exercise responses
-VOICE_SPEAKER: Mme_Durand = aoede | Speak warmly in French
-VOICE_SPEAKER: M_Lelong = achernar | Speak formally
-VOICE_SPEAKER: Narrator = aoede | Clear narration
+
+# Speaker mappings (use going forward): explicit ID + human-readable display name
+VOICE: Mme_Durand | Mme. Durand | aoede | Speak warmly in French
+VOICE: M_Lelong | M. Lelong | achernar | Speak formally
 ```
 
 | Field | Description |
@@ -63,9 +64,35 @@ VOICE_SPEAKER: Narrator = aoede | Clear narration
 | `VOICE_INTRO` | Voice for reading activity introductions (narrator) |
 | `VOICE_PROMPT` | Voice for exercise prompts |
 | `VOICE_RESPONSE` | Voice for exercise responses |
-| `VOICE_SPEAKER` | Map speaker name to voice (repeatable) |
+| `VOICE` | Map speaker **ID** to `{displayName, voice, prompt}` (repeatable) |
 
-**Format:** `VoiceName | Optional style instruction`
+**Formats:**
+
+- `VOICE_DEFAULT / VOICE_INTRO / VOICE_PROMPT / VOICE_RESPONSE`:
+  - `VoiceName | Optional style instruction`
+- `VOICE`:
+  - `SpeakerId | Display Name | VoiceName | Optional style instruction`
+
+## TTS Prompt (Optional)
+
+You can provide an optional TTS style/tone hint that will be passed to the TTS system prompt.
+
+### Module-level
+
+Applies as a default to all activities (unless overridden at activity-level):
+
+```
+TTS_PROMPT: This is a beginner course. Speak clearly and naturally.
+```
+
+### Activity-level (Dialogue / Exercise only)
+
+Overrides for a specific activity:
+
+```
+$DIALOGUE Greetings
+TTS_PROMPT: Speak like a casual conversation between friends.
+```
 
 ## Section Markers
 
@@ -108,7 +135,7 @@ $LESSON Grammar - Adjectives
 |-------|----------|-------------|
 | `INTRO` | No | Spoken by narrator before activity starts (sets the scene) |
 | `INSTRUCTION` | No | Brief text shown at top of screen during activity |
-| `SPEAKER` | No | Speaker name (connects to VOICE_SPEAKER for TTS) |
+| `SPEAKER` | No | Speaker ID or display name (connects to `VOICE` speaker mappings for TTS) |
 | `LINE` | **Yes** | The dialogue text in target language |
 | `LINE_T` | No | Translation (blurred until tapped) — place after LINE |
 | `VOCAB` | No | Vocabulary word/phrase (place immediately before the LINE it belongs to) |

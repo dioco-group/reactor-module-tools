@@ -172,6 +172,7 @@ export function parseModuleFile(content: string): Module {
         targetLang_G: mod.targetLang_G,
         homeLang_G: mod.homeLang_G,
         voiceConfig: state.voiceConfig,
+        ttsPrompt: (mod as any).ttsPrompt ?? null,
         lessons: mod.lessons || [],
     };
 }
@@ -274,6 +275,9 @@ function handleField(field: string, value: string, state: ParserState): void {
             case 'USER_LANG_G':  // Legacy support
                 state.module.homeLang_G = value as langCode_G_t;
                 return;
+            case 'TTS_PROMPT':
+                (state.module as any).ttsPrompt = value;
+                return;
             case 'VOICE_DEFAULT': {
                 const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
                 if (match) {
@@ -326,6 +330,26 @@ function handleField(field: string, value: string, state: ParserState): void {
                     };
                 }
                 return;
+
+            case 'VOICE': {
+                // New speaker mapping format:
+                // VOICE: <speakerId> | <displayName> | <voiceName> | <optionalPrompt>
+                // Example:
+                // VOICE: M_Dupre | M. Dupré | Achernar | Speak warmly
+                const parts = value.split('|').map(s => s.trim());
+                if (parts.length >= 3) {
+                    const speakerId = parts[0];
+                    const displayName = parts[1] || null;
+                    const voiceName = parts[2];
+                    const prompt = parts.slice(3).join(' | ') || null;
+                    state.voiceConfig.speakers[speakerId] = {
+                        voice: voiceName,
+                        prompt,
+                        displayName,
+                    };
+                }
+                return;
+            }
         }
     }
 
@@ -334,6 +358,11 @@ function handleField(field: string, value: string, state: ParserState): void {
         const activity = state.currentActivity;
 
         switch (field) {
+            case 'TTS_PROMPT':
+                if (activity.type === 'DIALOGUE' || activity.type === 'EXERCISE') {
+                    (activity as any).ttsPrompt = value;
+                }
+                return;
             case 'INSTRUCTION':
                 if (activity.type === 'DIALOGUE' || activity.type === 'EXERCISE') {
                     (activity as DialogueActivity | ExerciseActivity).instruction = value;
@@ -428,12 +457,14 @@ function startActivity(state: ParserState, type: Activity['type'], title: string
         state.currentActivity = {
             ...baseActivity,
             instruction: null,
+            ttsPrompt: null,
             lines: [],
         } as Partial<DialogueActivity>;
     } else if (type === 'EXERCISE') {
         state.currentActivity = {
             ...baseActivity,
             instruction: null,
+            ttsPrompt: null,
             items: [],
         } as Partial<ExerciseActivity>;
     } else if (type === 'GRAMMAR') {

@@ -13,8 +13,8 @@ import { ebnfSpec } from './spec_from_ebnf';
 
 const sectionNames = new Set(ebnfSpec.markers);
 
-// Per module_format.ebnf: voice_name and speaker_name are alnum only, no spaces.
-const idNoSpacesRe = /^[A-Za-z][A-Za-z0-9]*$/;
+// Per module_format.ebnf: voice_name and speaker_name are alnum/underscore only, no spaces.
+const idNoSpacesRe = /^[A-Za-z][A-Za-z0-9_]*$/;
 
 const headerFields = new Set([...ebnfSpec.headerFields, ...ebnfSpec.voiceFields]);
 const voiceFields = new Set(ebnfSpec.voiceFields);
@@ -136,8 +136,8 @@ export function lintModuleText(text: string): Diagnostic[] {
                 if (!headerFields.has(field)) {
                     push('warning', lineNo, `Unknown header field: ${field}`, 'unknown-header-field');
                 } else {
-                    // Per formal spec, VOICE_SPEAKER is repeatable; don't mark as duplicate.
-                    if (field !== 'VOICE_SPEAKER') {
+                    // Per formal spec, VOICE_SPEAKER (legacy) and VOICE are repeatable; don't mark as duplicate.
+                    if (field !== 'VOICE_SPEAKER' && field !== 'VOICE') {
                         if (seenHeader[field]) push('warning', lineNo, `Duplicate header field: ${field}`, 'dup-header-field');
                         seenHeader[field] = lineNo;
                     }
@@ -145,6 +145,7 @@ export function lintModuleText(text: string): Diagnostic[] {
 
                 // Voice config validation (EBNF rules)
                 if (field === 'VOICE_SPEAKER') {
+                    push('warning', lineNo, 'VOICE_SPEAKER is deprecated; use VOICE: SpeakerId | Display Name | VoiceName | Optional prompt.', 'voice_speaker-deprecated');
                     // Format: VOICE_SPEAKER: Speaker = VoiceName | optional prompt
                     const m = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
                     if (!m) {
@@ -178,6 +179,20 @@ export function lintModuleText(text: string): Diagnostic[] {
                                 'voice_speaker-case'
                             );
                         }
+                    }
+                }
+                if (field === 'VOICE') {
+                    // Format: VOICE: SpeakerId | Display Name | VoiceName | optional prompt
+                    const parts = value.split('|').map(s => s.trim());
+                    if (parts.length < 3) {
+                        push('error', lineNo, 'VOICE must be `VOICE: SpeakerId | Display Name | VoiceName | Optional prompt`.', 'voice-format');
+                    } else {
+                        const speakerId = parts[0];
+                        const displayName = parts[1];
+                        const voiceName = parts[2];
+                        if (!idNoSpacesRe.test(speakerId)) push('warning', lineNo, `VOICE speakerId must be alnum/_ only (no spaces): "${speakerId}"`, 'voice-speaker-id');
+                        if (!displayName) push('warning', lineNo, 'VOICE display name is empty; provide a display name for readable speaker labels.', 'voice-display-empty');
+                        if (!idNoSpacesRe.test(voiceName)) push('warning', lineNo, `Voice name must be alnum/_ only (no spaces): "${voiceName}"`, 'voice_name');
                     }
                 }
                 if (voiceFields.has(field) && field !== 'VOICE_SPEAKER') {

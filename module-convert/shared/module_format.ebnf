@@ -22,7 +22,8 @@ module_header       = "$MODULE" , newline ,
                       [ description_field ] ,
                       [ image_field ] ,
                       target_lang_field ,
-                      home_lang_field ;
+                      home_lang_field ,
+                      [ tts_prompt_field ] ;
 
 dioco_doc_id        = "DIOCO_DOC_ID:" , whitespace , identifier , newline ;
 title_field         = "TITLE:" , whitespace , text_value , newline ;
@@ -30,23 +31,27 @@ description_field   = "DESCRIPTION:" , whitespace , text_value , newline ;
 image_field         = "IMAGE:" , whitespace , filename , newline ;
 target_lang_field   = "TARGET_LANG_G:" , whitespace , lang_code , newline ;
 home_lang_field     = ( "HOME_LANG_G:" | "USER_LANG_G:" ) , whitespace , lang_code , newline ;
+tts_prompt_field    = "TTS_PROMPT:" , whitespace , text_value , newline ;
 
 (* ==========================================================================
    VOICE CONFIGURATION
    ========================================================================== *)
 
-voice_config        = voice_default | voice_intro | voice_prompt | voice_response | voice_speaker ;
+voice_config        = voice_default | voice_intro | voice_prompt | voice_response | voice_speaker | voice_entry ;
 
 voice_default       = "VOICE_DEFAULT:" , whitespace , voice_spec , newline ;
 voice_intro         = "VOICE_INTRO:" , whitespace , voice_spec , newline ;
 voice_prompt        = "VOICE_PROMPT:" , whitespace , voice_spec , newline ;
 voice_response      = "VOICE_RESPONSE:" , whitespace , voice_spec , newline ;
 voice_speaker       = "VOICE_SPEAKER:" , whitespace , speaker_name , whitespace , "=" , whitespace , voice_spec , newline ;
+voice_entry         = "VOICE:" , whitespace , speaker_id , whitespace , "|" , whitespace , display_name , whitespace , "|" , whitespace , voice_name , [ whitespace , "|" , whitespace , voice_style_prompt ] , newline ;
 
 voice_spec          = voice_name , [ whitespace , "|" , whitespace , voice_style_prompt ] ;
-voice_name          = letter , { letter | digit } ;  (* case-insensitive, no spaces *)
+voice_name          = letter , { letter | digit | "_" } ;  (* case-insensitive, no spaces *)
 voice_style_prompt  = text_value ;
-speaker_name        = letter , { letter | digit } ;  (* case-insensitive, no spaces *)
+speaker_name        = letter , { letter | digit | "_" } ;  (* case-insensitive, no spaces *)
+speaker_id          = speaker_name ;
+display_name        = text_value ;  (* human-readable, may contain spaces/punctuation/accents *)
 
 (* ==========================================================================
    LESSONS
@@ -73,6 +78,7 @@ activity            = dialogue_activity
 dialogue_activity   = "$DIALOGUE" , whitespace , activity_title , newline ,
                       [ intro_field ] ,
                       [ instruction_field ] ,
+                      [ tts_prompt_field ] ,
                       { vocab_entry } ,
                       { dialogue_line } ;
 
@@ -113,6 +119,7 @@ markdown_line       = ( ? any text not starting with "$" or known field ? ) , ne
 exercise_activity   = "$EXERCISE" , whitespace , activity_title , newline ,
                       [ intro_field ] ,
                       [ instruction_field ] ,
+                      [ tts_prompt_field ] ,
                       { exercise_item } ;
 
 exercise_item       = [ example_marker ] ,

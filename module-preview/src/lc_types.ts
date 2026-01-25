@@ -38,6 +38,8 @@ export interface ModuleListItem {
 export interface VoiceSpec {
     voice: string;
     prompt: string | null;
+    /** Optional human-readable speaker label (used for 3+ speaker single-voice fallback) */
+    displayName?: string | null;
 }
 
 /**
@@ -84,6 +86,8 @@ export interface ActivityBase {
     type: 'DIALOGUE' | 'GRAMMAR' | 'EXERCISE' | 'CHAT';
     id: string;
     title: string;
+    /** Spoken introduction for the activity (transition/context) */
+    intro?: string | null;
 }
 
 export interface DialogueActivity extends ActivityBase {

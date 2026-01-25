@@ -265,7 +265,11 @@ function renderPreviewPage(params: {
                                       typeof voice === 'string'
                                           ? voice
                                           : `${voice.voice}${voice.prompt ? ` | ${voice.prompt}` : ''}`;
-                                  return el('li', {}, [`${speaker} = ${vv}`]);
+                                  const display =
+                                      typeof voice === 'object' && (voice as any).displayName
+                                          ? ` (${(voice as any).displayName})`
+                                          : '';
+                                  return el('li', {}, [`${speaker}${display} = ${vv}`]);
                               })
                           ),
                       ]
