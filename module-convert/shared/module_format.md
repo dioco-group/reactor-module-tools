@@ -199,6 +199,42 @@ LINE: Ma soeur va bien.
 LINE_T: My sister feels fine.
 ```
 
+### Narrator Speaker (Scene Changes)
+
+Use `SPEAKER: Narrator` for lines that announce scene changes, settings, or transitions within a dialogue. This is the preferred way to break dialogues into logical sections.
+
+**Benefits:**
+- Provides clear visual separation in the UI
+- Uses the narrator voice (typically `VOICE_INTRO`) for consistency
+- Allows the TTS system to process dialogue segments in parallel
+
+**Example:**
+
+```
+$DIALOGUE A Day at the Office
+INTRO: Follow Marie through her workday.
+
+SPEAKER: Narrator
+LINE: Marie arrives at the office in the morning.
+LINE_T: Marie arrives at the office in the morning.
+
+SPEAKER: Marie
+LINE: Bonjour, tout le monde!
+LINE_T: Good morning, everyone!
+
+SPEAKER: Jean
+LINE: Bonjour, Marie. Tu as bien dormi?
+LINE_T: Good morning, Marie. Did you sleep well?
+
+SPEAKER: Narrator
+LINE: Later, during the lunch break...
+LINE_T: Later, during the lunch break...
+
+SPEAKER: Marie
+LINE: Je vais à la cafétéria. Tu viens?
+LINE_T: I'm going to the cafeteria. Are you coming?
+```
+
 ## $EXERCISE Activity
 
 **Goal:** Train oral fluency through audio-lingual drills (listen → respond → check).
