@@ -53,9 +53,9 @@ VOICE_INTRO: aoede | Speak like a friendly narrator
 VOICE_PROMPT: achernar | For exercise prompts
 VOICE_RESPONSE: achird | For exercise responses
 
-# Speaker mappings (use going forward): explicit ID + human-readable display name
-VOICE: Mme_Durand | Mme. Durand | aoede | Speak warmly in French
-VOICE: M_Lelong | M. Lelong | achernar | Speak formally
+# Speaker mappings: map speaker ID used in SPEAKER: fields to a voice
+VOICE: Mme_Durand | aoede | Speak warmly in French
+VOICE: M_Lelong | achernar | Speak formally
 ```
 
 | Field | Description |
@@ -64,14 +64,14 @@ VOICE: M_Lelong | M. Lelong | achernar | Speak formally
 | `VOICE_INTRO` | Voice for reading activity introductions (narrator) |
 | `VOICE_PROMPT` | Voice for exercise prompts |
 | `VOICE_RESPONSE` | Voice for exercise responses |
-| `VOICE` | Map speaker **ID** to `{displayName, voice, prompt}` (repeatable) |
+| `VOICE` | Map speaker **ID** to `{voice, prompt}` (repeatable) |
 
 **Formats:**
 
 - `VOICE_DEFAULT / VOICE_INTRO / VOICE_PROMPT / VOICE_RESPONSE`:
   - `VoiceName | Optional style instruction`
 - `VOICE`:
-  - `SpeakerId | Display Name | VoiceName | Optional style instruction`
+  - `SpeakerId | VoiceName | Optional style instruction`
 
 ## TTS Prompt (Optional)
 
