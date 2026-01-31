@@ -41,18 +41,9 @@ const log = diocoLogger("LC_PARSER");
 // COURSE PARSER
 // =============================================================================
 
-export interface ParsedCourse {
-  diocoPlaylistId: string;
-  title: string;
-  description: string;
-  image: string | null;
-  targetLang_G: langCode_G_t;
-  homeLang_G: langCode_G_t;
-}
-
-export function parseCourseFile(content: string): ParsedCourse {
+export function parseCourseFile(content: string): Course {
   const lines = content.split("\n");
-  const result: Partial<ParsedCourse> = {};
+  const result: Partial<Course> = {};
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -708,20 +699,6 @@ function generateActivityId(type: string, title: string): string {
 
 // Re-export the helper for backwards compatibility
 export { getModuleListItem };
-
-/**
- * Build a Course object from parsed course file
- */
-export function buildCourse(courseData: ParsedCourse): Course {
-  return {
-    diocoPlaylistId: courseData.diocoPlaylistId,
-    title: courseData.title,
-    description: courseData.description,
-    image: courseData.image, // Already string | null from ParsedCourse
-    targetLang_G: courseData.targetLang_G,
-    homeLang_G: courseData.homeLang_G,
-  };
-}
 
 // =============================================================================
 // TEST
