@@ -227,7 +227,9 @@
           return;
         }
         case "VOICE_SPEAKER":
-          const speakerMatch = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
+          const speakerMatch = value.match(
+            /^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/
+          );
           if (speakerMatch) {
             const [, speakerName, voiceName, prompt] = speakerMatch;
             state.voiceConfig.speakers[speakerName.trim()] = {
@@ -238,15 +240,14 @@
           return;
         case "VOICE": {
           const parts = value.split("|").map((s) => s.trim());
-          if (parts.length >= 3) {
+          if (parts.length >= 2) {
             const speakerId = parts[0];
-            const displayName = parts[1] || null;
-            const voiceName = parts[2];
-            const prompt = parts.slice(3).join(" | ") || null;
+            const voiceName = parts[1];
+            const prompt = parts.slice(2).join(" | ") || null;
             state.voiceConfig.speakers[speakerId] = {
               voice: voiceName,
               prompt,
-              displayName
+              displayName: null
             };
           }
           return;
@@ -2606,7 +2607,42 @@ ${content}</tr>
   // module-preview/src/diagnostics.ts
   var sectionNames = new Set(ebnfSpec.markers);
   var idNoSpacesRe = /^[A-Za-z][A-Za-z0-9_]*$/;
-  var headerFields = /* @__PURE__ */ new Set([...ebnfSpec.headerFields, ...ebnfSpec.voiceFields]);
+  var VALID_GEMINI_VOICES = /* @__PURE__ */ new Set([
+    "Zephyr",
+    "Puck",
+    "Charon",
+    "Kore",
+    "Fenrir",
+    "Leda",
+    "Orus",
+    "Aoede",
+    "Callirrhoe",
+    "Autonoe",
+    "Enceladus",
+    "Iapetus",
+    "Umbriel",
+    "Algieba",
+    "Despina",
+    "Erinome",
+    "Algenib",
+    "Rasalgethi",
+    "Laomedeia",
+    "Achernar",
+    "Alnilam",
+    "Schedar",
+    "Gacrux",
+    "Pulcherrima",
+    "Achird",
+    "Zubenelgenubi",
+    "Vindemiatrix",
+    "Sadachbia",
+    "Sadaltager",
+    "Sulafat"
+  ]);
+  var headerFields = /* @__PURE__ */ new Set([
+    ...ebnfSpec.headerFields,
+    ...ebnfSpec.voiceFields
+  ]);
   var voiceFields = new Set(ebnfSpec.voiceFields);
   var dialogueFields = new Set(ebnfSpec.dialogueFields);
   var exerciseFields = new Set(ebnfSpec.exerciseFields);
@@ -2642,27 +2678,57 @@ ${content}</tr>
       if (startsWithWs) {
         const t = raw.trimStart();
         if (t.startsWith("$")) {
-          push("error", lineNo, "Section marker must start at column 0 (no leading whitespace).", "section-indent");
+          push(
+            "error",
+            lineNo,
+            "Section marker must start at column 0 (no leading whitespace).",
+            "section-indent"
+          );
         } else if (/^[A-Z_]+:/.test(t)) {
-          push("error", lineNo, "Field must start at column 0 (no leading whitespace).", "field-indent");
+          push(
+            "error",
+            lineNo,
+            "Field must start at column 0 (no leading whitespace).",
+            "field-indent"
+          );
         }
       }
       if (trimmedEnd.startsWith("$")) {
         sawAnySectionMarker = true;
         if (/^\$(LESSON|DIALOGUE|EXERCISE|GRAMMAR|CHAT)\s*:/.test(trimmedEnd)) {
-          push("error", lineNo, "Section markers must not use a colon (use `$LESSON Title`, not `$LESSON: Title`).", "section-colon");
+          push(
+            "error",
+            lineNo,
+            "Section markers must not use a colon (use `$LESSON Title`, not `$LESSON: Title`).",
+            "section-colon"
+          );
         }
         const m = trimmedEnd.match(/^\$(\w+)(?:\s+(.*))?$/);
         if (!m) {
-          push("warning", lineNo, "Unrecognized section marker format.", "section-format");
+          push(
+            "warning",
+            lineNo,
+            "Unrecognized section marker format.",
+            "section-format"
+          );
           continue;
         }
         const marker = m[1];
         if (!sectionNames.has(marker)) {
-          push("warning", lineNo, `Unknown section marker: $${marker}`, "section-unknown");
+          push(
+            "warning",
+            lineNo,
+            `Unknown section marker: $${marker}`,
+            "section-unknown"
+          );
         }
         if (pendingVocabWord) {
-          push("warning", pendingVocabWord.line, "VOCAB must be followed immediately by VOCAB_T (pair).", "vocab-missing-vocab_t");
+          push(
+            "warning",
+            pendingVocabWord.line,
+            "VOCAB must be followed immediately by VOCAB_T (pair).",
+            "vocab-missing-vocab_t"
+          );
           pendingVocabWord = null;
         }
         if (marker === "MODULE") {
@@ -2677,7 +2743,12 @@ ${content}</tr>
           inHeader = false;
           currentActivity = marker;
           if (!currentLessonLine) {
-            push("warning", lineNo, `Found $${marker} before any $LESSON; parser will create a "Default Lesson".`, "implicit-lesson");
+            push(
+              "warning",
+              lineNo,
+              `Found $${marker} before any $LESSON; parser will create a "Default Lesson".`,
+              "implicit-lesson"
+            );
           }
           lastDialogueHadLine = false;
           pendingVocabWord = null;
@@ -2688,7 +2759,12 @@ ${content}</tr>
       }
       if (ebnfSpec.exampleMarker && trimmed === ebnfSpec.exampleMarker) {
         if (currentActivity !== "EXERCISE") {
-          push("warning", lineNo, "EXAMPLE marker is only meaningful inside $EXERCISE.", "example-outside-exercise");
+          push(
+            "warning",
+            lineNo,
+            "EXAMPLE marker is only meaningful inside $EXERCISE.",
+            "example-outside-exercise"
+          );
         } else {
           pendingExerciseExample = { line: lineNo };
         }
@@ -2700,26 +2776,63 @@ ${content}</tr>
         const value = (fm[2] ?? "").trim();
         if (inHeader && !currentLessonLine && !currentActivity) {
           if (!headerFields.has(field)) {
-            push("warning", lineNo, `Unknown header field: ${field}`, "unknown-header-field");
+            push(
+              "warning",
+              lineNo,
+              `Unknown header field: ${field}`,
+              "unknown-header-field"
+            );
           } else {
             if (field !== "VOICE_SPEAKER" && field !== "VOICE") {
               if (seenHeader[field])
-                push("warning", lineNo, `Duplicate header field: ${field}`, "dup-header-field");
+                push(
+                  "warning",
+                  lineNo,
+                  `Duplicate header field: ${field}`,
+                  "dup-header-field"
+                );
               seenHeader[field] = lineNo;
             }
           }
           if (field === "VOICE_SPEAKER") {
-            push("warning", lineNo, "VOICE_SPEAKER is deprecated; use VOICE: SpeakerId | Display Name | VoiceName | Optional prompt.", "voice_speaker-deprecated");
+            push(
+              "warning",
+              lineNo,
+              "VOICE_SPEAKER is deprecated; use VOICE: SpeakerId | Display Name | VoiceName | Optional prompt.",
+              "voice_speaker-deprecated"
+            );
             const m = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
             if (!m) {
-              push("error", lineNo, "VOICE_SPEAKER must be `VOICE_SPEAKER: SpeakerName = VoiceName | Optional prompt`.", "voice_speaker-format");
+              push(
+                "error",
+                lineNo,
+                "VOICE_SPEAKER must be `VOICE_SPEAKER: SpeakerName = VoiceName | Optional prompt`.",
+                "voice_speaker-format"
+              );
             } else {
               const speakerName = m[1].trim();
               const voiceName = m[2].trim();
               if (!idNoSpacesRe.test(speakerName))
-                push("warning", lineNo, `VOICE_SPEAKER label must be alnum only (no spaces): "${speakerName}"`, "voice_speaker-label");
+                push(
+                  "warning",
+                  lineNo,
+                  `VOICE_SPEAKER label must be alnum only (no spaces): "${speakerName}"`,
+                  "voice_speaker-label"
+                );
               if (!idNoSpacesRe.test(voiceName))
-                push("warning", lineNo, `Voice name must be alnum only (no spaces): "${voiceName}"`, "voice_name");
+                push(
+                  "warning",
+                  lineNo,
+                  `Voice name must be alnum only (no spaces): "${voiceName}"`,
+                  "voice_name"
+                );
+              if (!VALID_GEMINI_VOICES.has(voiceName))
+                push(
+                  "error",
+                  lineNo,
+                  `Unknown Gemini voice: "${voiceName}". Valid voices: ${[...VALID_GEMINI_VOICES].slice(0, 5).join(", ")}...`,
+                  "voice-invalid"
+                );
               const key = speakerName.toLowerCase();
               const prev = seenVoiceSpeaker.get(key);
               if (prev) {
@@ -2730,7 +2843,10 @@ ${content}</tr>
                   "voice_speaker-dup"
                 );
               } else {
-                seenVoiceSpeaker.set(key, { line: lineNo, original: speakerName });
+                seenVoiceSpeaker.set(key, {
+                  line: lineNo,
+                  original: speakerName
+                });
               }
               if (prev && prev.original !== speakerName) {
                 push(
@@ -2745,72 +2861,161 @@ ${content}</tr>
           if (field === "VOICE") {
             const parts = value.split("|").map((s) => s.trim());
             if (parts.length < 3) {
-              push("error", lineNo, "VOICE must be `VOICE: SpeakerId | Display Name | VoiceName | Optional prompt`.", "voice-format");
+              push(
+                "error",
+                lineNo,
+                "VOICE must be `VOICE: SpeakerId | Display Name | VoiceName | Optional prompt`.",
+                "voice-format"
+              );
             } else {
               const speakerId = parts[0];
               const displayName = parts[1];
               const voiceName = parts[2];
               if (!idNoSpacesRe.test(speakerId))
-                push("warning", lineNo, `VOICE speakerId must be alnum/_ only (no spaces): "${speakerId}"`, "voice-speaker-id");
+                push(
+                  "warning",
+                  lineNo,
+                  `VOICE speakerId must be alnum/_ only (no spaces): "${speakerId}"`,
+                  "voice-speaker-id"
+                );
               if (!displayName)
-                push("warning", lineNo, "VOICE display name is empty; provide a display name for readable speaker labels.", "voice-display-empty");
+                push(
+                  "warning",
+                  lineNo,
+                  "VOICE display name is empty; provide a display name for readable speaker labels.",
+                  "voice-display-empty"
+                );
               if (!idNoSpacesRe.test(voiceName))
-                push("warning", lineNo, `Voice name must be alnum/_ only (no spaces): "${voiceName}"`, "voice_name");
+                push(
+                  "warning",
+                  lineNo,
+                  `Voice name must be alnum/_ only (no spaces): "${voiceName}"`,
+                  "voice_name"
+                );
+              if (!VALID_GEMINI_VOICES.has(voiceName))
+                push(
+                  "error",
+                  lineNo,
+                  `Unknown Gemini voice: "${voiceName}". Valid voices: ${[...VALID_GEMINI_VOICES].slice(0, 5).join(", ")}...`,
+                  "voice-invalid"
+                );
             }
           }
-          if (voiceFields.has(field) && field !== "VOICE_SPEAKER") {
+          if (voiceFields.has(field) && field !== "VOICE_SPEAKER" && field !== "VOICE") {
             const m = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
             if (m) {
               const voiceName = m[1].trim();
               if (!idNoSpacesRe.test(voiceName))
-                push("warning", lineNo, `Voice name must be alnum only (no spaces): "${voiceName}"`, "voice_name");
+                push(
+                  "warning",
+                  lineNo,
+                  `Voice name must be alnum only (no spaces): "${voiceName}"`,
+                  "voice_name"
+                );
+              if (!VALID_GEMINI_VOICES.has(voiceName))
+                push(
+                  "error",
+                  lineNo,
+                  `Unknown Gemini voice: "${voiceName}". Valid voices: ${[...VALID_GEMINI_VOICES].slice(0, 5).join(", ")}...`,
+                  "voice-invalid"
+                );
             }
           }
         } else if (currentActivity) {
           const allowed = currentActivity === "DIALOGUE" ? dialogueFields : currentActivity === "EXERCISE" ? exerciseFields : currentActivity === "CHAT" ? chatFields : currentActivity === "GRAMMAR" ? grammarFields : null;
           if (allowed && !allowed.has(field)) {
             if (currentActivity === "GRAMMAR" && field === "IMAGE") {
-              push("warning", lineNo, "IMAGE inside $GRAMMAR is not in the formal grammar and is ignored by lc_parser. Use markdown image syntax `![alt](file.png)`.", "grammar-image-ignored");
+              push(
+                "warning",
+                lineNo,
+                "IMAGE inside $GRAMMAR is not in the formal grammar and is ignored by lc_parser. Use markdown image syntax `![alt](file.png)`.",
+                "grammar-image-ignored"
+              );
             } else {
-              push("warning", lineNo, `Field ${field} is not expected inside $${currentActivity}.`, "field-unexpected");
+              push(
+                "warning",
+                lineNo,
+                `Field ${field} is not expected inside $${currentActivity}.`,
+                "field-unexpected"
+              );
             }
           }
           if (currentActivity === "GRAMMAR" && field !== "INTRO") {
-            push("warning", lineNo, `Line looks like a field (${field}:) inside $GRAMMAR. lc_parser will likely NOT include it in markdown content.`, "grammar-field-swallowed");
+            push(
+              "warning",
+              lineNo,
+              `Line looks like a field (${field}:) inside $GRAMMAR. lc_parser will likely NOT include it in markdown content.`,
+              "grammar-field-swallowed"
+            );
           }
         } else {
           if (!sawModuleMarker && headerFields.has(field)) {
-            push("warning", lineNo, `Header field ${field} appears before $MODULE. Add a $MODULE header.`, "header-before-module");
+            push(
+              "warning",
+              lineNo,
+              `Header field ${field} appears before $MODULE. Add a $MODULE header.`,
+              "header-before-module"
+            );
           } else {
-            push("warning", lineNo, `Field ${field} appears outside an activity; it will likely be ignored.`, "field-outside-activity");
+            push(
+              "warning",
+              lineNo,
+              `Field ${field} appears outside an activity; it will likely be ignored.`,
+              "field-outside-activity"
+            );
           }
         }
         if (currentActivity === "DIALOGUE") {
           if (field === "LINE")
             lastDialogueHadLine = true;
           if (field === "LINE_T" && !lastDialogueHadLine) {
-            push("warning", lineNo, "LINE_T appears without a preceding LINE in the current dialogue context.", "line_t-without-line");
+            push(
+              "warning",
+              lineNo,
+              "LINE_T appears without a preceding LINE in the current dialogue context.",
+              "line_t-without-line"
+            );
           }
           if (field === "VOCAB") {
             if (pendingVocabWord) {
-              push("warning", pendingVocabWord.line, "VOCAB must be followed immediately by VOCAB_T (pair).", "vocab-missing-vocab_t");
+              push(
+                "warning",
+                pendingVocabWord.line,
+                "VOCAB must be followed immediately by VOCAB_T (pair).",
+                "vocab-missing-vocab_t"
+              );
             }
             pendingVocabWord = { line: lineNo };
           }
           if (field === "VOCAB_T" && !pendingVocabWord) {
-            push("warning", lineNo, "VOCAB_T appears without a preceding VOCAB.", "vocab_t-without-vocab");
+            push(
+              "warning",
+              lineNo,
+              "VOCAB_T appears without a preceding VOCAB.",
+              "vocab_t-without-vocab"
+            );
           }
           if (field === "VOCAB_T")
             pendingVocabWord = null;
           if ((field === "SPEAKER" || field === "LINE") && pendingVocabWord) {
-            push("warning", pendingVocabWord.line, "VOCAB must be followed immediately by VOCAB_T (pair).", "vocab-missing-vocab_t");
+            push(
+              "warning",
+              pendingVocabWord.line,
+              "VOCAB must be followed immediately by VOCAB_T (pair).",
+              "vocab-missing-vocab_t"
+            );
             pendingVocabWord = null;
           }
         } else if (currentActivity === "EXERCISE") {
           if (field === "PROMPT")
             pendingExercisePrompt = { line: lineNo };
           if (field === "RESPONSE" && !pendingExercisePrompt) {
-            push("warning", lineNo, "RESPONSE appears before PROMPT.", "response-before-prompt");
+            push(
+              "warning",
+              lineNo,
+              "RESPONSE appears before PROMPT.",
+              "response-before-prompt"
+            );
           }
           if (field === "PROMPT" && value === "")
             push("warning", lineNo, "PROMPT is empty.", "empty-prompt");
@@ -2826,34 +3031,76 @@ ${content}</tr>
       }
       if (currentActivity === "GRAMMAR") {
       } else if (currentActivity === "DIALOGUE" || currentActivity === "EXERCISE" || currentActivity === "CHAT") {
-        push("warning", lineNo, `Unstructured content line inside $${currentActivity}. Did you forget a FIELD: prefix?`, "raw-content");
+        push(
+          "warning",
+          lineNo,
+          `Unstructured content line inside $${currentActivity}. Did you forget a FIELD: prefix?`,
+          "raw-content"
+        );
       } else {
-        push("warning", lineNo, "Content line appears outside any activity; it will be ignored.", "content-outside");
+        push(
+          "warning",
+          lineNo,
+          "Content line appears outside any activity; it will be ignored.",
+          "content-outside"
+        );
       }
     }
     if (pendingVocabWord) {
-      push("warning", pendingVocabWord.line, "VOCAB must be followed immediately by VOCAB_T (pair).", "vocab-missing-vocab_t");
+      push(
+        "warning",
+        pendingVocabWord.line,
+        "VOCAB must be followed immediately by VOCAB_T (pair).",
+        "vocab-missing-vocab_t"
+      );
     }
     if (pendingExerciseExample) {
-      push("warning", pendingExerciseExample.line, "EXAMPLE marker must be immediately followed by an exercise item (PROMPT...).", "example-not-applied");
+      push(
+        "warning",
+        pendingExerciseExample.line,
+        "EXAMPLE marker must be immediately followed by an exercise item (PROMPT...).",
+        "example-not-applied"
+      );
     }
     if (!sawAnySectionMarker) {
-      push("error", 1, "No section markers found. A .module should contain at least `$MODULE` and `$LESSON`/activities.", "no-sections");
+      push(
+        "error",
+        1,
+        "No section markers found. A .module should contain at least `$MODULE` and `$LESSON`/activities.",
+        "no-sections"
+      );
     }
     if (!sawModuleMarker) {
       push("error", 1, "Missing `$MODULE` header.", "missing-module");
     }
     if (sawModuleMarker) {
       if (!seenHeader.DIOCO_DOC_ID)
-        push("error", 1, "Missing required header field: DIOCO_DOC_ID", "missing-dioco-doc-id");
+        push(
+          "error",
+          1,
+          "Missing required header field: DIOCO_DOC_ID",
+          "missing-dioco-doc-id"
+        );
       if (!seenHeader.TITLE)
         push("error", 1, "Missing required header field: TITLE", "missing-title");
       if (!seenHeader.TARGET_LANG_G)
-        push("error", 1, "Missing required header field: TARGET_LANG_G", "missing-target-lang");
+        push(
+          "error",
+          1,
+          "Missing required header field: TARGET_LANG_G",
+          "missing-target-lang"
+        );
       if (!seenHeader.HOME_LANG_G && !seenHeader.USER_LANG_G)
-        push("error", 1, "Missing required header field: HOME_LANG_G (or legacy USER_LANG_G)", "missing-home-lang");
+        push(
+          "error",
+          1,
+          "Missing required header field: HOME_LANG_G (or legacy USER_LANG_G)",
+          "missing-home-lang"
+        );
     }
-    return diags.sort((a, b) => a.severity === b.severity ? a.line - b.line : a.severity === "error" ? -1 : 1);
+    return diags.sort(
+      (a, b) => a.severity === b.severity ? a.line - b.line : a.severity === "error" ? -1 : 1
+    );
   }
 
   // module-preview/src/source_index.ts
