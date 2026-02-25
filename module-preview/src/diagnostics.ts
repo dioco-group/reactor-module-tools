@@ -565,9 +565,9 @@ export function lintModuleText(text: string): Diagnostic[] {
   if (sawModuleMarker) {
     if (!seenHeader.DIOCO_DOC_ID)
       push(
-        "error",
+        "warning",
         1,
-        "Missing required header field: DIOCO_DOC_ID",
+        "Missing header field: DIOCO_DOC_ID (optional, moduleKey is derived from filename)",
         "missing-dioco-doc-id",
       );
     if (!seenHeader.TITLE)

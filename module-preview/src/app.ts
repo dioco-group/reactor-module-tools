@@ -231,7 +231,7 @@ function renderPreviewPage(params: {
             el('div', { class: 'moduleMeta mono' }, [`${mod.targetLang_G} → ${mod.homeLang_G}`]),
         ]),
         el('div', { class: 'moduleSub mono' }, [
-            `DIOCO_DOC_ID: ${mod.diocoDocId}`,
+            `MODULE_KEY: ${mod.moduleKey}`,
             mod.description ? ` • ${mod.description}` : '',
         ]),
         el('div', { class: 'pillRow' }, [

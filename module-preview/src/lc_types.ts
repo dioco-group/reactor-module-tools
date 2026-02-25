@@ -13,6 +13,7 @@ import { langCode_G_t } from './lang';
 // -----------------------------------------------------------------------------
 
 export interface Course {
+    diocoDocId: string;
     diocoPlaylistId: string;
     title: string;
     description: string;
@@ -26,7 +27,7 @@ export interface Course {
 // -----------------------------------------------------------------------------
 
 export interface ModuleListItem {
-    diocoDocId: string;
+    moduleKey: string;
     title: string;
     description: string | null;
     image: string | null;
@@ -55,7 +56,7 @@ export interface ModuleVoiceConfig {
 }
 
 export interface Module {
-    diocoDocId: string;
+    moduleKey: string;
     title: string;
     description: string | null;
     image: string | null;
@@ -149,7 +150,7 @@ export interface ChatActivity extends ActivityBase {
 export function getModuleListItem(module: Module): ModuleListItem {
     const activityCount = module.lessons.reduce((sum, lesson) => sum + lesson.activities.length, 0);
     return {
-        diocoDocId: module.diocoDocId,
+        moduleKey: module.moduleKey,
         title: module.title,
         description: module.description,
         image: module.image,

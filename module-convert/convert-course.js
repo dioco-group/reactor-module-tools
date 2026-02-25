@@ -99,7 +99,7 @@ function validateModuleOutput(text) {
   const t = String(text || '');
 
   if (!t.match(/^\s*\$MODULE/m)) warnings.push('Missing $MODULE header');
-  if (!t.match(/^\s*DIOCO_DOC_ID:\s*\S+/m)) warnings.push('Missing DIOCO_DOC_ID in header');
+  if (!t.match(/^\s*DIOCO_DOC_ID:\s*\S+/m)) warnings.push('Missing DIOCO_DOC_ID in header (optional, moduleKey derived from filename)');
   if (!t.match(/^\s*TITLE:\s*\S+/m)) warnings.push('Missing TITLE in header');
   if (!t.match(/^\s*TARGET_LANG_G:\s*\S+/m)) warnings.push('Missing TARGET_LANG_G in header');
   if (!t.match(/^\s*HOME_LANG_G:\s*\S+/m)) warnings.push('Missing HOME_LANG_G in header');
