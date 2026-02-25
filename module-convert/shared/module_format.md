@@ -33,7 +33,7 @@ HOME_LANG_G: en
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `DIOCO_DOC_ID` | **Yes** | Unique identifier (kebab-case, e.g., `lc_fsi_french_u1`) |
+| `DIOCO_DOC_ID` | No | Optional identifier (moduleKey is derived from filename at runtime) |
 | `TITLE` | **Yes** | Module title |
 | `DESCRIPTION` | No | Single line description of what the module teaches |
 | `IMAGE` | No | Image filename for module cover |
@@ -382,7 +382,7 @@ When generating module format output:
 - Start with `$MODULE` and required header fields
 - Use section markers with NO colon (`$LESSON Title` not `$LESSON: Title`)
 - Put titles on the same line as section markers
-- Ensure every module has `DIOCO_DOC_ID`, `TITLE`, `TARGET_LANG_G`, `HOME_LANG_G`
+- Ensure every module has `TITLE`, `TARGET_LANG_G`, `HOME_LANG_G` (`DIOCO_DOC_ID` is optional)
 - Use proper blank lines between sections
 - SPEAKER and LINE must be on separate lines
 - PROMPT and RESPONSE must be on separate lines
