@@ -87,8 +87,6 @@
     finalizeActivity(state);
     finalizeLesson(state);
     const mod = state.module;
-    if (!mod.diocoDocId)
-      throw new Error("Missing DIOCO_DOC_ID in .module file");
     if (!mod.title)
       throw new Error("Missing TITLE in .module file");
     if (!mod.targetLang_G)
@@ -96,7 +94,7 @@
     if (!mod.homeLang_G)
       throw new Error("Missing HOME_LANG_G in .module file");
     return {
-      diocoDocId: mod.diocoDocId,
+      moduleKey: mod.diocoDocId || mod.moduleKey || "",
       title: mod.title,
       description: mod.description || null,
       image: mod.image || null,
@@ -257,6 +255,21 @@
     if (state.currentActivity) {
       const activity = state.currentActivity;
       switch (field) {
+        case "IMAGE":
+          if (activity.type === "DIALOGUE") {
+            state.activityContentBuffer.push(`IMAGE:${value}`);
+          }
+          return;
+        case "PROMPT_IMAGE":
+          if (activity.type === "EXERCISE") {
+            state.activityContentBuffer.push(`PROMPT_IMAGE:${value}`);
+          }
+          return;
+        case "RESPONSE_IMAGE":
+          if (activity.type === "EXERCISE") {
+            state.activityContentBuffer.push(`RESPONSE_IMAGE:${value}`);
+          }
+          return;
         case "TTS_PROMPT":
           if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
             activity.ttsPrompt = value;
@@ -404,6 +417,8 @@
         } else {
           pendingVocabDefinition = definition;
         }
+      } else if (item.startsWith("IMAGE:")) {
+        currentLine.image = item.slice(6).trim();
       } else if (item.startsWith("LINE_T:")) {
         currentLine.translation = item.slice(7).trim();
       } else if (item.startsWith("NOTES:")) {
@@ -415,6 +430,7 @@
             text: currentLine.text,
             translation: currentLine.translation || "",
             notes: currentLine.notes || null,
+            image: currentLine.image || null,
             vocab: currentLine.vocab || null,
             nlp: null,
             // Added by backend
@@ -435,6 +451,7 @@
             text: currentLine.text,
             translation: currentLine.translation || "",
             notes: currentLine.notes || null,
+            image: currentLine.image || null,
             vocab: currentLine.vocab || null,
             nlp: null,
             // Added by backend
@@ -456,6 +473,7 @@
         text: currentLine.text,
         translation: currentLine.translation || "",
         notes: currentLine.notes || null,
+        image: currentLine.image || null,
         vocab: currentLine.vocab || null,
         nlp: null,
         // Added by backend
@@ -480,8 +498,10 @@
           items.push({
             prompt: currentItem.prompt,
             promptTranslation: currentItem.promptTranslation || null,
+            promptImage: currentItem.promptImage || null,
             response: currentItem.response,
             responseTranslation: currentItem.responseTranslation || null,
+            responseImage: currentItem.responseImage || null,
             isExample: currentItem.isExample || false,
             promptNlp: null,
             // Added by backend
@@ -500,18 +520,24 @@
         isExample = false;
       } else if (item.startsWith("PROMPT_T:")) {
         currentItem.promptTranslation = item.slice(9).trim();
+      } else if (item.startsWith("PROMPT_IMAGE:")) {
+        currentItem.promptImage = item.slice(13).trim();
       } else if (item.startsWith("RESPONSE:")) {
         currentItem.response = item.slice(9).trim();
       } else if (item.startsWith("RESPONSE_T:")) {
         currentItem.responseTranslation = item.slice(11).trim();
+      } else if (item.startsWith("RESPONSE_IMAGE:")) {
+        currentItem.responseImage = item.slice(15).trim();
       }
     }
     if (currentItem.prompt && currentItem.response) {
       items.push({
         prompt: currentItem.prompt,
         promptTranslation: currentItem.promptTranslation || null,
+        promptImage: currentItem.promptImage || null,
         response: currentItem.response,
         responseTranslation: currentItem.responseTranslation || null,
+        responseImage: currentItem.responseImage || null,
         isExample: currentItem.isExample || false,
         promptNlp: null,
         // Added by backend
@@ -2576,6 +2602,7 @@ ${content}</tr>
       "VOICE_SPEAKER"
     ],
     "dialogueFields": [
+      "IMAGE",
       "INSTRUCTION",
       "INTRO",
       "LINE",
@@ -2589,8 +2616,10 @@ ${content}</tr>
       "INSTRUCTION",
       "INTRO",
       "PROMPT",
+      "PROMPT_IMAGE",
       "PROMPT_T",
       "RESPONSE",
+      "RESPONSE_IMAGE",
       "RESPONSE_T"
     ],
     "grammarFields": [
@@ -3076,9 +3105,9 @@ ${content}</tr>
     if (sawModuleMarker) {
       if (!seenHeader.DIOCO_DOC_ID)
         push(
-          "error",
+          "warning",
           1,
-          "Missing required header field: DIOCO_DOC_ID",
+          "Missing header field: DIOCO_DOC_ID (optional, moduleKey is derived from filename)",
           "missing-dioco-doc-id"
         );
       if (!seenHeader.TITLE)
@@ -3340,7 +3369,7 @@ ${content}</tr>
         el("div", { class: "moduleMeta mono" }, [`${mod.targetLang_G} \u2192 ${mod.homeLang_G}`])
       ]),
       el("div", { class: "moduleSub mono" }, [
-        `DIOCO_DOC_ID: ${mod.diocoDocId}`,
+        `MODULE_KEY: ${mod.moduleKey}`,
         mod.description ? ` \u2022 ${mod.description}` : ""
       ]),
       el("div", { class: "pillRow" }, [
@@ -3460,6 +3489,7 @@ ${content}</tr>
                 el("th", { class: "colSpeaker" }, ["SPEAKER"]),
                 el("th", {}, ["LINE"]),
                 el("th", {}, ["TRANSLATION"]),
+                el("th", {}, ["IMAGE"]),
                 el("th", {}, ["VOCAB"]),
                 el("th", {}, ["VOCAB_T"]),
                 el("th", {}, ["NOTES"])
@@ -3474,6 +3504,7 @@ ${content}</tr>
                   el("td", { class: "cellMuted" }, [line.speaker ?? "\u2014"]),
                   el("td", { class: "cellStrong" }, [line.text]),
                   el("td", { class: "cellMuted" }, [line.translation || "\u2014"]),
+                  el("td", { class: "cellMuted mono" }, [line.image ?? "\u2014"]),
                   el("td", { class: "cellMuted" }, [
                     line.vocab?.length ? line.vocab.map((v) => v.word).join(", ") : "\u2014"
                   ]),
@@ -3510,8 +3541,10 @@ ${content}</tr>
                 el("th", { class: "colEx" }, ["EX"]),
                 el("th", {}, ["PROMPT"]),
                 el("th", {}, ["PROMPT_T"]),
+                el("th", {}, ["PROMPT_IMG"]),
                 el("th", {}, ["RESPONSE"]),
-                el("th", {}, ["RESPONSE_T"])
+                el("th", {}, ["RESPONSE_T"]),
+                el("th", {}, ["RESPONSE_IMG"])
               ])
             ]),
             el(
@@ -3523,8 +3556,10 @@ ${content}</tr>
                   el("td", { class: "colEx" }, [item.isExample ? "EX" : ""]),
                   el("td", { class: "cellStrong" }, [item.prompt]),
                   el("td", { class: "cellMuted" }, [item.promptTranslation ?? "\u2014"]),
+                  el("td", { class: "cellMuted mono" }, [item.promptImage ?? "\u2014"]),
                   el("td", { class: "cellStrong" }, [item.response]),
-                  el("td", { class: "cellMuted" }, [item.responseTranslation ?? "\u2014"])
+                  el("td", { class: "cellMuted" }, [item.responseTranslation ?? "\u2014"]),
+                  el("td", { class: "cellMuted mono" }, [item.responseImage ?? "\u2014"])
                 ])
               )
             )
@@ -3533,12 +3568,6 @@ ${content}</tr>
       );
     } else if (activity.type === "GRAMMAR") {
       const a = activity;
-      body.push(
-        el("div", { class: "kv" }, [
-          el("div", { class: "k" }, ["IMAGE"]),
-          el("div", { class: "v mono" }, [a.image ?? "\u2014"])
-        ])
-      );
       body.push(
         el("div", { class: "grammar" }, [
           renderMarkdown(a.content)

@@ -353,6 +353,24 @@ function handleField(field: string, value: string, state: ParserState): void {
     const activity = state.currentActivity;
 
     switch (field) {
+      case "IMAGE":
+        if (activity.type === "DIALOGUE") {
+          state.activityContentBuffer.push(`IMAGE:${value}`);
+        }
+        return;
+
+      case "PROMPT_IMAGE":
+        if (activity.type === "EXERCISE") {
+          state.activityContentBuffer.push(`PROMPT_IMAGE:${value}`);
+        }
+        return;
+
+      case "RESPONSE_IMAGE":
+        if (activity.type === "EXERCISE") {
+          state.activityContentBuffer.push(`RESPONSE_IMAGE:${value}`);
+        }
+        return;
+
       case "TTS_PROMPT":
         if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
           (activity as any).ttsPrompt = value;
@@ -547,6 +565,8 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
         // VOCAB_T came before VOCAB - store for later
         pendingVocabDefinition = definition;
       }
+    } else if (item.startsWith("IMAGE:")) {
+      currentLine.image = item.slice(6).trim();
     } else if (item.startsWith("LINE_T:")) {
       // Accumulate - order within item block doesn't matter
       currentLine.translation = item.slice(7).trim();
@@ -561,6 +581,7 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
           text: currentLine.text,
           translation: currentLine.translation || "",
           notes: currentLine.notes || null,
+          image: currentLine.image || null,
           vocab: currentLine.vocab || null,
           nlp: null, // Added by backend
           ttsDataURL: null, // Added by backend
@@ -581,6 +602,7 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
           text: currentLine.text,
           translation: currentLine.translation || "",
           notes: currentLine.notes || null,
+          image: currentLine.image || null,
           vocab: currentLine.vocab || null,
           nlp: null, // Added by backend
           ttsDataURL: null, // Added by backend
@@ -603,6 +625,7 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
       text: currentLine.text,
       translation: currentLine.translation || "",
       notes: currentLine.notes || null,
+      image: currentLine.image || null,
       vocab: currentLine.vocab || null,
       nlp: null, // Added by backend
       ttsDataURL: null, // Added by backend
@@ -632,8 +655,10 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
         items.push({
           prompt: currentItem.prompt,
           promptTranslation: currentItem.promptTranslation || null,
+          promptImage: currentItem.promptImage || null,
           response: currentItem.response,
           responseTranslation: currentItem.responseTranslation || null,
+          responseImage: currentItem.responseImage || null,
           isExample: currentItem.isExample || false,
           promptNlp: null, // Added by backend
           responseNlp: null, // Added by backend
@@ -651,11 +676,15 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
     } else if (item.startsWith("PROMPT_T:")) {
       // Accumulate - order within item block doesn't matter
       currentItem.promptTranslation = item.slice(9).trim();
+    } else if (item.startsWith("PROMPT_IMAGE:")) {
+      currentItem.promptImage = item.slice(13).trim();
     } else if (item.startsWith("RESPONSE:")) {
       currentItem.response = item.slice(9).trim();
     } else if (item.startsWith("RESPONSE_T:")) {
       // Accumulate - order within item block doesn't matter
       currentItem.responseTranslation = item.slice(11).trim();
+    } else if (item.startsWith("RESPONSE_IMAGE:")) {
+      currentItem.responseImage = item.slice(15).trim();
     }
   }
 
@@ -664,8 +693,10 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
     items.push({
       prompt: currentItem.prompt,
       promptTranslation: currentItem.promptTranslation || null,
+      promptImage: currentItem.promptImage || null,
       response: currentItem.response,
       responseTranslation: currentItem.responseTranslation || null,
+      responseImage: currentItem.responseImage || null,
       isExample: currentItem.isExample || false,
       promptNlp: null, // Added by backend
       responseNlp: null, // Added by backend

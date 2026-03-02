@@ -94,6 +94,7 @@ dialogue_line       = [ speaker_field ] ,
                       { vocab_entry } ,
                       line_field ,
                       [ line_translation ] ,
+                      [ image_field ] ,
                       [ notes_field ] ;
 
 speaker_field       = "SPEAKER:" , whitespace , speaker_name , newline ;
@@ -125,8 +126,13 @@ exercise_activity   = "$EXERCISE" , whitespace , activity_title , newline ,
 exercise_item       = [ example_marker ] ,
                       prompt_field ,
                       [ prompt_translation ] ,
+                      [ prompt_image ] ,
                       response_field ,
-                      [ response_translation ] ;
+                      [ response_translation ] ,
+                      [ response_image ] ;
+
+prompt_image        = "PROMPT_IMAGE:" , whitespace , filename , newline ;
+response_image      = "RESPONSE_IMAGE:" , whitespace , filename , newline ;
 
 example_marker      = "EXAMPLE" , newline ;
 prompt_field        = "PROMPT:" , whitespace , text_value , newline ;

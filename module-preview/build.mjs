@@ -90,6 +90,15 @@ async function generateSpecFromEbnf() {
   const grammarFields = withSharedFields(grammarBlock, fieldsFromBlock(grammarBlock));
   const chatFields = withSharedFields(chatBlock, fieldsFromBlock(chatBlock));
 
+  // The generator currently only extracts fields that appear directly inside the
+  // activity rules. Some fields live in sub-rules (e.g. dialogue_line, exercise_item).
+  // Ensure diagnostics allow these, since they are part of the format.
+  if (!dialogueFields.includes('IMAGE')) dialogueFields.push('IMAGE');
+  if (!exerciseFields.includes('PROMPT_IMAGE')) exerciseFields.push('PROMPT_IMAGE');
+  if (!exerciseFields.includes('RESPONSE_IMAGE')) exerciseFields.push('RESPONSE_IMAGE');
+  dialogueFields.sort();
+  exerciseFields.sort();
+
   const exampleMarker = allQuoted.includes('EXAMPLE') ? 'EXAMPLE' : null;
 
   const out = `/**

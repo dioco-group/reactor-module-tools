@@ -376,6 +376,7 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                             el('th', { class: 'colSpeaker' }, ['SPEAKER']),
                             el('th', {}, ['LINE']),
                             el('th', {}, ['TRANSLATION']),
+                            el('th', {}, ['IMAGE']),
                             el('th', {}, ['VOCAB']),
                             el('th', {}, ['VOCAB_T']),
                             el('th', {}, ['NOTES']),
@@ -390,6 +391,7 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                                 el('td', { class: 'cellMuted' }, [line.speaker ?? '—']),
                                 el('td', { class: 'cellStrong' }, [line.text]),
                                 el('td', { class: 'cellMuted' }, [line.translation || '—']),
+                                el('td', { class: 'cellMuted mono' }, [line.image ?? '—']),
                                 el('td', { class: 'cellMuted' }, [
                                     line.vocab?.length ? line.vocab.map((v) => v.word).join(', ') : '—',
                                 ]),
@@ -429,8 +431,10 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                             el('th', { class: 'colEx' }, ['EX']),
                             el('th', {}, ['PROMPT']),
                             el('th', {}, ['PROMPT_T']),
+                            el('th', {}, ['PROMPT_IMG']),
                             el('th', {}, ['RESPONSE']),
                             el('th', {}, ['RESPONSE_T']),
+                            el('th', {}, ['RESPONSE_IMG']),
                         ]),
                     ]),
                     el(
@@ -442,8 +446,10 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                                 el('td', { class: 'colEx' }, [item.isExample ? 'EX' : '']),
                                 el('td', { class: 'cellStrong' }, [item.prompt]),
                                 el('td', { class: 'cellMuted' }, [item.promptTranslation ?? '—']),
+                                el('td', { class: 'cellMuted mono' }, [item.promptImage ?? '—']),
                                 el('td', { class: 'cellStrong' }, [item.response]),
                                 el('td', { class: 'cellMuted' }, [item.responseTranslation ?? '—']),
+                                el('td', { class: 'cellMuted mono' }, [item.responseImage ?? '—']),
                             ])
                         )
                     ),
@@ -452,12 +458,6 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
         );
     } else if (activity.type === 'GRAMMAR') {
         const a = activity as GrammarActivity;
-        body.push(
-            el('div', { class: 'kv' }, [
-                el('div', { class: 'k' }, ['IMAGE']),
-                el('div', { class: 'v mono' }, [a.image ?? '—']),
-            ])
-        );
         body.push(
             el('div', { class: 'grammar' }, [
                 renderMarkdown(a.content),

@@ -138,6 +138,7 @@ $LESSON Grammar - Adjectives
 | `SPEAKER` | No | Speaker ID or display name (connects to `VOICE` speaker mappings for TTS) |
 | `LINE` | **Yes** | The dialogue text in target language |
 | `LINE_T` | No | Translation (blurred until tapped) — place after LINE |
+| `IMAGE` | No | Image filename shown on this dialogue card (e.g. scene illustration) |
 | `VOCAB` | No | Vocabulary word/phrase (place immediately before the LINE it belongs to) |
 | `VOCAB_T` | No | Translation/definition of vocabulary — place after VOCAB |
 | `NOTES` | No | Cultural context, grammar tips, or explanations for this line |
@@ -262,8 +263,10 @@ These are audio-lingual drills, not flashcards. The student should:
 | `EXAMPLE` | No | Marks next item as example (shown unblurred with "Example" label) |
 | `PROMPT` | **Yes** | The stimulus in target language |
 | `PROMPT_T` | No | Translation of prompt (blurred) — place after PROMPT |
+| `PROMPT_IMAGE` | No | Image filename shown with the prompt card |
 | `RESPONSE` | **Yes** | Expected answer in target language |
 | `RESPONSE_T` | No | Translation of response (blurred) — place after RESPONSE |
+| `RESPONSE_IMAGE` | No | Image filename shown with the response card |
 
 **Translation Order:** `PROMPT_T` should follow `PROMPT`, and `RESPONSE_T` should follow `RESPONSE`.
 
@@ -373,6 +376,50 @@ INTRO: Now you'll practice a real conversation.
 SCENARIO: You are leaving a shop after making a purchase. Say goodbye to the shop owner.
 INITIAL_PROMPT: You are a friendly French shop owner. Respond naturally and warmly when the customer says goodbye. Keep responses short and appropriate for a beginner learner.
 ```
+
+## Images
+
+Images can be used in dialogue lines, exercise items, grammar content, and as cover images for courses and modules.
+
+### Image Folder Convention
+
+Each module's images live in a folder named after the module file (without `.module`). For a module file `01-at-the-cafe.module`, images go in `01-at-the-cafe/`:
+
+```
+my-french-course/
+  course.course
+  cover.jpg                       # Course cover: IMAGE: cover.jpg
+  01-at-the-cafe.module
+  01-at-the-cafe/                 # Images for this module
+    cafe_scene.png
+    waiter.png
+  02-at-the-market.module
+  02-at-the-market/
+    market_stalls.png
+```
+
+In the module file, use bare filenames — the server automatically resolves them to the matching module folder:
+
+```
+IMAGE: cafe_scene.png            # resolves to 01-at-the-cafe/cafe_scene.png
+```
+
+If you include a path with `/`, it's used as-is relative to the repo root:
+
+```
+IMAGE: shared/logo.png           # resolves to shared/logo.png (no module prefix)
+```
+
+### Where Images Are Supported
+
+| Context | Field | Example |
+|---------|-------|---------|
+| Course header | `IMAGE:` | `IMAGE: cover.jpg` |
+| Module header | `IMAGE:` | `IMAGE: unit_cover.jpg` |
+| Dialogue line | `IMAGE:` | `IMAGE: cafe_scene.png` (after LINE or LINE_T) |
+| Exercise prompt | `PROMPT_IMAGE:` | `PROMPT_IMAGE: apple.png` (after PROMPT or PROMPT_T) |
+| Exercise response | `RESPONSE_IMAGE:` | `RESPONSE_IMAGE: labeled_apple.png` (after RESPONSE or RESPONSE_T) |
+| Grammar content | Markdown syntax | `![alt text](diagram.png)` |
 
 ## Output Requirements for Converters
 

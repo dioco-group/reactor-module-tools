@@ -103,6 +103,7 @@ export interface DialogueLine {
     text: string;
     translation: string;
     notes: string | null;
+    image: string | null;
     vocab: { word: string; definition: string }[] | null;
     // Backend-populated:
     nlp: unknown | null;
@@ -111,7 +112,6 @@ export interface DialogueLine {
 
 export interface GrammarActivity extends ActivityBase {
     type: 'GRAMMAR';
-    image: string | null;
     content: string;
     // Backend-populated in app (not in this parser):
     phrases: unknown[];
@@ -127,8 +127,10 @@ export interface ExerciseActivity extends ActivityBase {
 export interface ExerciseItem {
     prompt: string;
     promptTranslation: string | null;
+    promptImage: string | null;
     response: string;
     responseTranslation: string | null;
+    responseImage: string | null;
     isExample: boolean;
     // Backend-populated:
     promptNlp: unknown | null;
