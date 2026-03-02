@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { parseModuleFile } from "./parser/moduleParser";
 import { lintModuleText } from "./parser/diagnostics";
 import {
@@ -20,6 +21,8 @@ export class ModulePreviewPanel {
   private panel: vscode.WebviewPanel;
   private extensionUri: vscode.Uri;
   private disposables: vscode.Disposable[] = [];
+  private currentDocumentDir: vscode.Uri | null = null;
+  private currentModuleBaseName: string | null = null;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this.panel = panel;
@@ -33,13 +36,14 @@ export class ModulePreviewPanel {
       ModulePreviewPanel.currentPanel.panel.reveal(column);
       return ModulePreviewPanel.currentPanel;
     }
+    const workspaceRoots = (vscode.workspace.workspaceFolders || []).map((f) => f.uri);
     const panel = vscode.window.createWebviewPanel(
       "lr.modulePreview",
       "Module Preview",
       column,
       {
         enableScripts: false,
-        localResourceRoots: [vscode.Uri.joinPath(extensionUri, "media")],
+        localResourceRoots: [vscode.Uri.joinPath(extensionUri, "media"), ...workspaceRoots],
       },
     );
     ModulePreviewPanel.currentPanel = new ModulePreviewPanel(
@@ -50,6 +54,9 @@ export class ModulePreviewPanel {
   }
 
   update(document: vscode.TextDocument): void {
+    this.currentDocumentDir = vscode.Uri.file(path.dirname(document.fileName));
+    this.currentModuleBaseName = path.basename(document.fileName, ".module");
+
     const text = document.getText();
     let html: string;
     try {
@@ -173,6 +180,11 @@ export class ModulePreviewPanel {
   private renderDialogueLine(line: DialogueLine): string {
     let html = `<div class="dialogue-line">`;
     if (line.speaker) html += `<div class="speaker">${esc(line.speaker)}</div>`;
+    if (line.image) {
+      const src = this.resolveAssetSrc(line.image);
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" />`;
+      html += `<div class="asset-cap"><span class="field-label">IMAGE</span> <code>${esc(line.image)}</code></div></div>`;
+    }
     if (line.vocab && line.vocab.length > 0) {
       html += `<div class="vocab-list">`;
       for (const v of line.vocab) {
@@ -212,15 +224,25 @@ export class ModulePreviewPanel {
     html += `<div class="prompt"><span class="field-label">P</span> ${esc(item.prompt)}</div>`;
     if (item.promptTranslation)
       html += `<div class="prompt-t">${esc(item.promptTranslation)}</div>`;
+    if (item.promptImage) {
+      const src = this.resolveAssetSrc(item.promptImage);
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" />`;
+      html += `<div class="asset-cap"><span class="field-label">PROMPT_IMAGE</span> <code>${esc(item.promptImage)}</code></div></div>`;
+    }
     html += `<div class="response"><span class="field-label">R</span> ${esc(item.response)}</div>`;
     if (item.responseTranslation)
       html += `<div class="response-t">${esc(item.responseTranslation)}</div>`;
+    if (item.responseImage) {
+      const src = this.resolveAssetSrc(item.responseImage);
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" />`;
+      html += `<div class="asset-cap"><span class="field-label">RESPONSE_IMAGE</span> <code>${esc(item.responseImage)}</code></div></div>`;
+    }
     html += `</div></div>`;
     return html;
   }
 
   private renderGrammar(act: GrammarActivity): string {
-    return `<div class="grammar-content">${renderMarkdown(act.content)}</div>`;
+    return `<div class="grammar-content">${renderMarkdown(act.content, (src) => this.resolveAssetSrc(src))}</div>`;
   }
 
   private renderChat(act: ChatActivity): string {
@@ -263,6 +285,25 @@ export class ModulePreviewPanel {
     this.panel.dispose();
     while (this.disposables.length) this.disposables.pop()!.dispose();
   }
+
+  private resolveAssetSrc(assetPath: string): string {
+    if (!assetPath) return assetPath;
+    // Allow absolute URLs / data URIs
+    if (/^(https?:)?\/\//.test(assetPath) || assetPath.startsWith("data:")) return assetPath;
+    if (!this.currentDocumentDir) return assetPath;
+
+    let cleaned = assetPath.trim();
+    while (cleaned.startsWith("./")) cleaned = cleaned.slice(2);
+    while (cleaned.startsWith("../")) cleaned = cleaned.slice(3);
+
+    // Module folder convention: bare filenames resolve to <moduleBaseName>/<filename>
+    if (!cleaned.includes("/") && this.currentModuleBaseName) {
+      cleaned = `${this.currentModuleBaseName}/${cleaned}`;
+    }
+
+    const uri = vscode.Uri.joinPath(this.currentDocumentDir, ...cleaned.split("/"));
+    return this.panel.webview.asWebviewUri(uri).toString();
+  }
 }
 
 function esc(s: string): string {
@@ -296,8 +337,16 @@ function voiceSpecStr(spec: string | VoiceSpec): string {
   return s;
 }
 
-function renderMarkdown(md: string): string {
-  let html = esc(md);
+function renderMarkdown(md: string, resolveImage?: (src: string) => string): string {
+  const images: string[] = [];
+  const withPlaceholders = md.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, src) => {
+    const resolved = resolveImage ? resolveImage(String(src)) : String(src);
+    const tag = `<img class="md-img" src="${esc(String(resolved))}" alt="${esc(String(alt))}" />`;
+    images.push(tag);
+    return `@@IMG${images.length - 1}@@`;
+  });
+
+  let html = esc(withPlaceholders);
   // {curly bracket} phrases -> highlighted audio buttons
   html = html.replace(/\{([^}]+)\}/g, '<span class="audio-phrase">$1</span>');
   html = html.replace(/^### (.+)$/gm, "<h5>$1</h5>");
@@ -329,6 +378,7 @@ function renderMarkdown(md: string): string {
   html = html.replace(/(<\/ul>)\s*<\/p>/g, "$1");
   html = html.replace(/<p>\s*(<table>)/g, "$1");
   html = html.replace(/(<\/table>)\s*<\/p>/g, "$1");
+  html = html.replace(/@@IMG(\d+)@@/g, (_m, idx) => images[Number(idx)] || "");
   return html;
 }
 
@@ -391,6 +441,10 @@ body { font-family: var(--vscode-font-family, system-ui); font-size: 13px; color
 .line-text { font-size: 15px; margin-bottom: 2px; }
 .line-translation { color: var(--muted); font-size: 13px; }
 .line-notes { color: var(--warning); font-size: 12px; margin-top: 4px; padding: 4px 8px; background: rgba(220, 220, 170, 0.08); border-radius: 3px; }
+.asset-block { margin: 8px 0 10px; }
+.asset-img { display: block; width: 100%; max-height: 240px; object-fit: contain; background: rgba(255,255,255,0.04); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); }
+.asset-cap { margin-top: 6px; color: var(--muted); font-size: 11px; }
+.md-img { display: block; width: 100%; max-height: 320px; object-fit: contain; background: rgba(255,255,255,0.04); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); margin: 10px 0; }
 .vocab-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
 .vocab-item { font-size: 11px; padding: 2px 6px; background: rgba(78, 201, 176, 0.1); border: 1px solid rgba(78, 201, 176, 0.2); border-radius: 3px; }
 .vocab-word { color: var(--success); font-weight: 600; }

@@ -30,6 +30,7 @@ export const ebnfSpec: EbnfSpec = {
     "VOICE_SPEAKER",
   ],
   dialogueFields: [
+    "IMAGE",
     "INSTRUCTION",
     "INTRO",
     "LINE",
@@ -44,8 +45,10 @@ export const ebnfSpec: EbnfSpec = {
     "INSTRUCTION",
     "INTRO",
     "PROMPT",
+    "PROMPT_IMAGE",
     "PROMPT_T",
     "RESPONSE",
+    "RESPONSE_IMAGE",
     "RESPONSE_T",
     "TTS_PROMPT",
   ],

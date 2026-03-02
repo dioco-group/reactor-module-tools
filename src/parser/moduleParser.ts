@@ -354,6 +354,24 @@ function handleField(field: string, value: string, state: ParserState): void {
     const activity = state.currentActivity;
 
     switch (field) {
+      case "IMAGE":
+        if (activity.type === "DIALOGUE") {
+          state.activityContentBuffer.push(`IMAGE:${value}`);
+        }
+        return;
+
+      case "PROMPT_IMAGE":
+        if (activity.type === "EXERCISE") {
+          state.activityContentBuffer.push(`PROMPT_IMAGE:${value}`);
+        }
+        return;
+
+      case "RESPONSE_IMAGE":
+        if (activity.type === "EXERCISE") {
+          state.activityContentBuffer.push(`RESPONSE_IMAGE:${value}`);
+        }
+        return;
+
       case "TTS_PROMPT":
         if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
           (activity as any).ttsPrompt = value;
@@ -534,34 +552,30 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
 
   for (const item of buffer) {
     if (item.startsWith("VOCAB:")) {
-      // Start a new vocab item
       const word = item.slice(6).trim();
-      // If we have a pending definition from an earlier VOCAB_T, use it
       pendingVocab.push({ word, definition: pendingVocabDefinition || "" });
       pendingVocabDefinition = null;
     } else if (item.startsWith("VOCAB_T:")) {
       const definition = item.slice(8).trim();
-      // Add definition to the last vocab item, or store for next VOCAB
       if (pendingVocab.length > 0) {
         pendingVocab[pendingVocab.length - 1].definition = definition;
       } else {
-        // VOCAB_T came before VOCAB - store for later
         pendingVocabDefinition = definition;
       }
+    } else if (item.startsWith("IMAGE:")) {
+      currentLine.image = item.slice(6).trim();
     } else if (item.startsWith("LINE_T:")) {
-      // Accumulate - order within item block doesn't matter
       currentLine.translation = item.slice(7).trim();
     } else if (item.startsWith("NOTES:")) {
-      // Accumulate - order within item block doesn't matter
       currentLine.notes = item.slice(6).trim();
     } else if (item.startsWith("SPEAKER:")) {
-      // If we have a pending line, save it
       if (currentLine.text) {
         lines.push({
           speaker: currentLine.speaker || null,
           text: currentLine.text,
           translation: currentLine.translation || "",
           notes: currentLine.notes || null,
+          image: currentLine.image || null,
           vocab: currentLine.vocab || null,
         });
         currentLine = {};
@@ -578,12 +592,12 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
           text: currentLine.text,
           translation: currentLine.translation || "",
           notes: currentLine.notes || null,
+          image: currentLine.image || null,
           vocab: currentLine.vocab || null,
         });
         currentLine = { speaker: currentLine.speaker };
       }
       currentLine.text = item.slice(5).trim();
-      // Attach pending vocab to this line
       if (pendingVocab.length > 0) {
         currentLine.vocab = pendingVocab;
         pendingVocab = [];
@@ -597,6 +611,7 @@ function parseDialogueLines(buffer: string[]): DialogueLine[] {
       text: currentLine.text,
       translation: currentLine.translation || "",
       notes: currentLine.notes || null,
+      image: currentLine.image || null,
       vocab: currentLine.vocab || null,
     });
   }
@@ -616,16 +631,16 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
 
   for (const item of buffer) {
     if (item.startsWith("EXAMPLE:")) {
-      // Mark the next item(s) as examples
       isExample = true;
     } else if (item.startsWith("PROMPT:")) {
-      // If we have a pending item, save it
       if (currentItem.prompt && currentItem.response) {
         items.push({
           prompt: currentItem.prompt,
           promptTranslation: currentItem.promptTranslation || null,
+          promptImage: currentItem.promptImage || null,
           response: currentItem.response,
           responseTranslation: currentItem.responseTranslation || null,
+          responseImage: currentItem.responseImage || null,
           isExample: currentItem.isExample || false,
         });
       }
@@ -633,17 +648,17 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
         prompt: item.slice(7).trim(),
         isExample: isExample,
       };
-      // Reset example flag after applying to an item
-      // (each EXAMPLE marker applies to the immediately following PROMPT)
       isExample = false;
     } else if (item.startsWith("PROMPT_T:")) {
-      // Accumulate - order within item block doesn't matter
       currentItem.promptTranslation = item.slice(9).trim();
+    } else if (item.startsWith("PROMPT_IMAGE:")) {
+      currentItem.promptImage = item.slice(13).trim();
     } else if (item.startsWith("RESPONSE:")) {
       currentItem.response = item.slice(9).trim();
     } else if (item.startsWith("RESPONSE_T:")) {
-      // Accumulate - order within item block doesn't matter
       currentItem.responseTranslation = item.slice(11).trim();
+    } else if (item.startsWith("RESPONSE_IMAGE:")) {
+      currentItem.responseImage = item.slice(15).trim();
     }
   }
 
@@ -651,8 +666,10 @@ function parseExerciseItems(buffer: string[]): ExerciseItem[] {
     items.push({
       prompt: currentItem.prompt,
       promptTranslation: currentItem.promptTranslation || null,
+      promptImage: currentItem.promptImage || null,
       response: currentItem.response,
       responseTranslation: currentItem.responseTranslation || null,
+      responseImage: currentItem.responseImage || null,
       isExample: currentItem.isExample || false,
     });
   }

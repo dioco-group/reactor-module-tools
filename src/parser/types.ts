@@ -67,12 +67,12 @@ export interface DialogueLine {
   text: string;
   translation: string;
   notes: string | null;
+  image: string | null;
   vocab: { word: string; definition: string }[] | null;
 }
 
 export interface GrammarActivity extends ActivityBase {
   type: "GRAMMAR";
-  image: string | null;
   content: string;
 }
 
@@ -86,8 +86,10 @@ export interface ExerciseActivity extends ActivityBase {
 export interface ExerciseItem {
   prompt: string;
   promptTranslation: string | null;
+  promptImage: string | null;
   response: string;
   responseTranslation: string | null;
+  responseImage: string | null;
   isExample: boolean;
 }
 

@@ -22,6 +22,7 @@
 - SPEAKER: speaker name (must match a VOICE entry)
 - LINE: text in target language
 - LINE_T: translation in home language
+- IMAGE: image filename for this dialogue card (optional)
 - NOTES: optional grammar/cultural notes
 - VOCAB: vocabulary word (immediately followed by VOCAB_T)
 - VOCAB_T: vocabulary translation
@@ -31,13 +32,22 @@
 - EXAMPLE marker on its own line marks the next item as an example
 - PROMPT: the prompt text
 - PROMPT_T: prompt translation (optional)
+- PROMPT_IMAGE: image filename for the prompt card (optional)
 - RESPONSE: the expected response
 - RESPONSE_T: response translation (optional)
+- RESPONSE_IMAGE: image filename for the response card (optional)
 
 ## Voice configuration
 - VOICE: SpeakerId | Display Name | GeminiVoiceName | Optional speaking prompt
 - Valid Gemini voices: Zephyr, Puck, Charon, Kore, Fenrir, Leda, Orus, Aoede, Achernar, etc.
 - Speaker IDs must be alphanumeric with underscores only (no spaces)
+
+## Images
+- Course header IMAGE: is a cover image (usually stored in repo root)
+- Module header IMAGE: and activity images typically use bare filenames
+- Images are stored in a folder matching the module filename (e.g. 01-cafe.module → 01-cafe/) and bare filenames resolve to that folder
+- Grammar images use markdown syntax: ![alt](filename.png)
+- Paths with / are relative to repo root; bare filenames resolve to the module folder
 
 ## Key rules
 - All fields and markers must start at column 0 (no leading whitespace)
