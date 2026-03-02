@@ -2,7 +2,7 @@
   "name": "lr-course-editor",
   "displayName": "Language Reactor Course Editor",
   "description": "Edit, preview, and manage Language Reactor courses",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "language-reactor",
   "repository": {
     "type": "git",
