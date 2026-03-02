@@ -95,6 +95,9 @@ export function parseCourseFile(content: string): Course {
     throw new Error("Missing HOME_LANG_G in .course file");
 
   return {
+    // Server derives a stable diocoDocId from the repo; in the extension we don't
+    // have repo context here, so we keep it as an empty placeholder.
+    diocoDocId: "",
     diocoPlaylistId: result.diocoPlaylistId,
     title: result.title,
     description: result.description || "",

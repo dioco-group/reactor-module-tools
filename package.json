@@ -4,6 +4,10 @@
   "description": "Edit, preview, and manage Language Reactor courses",
   "version": "0.1.1",
   "publisher": "language-reactor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dioco-group/lr-cursor-extension.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
