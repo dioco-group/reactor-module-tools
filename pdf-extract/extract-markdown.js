@@ -189,7 +189,7 @@ TASK: Convert all content to clean Markdown format.
 IMAGE REFERENCES:
 - For each illustration/drawing, insert a markdown image reference
 - Use PDF page numbers (${pdfPageStart}-${pdfPageEnd}) for the filename, NOT printed page numbers
-- Format: ![Detailed description](images/page_XXX_YYY.png)
+- Format: ![Detailed description](images/page_XXX_YYY.jpg)
 - XXX = PDF page number (zero-padded to 3 digits)
 - YYY = image index on that page (001, 002, etc.)
 - PRINTED PANEL NUMBER: If the illustration has a visible printed number or label next to it
@@ -201,10 +201,10 @@ IMAGE REFERENCES:
   * What action is happening
   * Any text labels or speech bubbles visible in the image
   * Relevant context for language learning
-- Example (numbered panel): ![#8 An open book viewed from the side with two arrows pointing inward toward it, indicating the action of closing the book](images/page_011_008.png)
-- Example (numbered panel): ![#1 A man holding his open hand up to his ear as if listening carefully](images/page_011_001.png)
-- Example (no number): ![Two men in business suits shaking hands in an office, one says "Nice to meet you" while the other responds "The pleasure is mine"](images/page_005_001.png)
-- Example (no number): ![A family of four sitting at a dinner table with plates of food, labels point to: father, mother, son, daughter](images/page_012_001.png)
+- Example (numbered panel): ![#8 An open book viewed from the side with two arrows pointing inward toward it, indicating the action of closing the book](images/page_011_008.jpg)
+- Example (numbered panel): ![#1 A man holding his open hand up to his ear as if listening carefully](images/page_011_001.jpg)
+- Example (no number): ![Two men in business suits shaking hands in an office, one says "Nice to meet you" while the other responds "The pleasure is mine"](images/page_005_001.jpg)
+- Example (no number): ![A family of four sitting at a dinner table with plates of food, labels point to: father, mother, son, daughter](images/page_012_001.jpg)
 
 ${buildSplitInstructions(CONFIG.SPLIT_ENABLED, CONFIG.SPLIT_INSTRUCTIONS)}
 

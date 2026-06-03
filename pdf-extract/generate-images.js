@@ -21,10 +21,10 @@
  *
  * Input (from extract-markdown.js):
  *   <outputDir>/<pdfName>/
- *   ├── <pdfName>_complete.md     # markdown with ![#N desc](images/page_XXX_YYY.png)
+ *   ├── <pdfName>_complete.md     # markdown with ![#N desc](images/page_XXX_YYY.jpg)
  *   └── temp/pages/page_XXX.png   # full page scans (300 DPI)
  * Output:
- *   <outputDir>/<pdfName>/images/page_XXX_YYY.png
+ *   <outputDir>/<pdfName>/images/page_XXX_YYY.jpg   # the image model returns JPEG
  */
 
 import 'dotenv/config';
@@ -159,7 +159,7 @@ function extractJsonArray(text) {
  * (without the marker) for prompts.
  */
 function parseImageReferences(markdown) {
-  const regex = /!\[([^\]]*)\]\(images\/(page_(\d+)_(\d+)\.png)\)/g;
+  const regex = /!\[([^\]]*)\]\(images\/(page_(\d+)_(\d+)\.(?:png|jpe?g))\)/g;
   const images = [];
   let match;
   while ((match = regex.exec(markdown)) !== null) {
@@ -200,10 +200,14 @@ class ImagePipeline {
       try {
         return await fn();
       } catch (err) {
-        const is429 = err?.status === 429 || err?.code === 429 || err?.message?.includes('RESOURCE_EXHAUSTED');
-        if (!is429 || attempt === maxAttempts) throw err;
-        const delay = Math.pow(2, attempt) * CONFIG.RATE_LIMIT_DELAY_MULTIPLIER;
-        console.warn(`  Hit 429 - retrying in ${delay / 1000}s (attempt ${attempt}/${maxAttempts})`);
+        const msg = err?.message || '';
+        const is429 = err?.status === 429 || err?.code === 429 || msg.includes('RESOURCE_EXHAUSTED');
+        // Transient network errors (e.g. brief internet drops) should not fail an
+        // image outright - retry them so a blip can't wipe out a whole run.
+        const isNetwork = /fetch failed|ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up|network|terminated/i.test(msg);
+        if ((!is429 && !isNetwork) || attempt === maxAttempts) throw err;
+        const delay = Math.pow(2, attempt) * (is429 ? CONFIG.RATE_LIMIT_DELAY_MULTIPLIER : CONFIG.RETRY_DELAY_MULTIPLIER);
+        console.warn(`  ${is429 ? 'Hit 429' : 'Network error'} - retrying in ${delay / 1000}s (attempt ${attempt}/${maxAttempts})`);
         await sleep(delay);
       }
     }
@@ -352,7 +356,7 @@ async function main() {
         failed++;
         continue;
       }
-      const refPng = cropRegion(pageNum, box, width, height, path.join(refDir, img.filename.replace(/\.png$/, '')));
+      const refPng = cropRegion(pageNum, box, width, height, path.join(refDir, img.filename.replace(/\.(?:png|jpe?g)$/, '')));
       if (!refPng || !fs.existsSync(refPng)) {
         console.log(`  ${img.filename}: crop failed - skipped`);
         failed++;
