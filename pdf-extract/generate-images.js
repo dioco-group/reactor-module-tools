@@ -217,22 +217,50 @@ class ImagePipeline {
   /** Detect bounding boxes for all illustrations on a page. Returns { id: [ymin,xmin,ymax,xmax] }. */
   async detectBoxes(pagePngPath, images) {
     const data = fs.readFileSync(pagePngPath).toString('base64');
-    const resp = await this.callWith429Retry(
-      () => this.genai.models.generateContent({
-        model: CONFIG.BBOX_MODEL,
-        contents: [{ parts: [
-          { text: BBOX_PROMPT(images) },
-          { inlineData: { mimeType: 'image/png', data } },
-        ] }],
-        config: { thinkingConfig: { thinkingLevel: 'LOW' }, responseMimeType: 'application/json' },
+    // Retry on malformed JSON too: the model occasionally returns truncated/invalid
+    // JSON, and skipping the whole page would drop every illustration on it.
+    let lastErr;
+    for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+      const resp = await this.callWith429Retry(
+        () => this.genai.models.generateContent({
+          model: CONFIG.BBOX_MODEL,
+          contents: [{ parts: [
+            { text: BBOX_PROMPT(images) },
+            { inlineData: { mimeType: 'image/png', data } },
+          ] }],
+        config: {
+          thinkingConfig: { thinkingLevel: 'LOW' },
+          responseMimeType: 'application/json',
+          // Structured output guarantees valid, parseable JSON (some pages
+          // otherwise return malformed JSON that we can't repair).
+          responseSchema: {
+            type: 'ARRAY',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                id: { type: 'INTEGER' },
+                box: { type: 'ARRAY', items: { type: 'INTEGER' } },
+              },
+              required: ['id', 'box'],
+            },
+          },
+        },
       }),
       CONFIG.MAX_RETRIES
     );
-    const boxes = {};
-    for (const b of extractJsonArray(resp.text || '')) {
-      if (b && typeof b.id !== 'undefined' && Array.isArray(b.box)) boxes[b.id] = b.box;
+      try {
+        const boxes = {};
+        for (const b of extractJsonArray(resp.text || '')) {
+          if (b && typeof b.id !== 'undefined' && Array.isArray(b.box)) boxes[b.id] = b.box;
+        }
+        return boxes;
+      } catch (e) {
+        lastErr = e;
+        console.warn(`  bbox JSON parse failed (attempt ${attempt}/${CONFIG.MAX_RETRIES}): ${e.message}`);
+        if (attempt < CONFIG.MAX_RETRIES) await sleep(CONFIG.RETRY_DELAY_MULTIPLIER * attempt);
+      }
     }
-    return boxes;
+    throw lastErr || new Error('bbox detection failed');
   }
 
   /** Re-render a single-illustration crop into a clean image. Returns a Buffer or null. */
