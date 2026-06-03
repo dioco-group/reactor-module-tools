@@ -126,6 +126,20 @@ function loadConfig(args) {
     // Hard-coded defaults
     ...DEFAULTS,
 
+    // Optional per-course overrides from JSON config
+    MODEL: typeof cfg.model === 'string' && cfg.model.trim() ? cfg.model.trim() : DEFAULTS.MODEL,
+    // temperature may be set to null to omit it entirely (e.g. Gemini 3.5 Flash
+    // no longer accepts a temperature). Falls back to the default when unset.
+    TEMPERATURE: ('temperature' in cfg) ? cfg.temperature : DEFAULTS.TEMPERATURE,
+    MAX_OUTPUT_TOKENS: Number.isInteger(cfg.maxTokens) ? cfg.maxTokens : DEFAULTS.MAX_OUTPUT_TOKENS,
+    // Thinking level for models that support it (Gemini 3.x): LOW | MEDIUM | HIGH | MINIMAL.
+    // Transcription does not need deep thinking; LOW is faster, cheaper, and avoids
+    // empty responses caused by thinking tokens exhausting the output budget.
+    // null leaves the model default.
+    THINKING_LEVEL: typeof cfg.thinkingLevel === 'string' && cfg.thinkingLevel.trim()
+      ? cfg.thinkingLevel.trim().toUpperCase()
+      : null,
+
     // Environment
     API_KEY: process.env.GEMINI_API_KEY || '',
   };
@@ -178,13 +192,19 @@ IMAGE REFERENCES:
 - Format: ![Detailed description](images/page_XXX_YYY.png)
 - XXX = PDF page number (zero-padded to 3 digits)
 - YYY = image index on that page (001, 002, etc.)
+- PRINTED PANEL NUMBER: If the illustration has a visible printed number or label next to it
+  (e.g. a numbered panel "8." in an exercise grid), begin the description with that number
+  using the form "#N " (a hash, the number, then a space). This lets downstream tooling
+  identify the exact panel reliably. Omit it only when no number is printed for that image.
 - The description should be detailed and useful, describing:
   * Who/what is shown (people, objects, scene)
   * What action is happening
   * Any text labels or speech bubbles visible in the image
   * Relevant context for language learning
-- Example: ![Two men in business suits shaking hands in an office, one says "Nice to meet you" while the other responds "The pleasure is mine"](images/page_005_001.png)
-- Example: ![A family of four sitting at a dinner table with plates of food, labels point to: father, mother, son, daughter](images/page_012_001.png)
+- Example (numbered panel): ![#8 An open book viewed from the side with two arrows pointing inward toward it, indicating the action of closing the book](images/page_011_008.png)
+- Example (numbered panel): ![#1 A man holding his open hand up to his ear as if listening carefully](images/page_011_001.png)
+- Example (no number): ![Two men in business suits shaking hands in an office, one says "Nice to meet you" while the other responds "The pleasure is mine"](images/page_005_001.png)
+- Example (no number): ![A family of four sitting at a dinner table with plates of food, labels point to: father, mother, son, daughter](images/page_012_001.png)
 
 ${buildSplitInstructions(CONFIG.SPLIT_ENABLED, CONFIG.SPLIT_INSTRUCTIONS)}
 
@@ -464,40 +484,45 @@ class MarkdownExtractor {
    */
   async extractMarkdown(file, pdfPageStart, pdfPageEnd) {
     const prompt = EXTRACTION_PROMPT(pdfPageStart, pdfPageEnd);
-    
-    const response = await this.callWith429Retry(
-      () => this.genai.models.generateContent({
-        model: CONFIG.MODEL,
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              { fileData: { mimeType: file.mimeType, fileUri: file.uri } },
-            ],
+
+    // Retry on EMPTY responses too. Thinking models (e.g. Gemini 3.5 Flash) can
+    // occasionally return no text when thinking tokens exhaust the output budget
+    // or a candidate is filtered; a silent empty chunk would leave a hole in the
+    // book, so we surface it and retry rather than saving blank markdown.
+    for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+      const response = await this.callWith429Retry(
+        () => this.genai.models.generateContent({
+          model: CONFIG.MODEL,
+          contents: [
+            {
+              parts: [
+                { text: prompt },
+                { fileData: { mimeType: file.mimeType, fileUri: file.uri } },
+              ],
+            },
+          ],
+          config: {
+            // Research: low temperature improves consistency for transcription.
+            // Omitted when null (some models, e.g. Gemini 3.5 Flash, reject it).
+            ...(typeof CONFIG.TEMPERATURE === 'number' ? { temperature: CONFIG.TEMPERATURE } : {}),
+            ...(CONFIG.THINKING_LEVEL ? { thinkingConfig: { thinkingLevel: CONFIG.THINKING_LEVEL } } : {}),
+            maxOutputTokens: CONFIG.MAX_OUTPUT_TOKENS,
           },
-        ],
-        config: {
-          // Research: low temperature improves consistency for transcription
-          temperature: CONFIG.TEMPERATURE,
-          maxOutputTokens: CONFIG.MAX_OUTPUT_TOKENS,
-        },
-      }),
-      CONFIG.MAX_RETRIES
-    );
-    
-    // Debug: log response structure to see non-text parts
-    if (response.candidates?.[0]?.content?.parts) {
-      const parts = response.candidates[0].content.parts;
-      const nonTextParts = parts.filter(p => !p.text);
-      if (nonTextParts.length > 0) {
-        console.log(`  [Debug] Response has ${parts.length} parts, ${nonTextParts.length} non-text:`);
-        nonTextParts.forEach((p, i) => {
-          console.log(`    Part ${i}: ${JSON.stringify(Object.keys(p))}`);
-        });
+        }),
+        CONFIG.MAX_RETRIES
+      );
+
+      const text = response.text || '';
+      if (text.trim().length > 0) return text;
+
+      const finishReason = response.candidates?.[0]?.finishReason;
+      console.warn(`  Empty response (finishReason=${finishReason}) - attempt ${attempt}/${CONFIG.MAX_RETRIES}`);
+      if (attempt < CONFIG.MAX_RETRIES) {
+        await sleep(CONFIG.RETRY_DELAY_MULTIPLIER * attempt);
       }
     }
-    
-    return response.text || '';
+
+    throw new Error('Model returned empty markdown after retries');
   }
   
   /**

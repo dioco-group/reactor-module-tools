@@ -1,84 +1,58 @@
 /**
- * Image Generator from Markdown
- * 
- * Parses markdown for image references and generates improved 1:1 images.
- * Part 2 of the PDF extraction pipeline.
- * 
- * RESEARCH-BASED DESIGN DECISIONS:
- * 
- * 1. Minimal Context During Generation:
- *    Research shows "attention dilution" - as context grows, the model's
- *    attention spreads thin and style fidelity drops. We load ONLY the
- *    specific page containing the image, not the full PDF or many pages.
- *    "More reference images = attention dilution = worse output quality"
- * 
- * 2. Separate Extraction from Generation:
- *    The extraction phase (many pages) and generation phase (minimal context)
- *    have different optimal context sizes. We separate them into two scripts.
- * 
- * 3. 1:1 Aspect Ratio:
- *    Square images work well for mobile language learning apps. We request
- *    1:1 directly from the model rather than resizing afterward.
- * 
- * 4. Resume by File Existence:
- *    Simple and robust - if the image file exists on disk, skip it.
- *    No need for separate tracking JSON.
- * 
- * 5. PDF Page Numbers for File Mapping:
- *    Image filenames use PDF page index (page_005_001.png) which maps directly
- *    to temp page files (temp/pages/page_005.png). This avoids the complexity
- *    of tracking printed page number to PDF page number mappings.
- * 
- * Future Improvements (not implemented yet):
- * - Style reference images (1-3 exemplars for consistent style)
- * - Textual style guidelines ("line weight: thin black outlines...")
- * - Colorization mode
- * 
- * Usage:
- *   node generate-images.js
- * 
+ * Image Generator from Markdown (crop + re-render hybrid)
+ *
+ * Part 2 of the PDF extraction pipeline. Produces one clean illustration per
+ * image reference in the extracted markdown.
+ *
+ * WHY THIS DESIGN (crop + re-render, not full-page generation):
+ *   Asking an image model to "find illustration X on this whole page and redraw
+ *   it" is unreliable on dense pages: it picks the wrong panel, flips arrow
+ *   directions, and drifts in style. Instead we:
+ *     1. Detect each illustration's bounding box on the page (one vision call
+ *        per page, using the markdown descriptions + printed #N panel numbers).
+ *     2. Expand the box by a margin and CROP that region straight out of the
+ *        300-DPI source-PDF scan (pdftoppm) -> a tight, unambiguous reference of
+ *        the ONE correct illustration.
+ *     3. Re-render from that crop. The model only ever sees the single correct
+ *        illustration, so panel-selection and arrow-direction errors are
+ *        structurally eliminated; it just cleans up the line art.
+ *
+ * Resume: skips images whose output file already exists.
+ *
  * Input (from extract-markdown.js):
- *   output/{pdfName}/
- *   ├── {pdfName}_complete.md     # Markdown with image references
- *   └── temp/pages/               # PDF pages as PNG
- * 
+ *   <outputDir>/<pdfName>/
+ *   ├── <pdfName>_complete.md     # markdown with ![#N desc](images/page_XXX_YYY.png)
+ *   └── temp/pages/page_XXX.png   # full page scans (300 DPI)
  * Output:
- *   output/{pdfName}/
- *   └── images/                   # Generated 1:1 images
- *       ├── page_005_001.png
- *       └── page_005_002.png
+ *   <outputDir>/<pdfName>/images/page_XXX_YYY.png
  */
 
 import 'dotenv/config';
 import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 // ============================================================================
 // CONFIG (positional arg)
 // ============================================================================
 
 function parseArgs() {
-  const args = process.argv.slice(2);
-
-  const configPath = args[0];
+  const configPath = process.argv[2];
   if (!configPath) {
     console.error('Usage: node pdf-extract/generate-images.js <pdf-extract-config.json>');
-    console.error('');
     console.error('Example:');
     console.error('  node pdf-extract/generate-images.js configs/fsi-french/pdf-extract.json');
     process.exit(1);
   }
-
   return { configPath };
 }
 
 function readJsonFile(filePath) {
-  const text = fs.readFileSync(filePath, 'utf8');
-  return JSON.parse(text);
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
-function loadInputDirFromConfig(configPath) {
+function loadConfig(configPath) {
   const absoluteConfigPath = path.resolve(configPath);
   const configDir = path.dirname(absoluteConfigPath);
   const cfg = readJsonFile(absoluteConfigPath);
@@ -92,387 +66,323 @@ function loadInputDirFromConfig(configPath) {
     process.exit(1);
   }
 
-  const inputPdfAbs = path.resolve(configDir, cfg.inputPdf);
+  const sourcePdf = path.resolve(configDir, cfg.inputPdf);
   const outputDirAbs = path.resolve(configDir, cfg.outputDir);
-  const pdfBaseName = path.basename(inputPdfAbs, '.pdf');
+  const pdfBaseName = path.basename(sourcePdf, '.pdf');
 
-  // extract-markdown.js writes to: <outputDir>/<pdfBaseName>/...
-  return path.join(outputDirAbs, pdfBaseName);
+  return {
+    // extract-markdown.js writes to: <outputDir>/<pdfBaseName>/...
+    INPUT_DIR: path.join(outputDirAbs, pdfBaseName),
+    SOURCE_PDF: sourcePdf,
+
+    // Models
+    IMAGE_MODEL: typeof cfg.imageModel === 'string' && cfg.imageModel.trim() ? cfg.imageModel.trim() : 'gemini-3-pro-image',
+    BBOX_MODEL: typeof cfg.bboxModel === 'string' && cfg.bboxModel.trim() ? cfg.bboxModel.trim() : 'gemini-3.5-flash',
+
+    // Crop settings
+    DPI: 300, // must match the DPI used to render temp/pages in extract-markdown.js
+    EXPAND: typeof cfg.imageExpand === 'number' ? cfg.imageExpand : 0.25, // grow bbox by this fraction (margin)
+
+    // Rate limiting / retries
+    API_KEY: process.env.GEMINI_API_KEY || '',
+    DELAY_BETWEEN_IMAGES: 3000,
+    MAX_RETRIES: 3,
+    RETRY_DELAY_MULTIPLIER: 3000,
+    RATE_LIMIT_DELAY_MULTIPLIER: 5000,
+  };
 }
 
-const ARGS = parseArgs();
-
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-const CONFIG = {
-  // Input directory (derived from pdf-extract config)
-  INPUT_DIR: loadInputDirFromConfig(ARGS.configPath),
-  
-  // Gemini settings
-  MODEL: 'gemini-3-pro-image-preview',
-  API_KEY: process.env.GEMINI_API_KEY || '',
-  TEMPERATURE: 1.0,
-  
-  // Image settings
-  IMAGE_SIZE: 1024,  // Request 1:1 at this size
-  
-  // Rate limiting
-  DELAY_BETWEEN_IMAGES: 5000,  // 5 seconds between image generations
-  MAX_RETRIES: 3,
-  RETRY_DELAY_MULTIPLIER: 3000,
-  RATE_LIMIT_DELAY_MULTIPLIER: 5000,
-};
+const CONFIG = loadConfig(parseArgs().configPath);
 
 // ============================================================================
 // PROMPTS
 // ============================================================================
 
-/**
- * Prompt for image generation.
- * 
- * RESEARCH NOTE:
- * We provide up to 3 pages as context (prev, current, next) - all pages that
- * have images on them. This gives the model style examples while keeping
- * context minimal (research shows more images = attention dilution).
- * 
- * The first image is always the TARGET page. Additional images are STYLE
- * REFERENCE pages from nearby in the document.
- */
-const IMAGE_GENERATION_PROMPT = (description, hasStylePages) => `
-${hasStylePages ? 'I am showing you several pages from a language learning textbook. The FIRST image is the TARGET page containing the illustration to recreate. The other images are STYLE REFERENCE pages showing the illustration style used in this book.' : 'Look at this page from a language learning textbook.'}
+const BBOX_PROMPT = (images) => `
+This is one page from a language learning textbook containing ${images.length} illustration(s).
 
-Find the illustration on the TARGET page that matches this description: "${description}"
+For EACH illustration listed below, return the tight bounding box of the DRAWING/ARTWORK only:
+- INCLUDE the whole illustration and any arrows that are part of it.
+- EXCLUDE the rectangular panel border/frame box (if any).
+- EXCLUDE any small printed panel number (e.g. "8.").
 
-Generate a FAITHFUL REPRODUCTION of this illustration with improved quality:
+Illustrations (id, printed panel number if any, description):
+${images.map(im => `- id ${im.imageIndex}${im.panelNumber != null ? ` (panel #${im.panelNumber})` : ''}: ${im.cleanDescription}`).join('\n')}
 
-CRITICAL - PRESERVE THE ORIGINAL STYLE:
-- Keep the SAME artistic style as the original (line weight, shading technique, character proportions)
-- Do NOT modernize or change the illustration style
-- The goal is a cleaner, higher quality version of the SAME illustration - not a reinterpretation
+Return ONLY JSON: an array of {"id": <id>, "box": [ymin, xmin, ymax, xmax]} with coordinates
+normalized to integers 0-1000 (top-left origin). One object per illustration id above.
+`;
 
-REQUIREMENTS:
-1. Square format (1:1 aspect ratio)
-2. Faithful to the original style and composition
-3. Improve ONLY: scan quality, line clarity, and any artifacts from the original scan
-4. Keep the same subject matter, poses, and visual elements
-5. Size: approximately ${CONFIG.IMAGE_SIZE}x${CONFIG.IMAGE_SIZE} pixels
-6. Include any text labels that are part of the illustration
+const RERENDER_PROMPT = (description) => `
+You are given a SINGLE illustration cropped from a black-and-white language-learning textbook.
+The crop has some surrounding margin and may show small fragments of neighbouring illustrations
+at the very edges.
 
+Target illustration: "${description}"
+
+Recreate the MAIN, CENTRAL illustration as a clean, faithful, higher-quality reproduction:
+- Reproduce it EXACTLY: same composition, poses, objects, and the SAME ARROW DIRECTIONS.
+  Do NOT mirror, rotate, or change any direction of motion or arrows.
+- Keep the original black-and-white line-art style (line weight, shading, proportions).
+- EXCLUDE: any panel frame/border, the printed panel number, and any partial neighbouring
+  illustrations near the edges.
+- Output ONLY the central illustration on a plain white background, square 1:1 aspect ratio.
 Generate the image now.
 `;
 
 // ============================================================================
-// Utility Functions
+// Utilities
 // ============================================================================
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function ensureDir(d) { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function pngSize(file) {
+  const b = fs.readFileSync(file);
+  return { width: b.readUInt32BE(16), height: b.readUInt32BE(20) };
 }
 
-function ensureDir(dirPath) {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
+function extractJsonArray(text) {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const raw = fenced ? fenced[1] : text;
+  const start = raw.indexOf('[');
+  const end = raw.lastIndexOf(']');
+  if (start === -1 || end === -1) throw new Error('No JSON array in response');
+  return JSON.parse(raw.slice(start, end + 1));
 }
-
-// ============================================================================
-// Markdown Parser
-// ============================================================================
 
 /**
- * Parse markdown to extract image references.
- * 
- * Expected format: ![description](images/page_XXX_YYY.png)
- * 
- * @param {string} markdown - Markdown content
- * @returns {Array<{description: string, filename: string, pageNum: number, imageIndex: number}>}
+ * Parse markdown image references.
+ * The extractor may begin a description with a "#N" marker (printed panel number).
+ * We keep the raw description, expose the parsed panelNumber, and a cleanDescription
+ * (without the marker) for prompts.
  */
 function parseImageReferences(markdown) {
-  // Match: ![any description](images/page_XXX_YYY.png)
   const regex = /!\[([^\]]*)\]\(images\/(page_(\d+)_(\d+)\.png)\)/g;
   const images = [];
   let match;
-  
   while ((match = regex.exec(markdown)) !== null) {
+    const description = match[1];
+    const numMatch = description.match(/^#(\d{1,3})\b/);
     images.push({
-      description: match[1],
+      description,
+      cleanDescription: description.replace(/^#\d+\s*/, ''),
       filename: match[2],
       pageNum: parseInt(match[3], 10),
       imageIndex: parseInt(match[4], 10),
+      panelNumber: numMatch ? parseInt(numMatch[1], 10) : null,
     });
   }
-  
   return images;
 }
 
-/**
- * Get unique page numbers that have images, sorted.
- */
-function getPagesWithImages(images) {
-  const pages = [...new Set(images.map(img => img.pageNum))];
-  return pages.sort((a, b) => a - b);
-}
-
-/**
- * Find neighboring pages with images for style context.
- * Returns up to 2 additional pages (before and after) that have images.
- * 
- * @param {number} targetPage - The page we're generating an image for
- * @param {number[]} pagesWithImages - Sorted list of pages that have images
- * @returns {number[]} - Array of page numbers to use as style context (excluding target)
- */
-function getStyleContextPages(targetPage, pagesWithImages) {
-  const targetIndex = pagesWithImages.indexOf(targetPage);
-  const contextPages = [];
-  
-  // Get previous page with images
-  if (targetIndex > 0) {
-    contextPages.push(pagesWithImages[targetIndex - 1]);
+function groupByPage(images) {
+  const byPage = new Map();
+  for (const img of images) {
+    if (!byPage.has(img.pageNum)) byPage.set(img.pageNum, []);
+    byPage.get(img.pageNum).push(img);
   }
-  
-  // Get next page with images
-  if (targetIndex < pagesWithImages.length - 1) {
-    contextPages.push(pagesWithImages[targetIndex + 1]);
-  }
-  
-  return contextPages;
+  return byPage;
 }
 
 // ============================================================================
-// Gemini Image Generator
+// Gemini wrappers
 // ============================================================================
 
-class ImageGenerator {
+class ImagePipeline {
   constructor(apiKey) {
     this.genai = new GoogleGenAI({ apiKey });
   }
-  
-  /**
-   * Call Gemini API with 429 (rate limit) retry handling
-   */
+
   async callWith429Retry(fn, maxAttempts) {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return await fn();
       } catch (err) {
-        const is429 = err?.status === 429 || err?.code === 429 || 
-                      err?.message?.includes('RESOURCE_EXHAUSTED');
+        const is429 = err?.status === 429 || err?.code === 429 || err?.message?.includes('RESOURCE_EXHAUSTED');
         if (!is429 || attempt === maxAttempts) throw err;
-        
         const delay = Math.pow(2, attempt) * CONFIG.RATE_LIMIT_DELAY_MULTIPLIER;
-        console.warn(`  Hit 429 – retrying in ${delay / 1000}s (attempt ${attempt}/${maxAttempts})`);
+        console.warn(`  Hit 429 - retrying in ${delay / 1000}s (attempt ${attempt}/${maxAttempts})`);
         await sleep(delay);
       }
     }
     throw new Error('Exceeded retries');
   }
-  
-  /**
-   * Generate an improved image based on page(s) and description.
-   * 
-   * RESEARCH NOTE:
-   * We send the target page plus up to 2 style reference pages (neighboring
-   * pages that also have images). This provides style context while keeping
-   * the total to 3 pages max - still minimal enough to avoid attention dilution.
-   * 
-   * @param {string} targetPagePath - Path to the target page PNG (contains the image to recreate)
-   * @param {string[]} stylePagePaths - Paths to style reference pages (optional, 0-2 pages)
-   * @param {string} description - Description of the image to generate
-   * @returns {Promise<Buffer|null>} - Generated image data or null if failed
-   */
-  async generateImage(targetPagePath, stylePagePaths, description) {
-    const hasStylePages = stylePagePaths.length > 0;
-    const prompt = IMAGE_GENERATION_PROMPT(description, hasStylePages);
-    
-    // Build parts array: prompt + target page + style pages
-    const parts = [{ text: prompt }];
-    
-    // Helper to add image part
-    const addImagePart = async (imagePath) => {
-      const imageData = await fs.promises.readFile(imagePath);
-      const base64Image = imageData.toString('base64');
-      const ext = path.extname(imagePath).toLowerCase();
-      const mimeType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
-      parts.push({
-        inlineData: {
-          mimeType: mimeType,
-          data: base64Image
-        }
-      });
-    };
-    
-    // Add target page FIRST (most important)
-    await addImagePart(targetPagePath);
-    
-    // Add style reference pages
-    for (const stylePath of stylePagePaths) {
-      await addImagePart(stylePath);
-    }
-    
-    const response = await this.callWith429Retry(
+
+  /** Detect bounding boxes for all illustrations on a page. Returns { id: [ymin,xmin,ymax,xmax] }. */
+  async detectBoxes(pagePngPath, images) {
+    const data = fs.readFileSync(pagePngPath).toString('base64');
+    const resp = await this.callWith429Retry(
       () => this.genai.models.generateContent({
-        model: CONFIG.MODEL,
-        contents: [{ parts }],
-        config: {
-          responseModalities: ['IMAGE'],
-          temperature: CONFIG.TEMPERATURE,
-        },
+        model: CONFIG.BBOX_MODEL,
+        contents: [{ parts: [
+          { text: BBOX_PROMPT(images) },
+          { inlineData: { mimeType: 'image/png', data } },
+        ] }],
+        config: { thinkingConfig: { thinkingLevel: 'LOW' }, responseMimeType: 'application/json' },
       }),
       CONFIG.MAX_RETRIES
     );
-    
-    // Extract image from response
-    let imageData = null;
-    
-    const extractImage = (parts) => {
-      for (const part of parts) {
-        if (part.inlineData) {
-          return Buffer.from(part.inlineData.data, 'base64');
-        }
+    const boxes = {};
+    for (const b of extractJsonArray(resp.text || '')) {
+      if (b && typeof b.id !== 'undefined' && Array.isArray(b.box)) boxes[b.id] = b.box;
+    }
+    return boxes;
+  }
+
+  /** Re-render a single-illustration crop into a clean image. Returns a Buffer or null. */
+  async rerender(refPngPath, description) {
+    const data = fs.readFileSync(refPngPath).toString('base64');
+    for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+      const resp = await this.callWith429Retry(
+        () => this.genai.models.generateContent({
+          model: CONFIG.IMAGE_MODEL,
+          contents: [{ parts: [
+            { text: RERENDER_PROMPT(description) },
+            { inlineData: { mimeType: 'image/png', data } },
+          ] }],
+          config: { responseModalities: ['IMAGE'] },
+        }),
+        CONFIG.MAX_RETRIES
+      );
+      for (const part of (resp.candidates?.[0]?.content?.parts || [])) {
+        if (part.inlineData) return Buffer.from(part.inlineData.data, 'base64');
       }
-      return null;
-    };
-    
-    if (response.candidates?.[0]?.content?.parts) {
-      imageData = extractImage(response.candidates[0].content.parts);
+      console.warn(`  No image returned - attempt ${attempt}/${CONFIG.MAX_RETRIES}`);
+      if (attempt < CONFIG.MAX_RETRIES) await sleep(CONFIG.RETRY_DELAY_MULTIPLIER * attempt);
     }
-    if (!imageData && response.parts) {
-      imageData = extractImage(response.parts);
-    }
-    
-    return imageData;
+    return null;
   }
 }
 
+/** Crop an expanded region from the source PDF page using pdftoppm. */
+function cropRegion(pageNum, box, pageW, pageH, outPrefix) {
+  let [ymin, xmin, ymax, xmax] = box;
+  const cx = (xmin + xmax) / 2, cy = (ymin + ymax) / 2;
+  const w = (xmax - xmin) * (1 + CONFIG.EXPAND);
+  const h = (ymax - ymin) * (1 + CONFIG.EXPAND);
+  xmin = clamp(cx - w / 2, 0, 1000); xmax = clamp(cx + w / 2, 0, 1000);
+  ymin = clamp(cy - h / 2, 0, 1000); ymax = clamp(cy + h / 2, 0, 1000);
+  const px = Math.round((xmin / 1000) * pageW);
+  const py = Math.round((ymin / 1000) * pageH);
+  const pw = Math.round(((xmax - xmin) / 1000) * pageW);
+  const ph = Math.round(((ymax - ymin) / 1000) * pageH);
+  if (pw <= 0 || ph <= 0) return null;
+  execSync(
+    `pdftoppm -png -r ${CONFIG.DPI} -f ${pageNum} -l ${pageNum} -x ${px} -y ${py} -W ${pw} -H ${ph} -singlefile "${CONFIG.SOURCE_PDF}" "${outPrefix}"`,
+    { stdio: 'pipe' }
+  );
+  return `${outPrefix}.png`;
+}
+
 // ============================================================================
-// Main Generation Pipeline
+// Main
 // ============================================================================
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('Image Generator from Markdown');
+  console.log('Image Generator (crop + re-render)');
   console.log('='.repeat(60));
-  console.log(`\nInput:  ${CONFIG.INPUT_DIR}`);
-  console.log(`Model:  ${CONFIG.MODEL}`);
-  console.log(`Size:   ${CONFIG.IMAGE_SIZE}x${CONFIG.IMAGE_SIZE}`);
-  
+  console.log(`\nInput:       ${CONFIG.INPUT_DIR}`);
+  console.log(`Source PDF:  ${CONFIG.SOURCE_PDF}`);
+  console.log(`BBox model:  ${CONFIG.BBOX_MODEL}`);
+  console.log(`Image model: ${CONFIG.IMAGE_MODEL}`);
+  console.log(`Expand:      ${Math.round(CONFIG.EXPAND * 100)}%`);
+
   if (!CONFIG.API_KEY) {
     console.error('\nERROR: GEMINI_API_KEY not set!');
-    console.error('Set it as: export GEMINI_API_KEY="your-key-here"');
     process.exit(1);
   }
-  
-  // Find the markdown file
+
   const dirName = path.basename(CONFIG.INPUT_DIR);
   const markdownPath = path.join(CONFIG.INPUT_DIR, `${dirName}_complete.md`);
   const pagesDir = path.join(CONFIG.INPUT_DIR, 'temp', 'pages');
   const imagesDir = path.join(CONFIG.INPUT_DIR, 'images');
-  
-  if (!fs.existsSync(markdownPath)) {
-    console.error(`\nERROR: Markdown file not found: ${markdownPath}`);
-    console.error('Run extract-markdown.js first.');
-    process.exit(1);
-  }
-  
-  if (!fs.existsSync(pagesDir)) {
-    console.error(`\nERROR: Pages directory not found: ${pagesDir}`);
-    console.error('Run extract-markdown.js first.');
-    process.exit(1);
-  }
-  
+  const refDir = path.join(CONFIG.INPUT_DIR, 'temp', 'crops');
+
+  if (!fs.existsSync(markdownPath)) { console.error(`\nERROR: Markdown not found: ${markdownPath}`); process.exit(1); }
+  if (!fs.existsSync(pagesDir)) { console.error(`\nERROR: Pages dir not found: ${pagesDir}`); process.exit(1); }
   ensureDir(imagesDir);
-  
-  // Step 1: Parse markdown for image references
+  ensureDir(refDir);
+
   console.log('\n[Step 1] Parsing markdown for image references...');
   const markdown = await fs.promises.readFile(markdownPath, 'utf8');
   const images = parseImageReferences(markdown);
-  console.log(`  Found ${images.length} image reference(s)`);
-  
-  if (images.length === 0) {
-    console.log('\nNo images to generate. Done!');
-    return;
-  }
-  
-  // Get list of pages that have images (for style context)
-  const pagesWithImages = getPagesWithImages(images);
-  console.log(`  Images spread across ${pagesWithImages.length} pages`);
-  
-  // Step 2: Generate each image
-  console.log('\n[Step 2] Generating images with style context...');
-  const generator = new ImageGenerator(CONFIG.API_KEY);
-  
-  let generated = 0;
-  let skipped = 0;
-  let failed = 0;
-  
-  for (let i = 0; i < images.length; i++) {
-    const img = images[i];
-    const outputPath = path.join(imagesDir, img.filename);
-    const targetPagePath = path.join(pagesDir, `page_${String(img.pageNum).padStart(3, '0')}.png`);
-    
-    console.log(`\n[${i + 1}/${images.length}] ${img.filename}`);
-    console.log(`  Description: ${img.description.substring(0, 60)}${img.description.length > 60 ? '...' : ''}`);
-    
-    // Resume: skip if already exists
-    if (fs.existsSync(outputPath)) {
-      console.log(`  ⊙ Already exists, skipping`);
-      skipped++;
+  const byPage = groupByPage(images);
+  console.log(`  Found ${images.length} image reference(s) across ${byPage.size} page(s)`);
+  if (images.length === 0) { console.log('\nNo images to generate. Done!'); return; }
+
+  const pipeline = new ImagePipeline(CONFIG.API_KEY);
+  let generated = 0, skipped = 0, failed = 0, done = 0;
+
+  console.log('\n[Step 2] Detecting boxes, cropping, and re-rendering...');
+  const pageNums = [...byPage.keys()].sort((a, b) => a - b);
+
+  for (const pageNum of pageNums) {
+    const pageImages = byPage.get(pageNum);
+    const pending = pageImages.filter(im => !fs.existsSync(path.join(imagesDir, im.filename)));
+    skipped += pageImages.length - pending.length;
+    done += pageImages.length;
+    if (pending.length === 0) continue;
+
+    const pagePng = path.join(pagesDir, `page_${String(pageNum).padStart(3, '0')}.png`);
+    if (!fs.existsSync(pagePng)) {
+      console.log(`\n[page ${pageNum}] page scan missing (${pagePng}) - skipping ${pending.length}`);
+      failed += pending.length;
       continue;
     }
-    
-    // Check target page image exists
-    if (!fs.existsSync(targetPagePath)) {
-      console.log(`  ✗ Page image not found: ${targetPagePath}`);
-      failed++;
-      continue;
-    }
-    
-    // Get style context pages (neighboring pages with images)
-    const contextPageNums = getStyleContextPages(img.pageNum, pagesWithImages);
-    const stylePagePaths = contextPageNums
-      .map(pageNum => path.join(pagesDir, `page_${String(pageNum).padStart(3, '0')}.png`))
-      .filter(p => fs.existsSync(p));  // Only include pages that exist
-    
-    if (stylePagePaths.length > 0) {
-      console.log(`  Style context: ${contextPageNums.length} nearby page(s) with images`);
-    }
-    
+
+    console.log(`\n[page ${pageNum}] ${pending.length} pending of ${pageImages.length}`);
+    const { width, height } = pngSize(pagePng);
+
+    let boxes = {};
     try {
-      const imageData = await generator.generateImage(targetPagePath, stylePagePaths, img.description);
-      
-      if (imageData) {
-        await fs.promises.writeFile(outputPath, imageData);
-        console.log(`  ✓ Generated: ${img.filename}`);
-        generated++;
-      } else {
-        console.log(`  ✗ No image data returned`);
+      boxes = await pipeline.detectBoxes(pagePng, pending);
+    } catch (e) {
+      console.log(`  bbox detection failed: ${e.message} - skipping page`);
+      failed += pending.length;
+      continue;
+    }
+
+    for (const img of pending) {
+      const box = boxes[img.imageIndex];
+      if (!box || !Array.isArray(box) || box.length !== 4) {
+        console.log(`  ${img.filename}: no bbox - skipped`);
+        failed++;
+        continue;
+      }
+      const refPng = cropRegion(pageNum, box, width, height, path.join(refDir, img.filename.replace(/\.png$/, '')));
+      if (!refPng || !fs.existsSync(refPng)) {
+        console.log(`  ${img.filename}: crop failed - skipped`);
+        failed++;
+        continue;
+      }
+      try {
+        const imageData = await pipeline.rerender(refPng, img.cleanDescription);
+        if (imageData) {
+          await fs.promises.writeFile(path.join(imagesDir, img.filename), imageData);
+          console.log(`  ${img.filename}: OK`);
+          generated++;
+        } else {
+          console.log(`  ${img.filename}: no image returned - skipped`);
+          failed++;
+        }
+      } catch (e) {
+        console.log(`  ${img.filename}: re-render error ${e.message}`);
         failed++;
       }
-    } catch (error) {
-      console.log(`  ✗ Error: ${error.message}`);
-      failed++;
-    }
-    
-    // Delay between images
-    if (i < images.length - 1) {
       await sleep(CONFIG.DELAY_BETWEEN_IMAGES);
     }
   }
-  
-  // Summary
+
   console.log('\n' + '='.repeat(60));
   console.log('Generation Complete!');
   console.log('='.repeat(60));
   console.log(`\nGenerated: ${generated}`);
-  console.log(`Skipped:   ${skipped}`);
+  console.log(`Skipped:   ${skipped} (already existed)`);
   console.log(`Failed:    ${failed}`);
   console.log(`\nOutput: ${imagesDir}`);
 }
 
-main().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
-
+main().catch(err => { console.error('Fatal error:', err); process.exit(1); });
