@@ -42,56 +42,114 @@ export interface LessonContent {
   activities: Activity[];
 }
 
+// =============================================================================
+// ACTIVITIES (format v2)
+// =============================================================================
+
+export type ActivityType = "DIALOGUE" | "GRAMMAR" | "SELECT" | "PRODUCE" | "CHAT";
+
 export type Activity =
   | DialogueActivity
   | GrammarActivity
-  | ExerciseActivity
+  | SelectActivity
+  | ProduceActivity
   | ChatActivity;
 
 export interface ActivityBase {
-  type: "DIALOGUE" | "GRAMMAR" | "EXERCISE" | "CHAT";
+  type: ActivityType;
   id: string;
   title: string;
   intro?: string | null;
 }
 
+// DIALOGUE -------------------------------------------------------------------
+
 export interface DialogueActivity extends ActivityBase {
   type: "DIALOGUE";
   instruction: string | null;
   ttsPrompt: string | null;
+  repeat: boolean;
   lines: DialogueLine[];
 }
 
 export interface DialogueLine {
   speaker: string | null;
   text: string;
-  translation: string;
+  translation: string | null;
   notes: string | null;
   image: string | null;
-  vocab: { word: string; definition: string }[] | null;
+  vocab: { word: string; definition: string | null }[] | null;
+  audio: string | null;
 }
+
+// GRAMMAR --------------------------------------------------------------------
 
 export interface GrammarActivity extends ActivityBase {
   type: "GRAMMAR";
   content: string;
 }
 
-export interface ExerciseActivity extends ActivityBase {
-  type: "EXERCISE";
+// SELECT ---------------------------------------------------------------------
+
+export interface SelectActivity extends ActivityBase {
+  type: "SELECT";
   instruction: string | null;
-  ttsPrompt: string | null;
-  items: ExerciseItem[];
+  audioOnly: boolean;
+  multi: boolean;
+  image: string | null;
+  options: SelectOption[];
+  items: SelectItem[];
 }
 
-export interface ExerciseItem {
+export interface SelectOption {
+  id: string;
+  text: string | null;
+  translation: string | null;
+  image: string | null;
+}
+
+export interface SelectItem {
   prompt: string;
   promptTranslation: string | null;
   promptImage: string | null;
-  response: string;
-  responseTranslation: string | null;
-  responseImage: string | null;
+  options: SelectOption[] | null;
+  answer: string[];
+  feedback: string | null;
+  feedbackTranslation: string | null;
+  audio: string | null;
   isExample: boolean;
 }
+
+// PRODUCE --------------------------------------------------------------------
+
+export type ProduceInput = "type" | "speak" | "either";
+export type ProduceCheck = "reveal" | "exact" | "llm";
+
+export interface ProduceActivity extends ActivityBase {
+  type: "PRODUCE";
+  instruction: string | null;
+  ttsPrompt: string | null;
+  input: ProduceInput;
+  check: ProduceCheck;
+  audioOnly: boolean;
+  items: ProduceItem[];
+}
+
+export interface ProduceItem {
+  prompt: string | null;
+  promptTranslation: string | null;
+  promptImage: string | null;
+  template: string | null;
+  audio: string | null;
+  response: string | null;
+  responseTranslation: string | null;
+  responseAudio: string | null;
+  accept: string[] | null;
+  rubric: string | null;
+  isExample: boolean;
+}
+
+// CHAT -----------------------------------------------------------------------
 
 export interface ChatActivity extends ActivityBase {
   type: "CHAT";

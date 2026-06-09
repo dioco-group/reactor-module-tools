@@ -3,14 +3,17 @@ export type EbnfSpec = {
   headerFields: string[];
   voiceFields: string[];
   dialogueFields: string[];
-  exerciseFields: string[];
+  selectFields: string[];
+  produceFields: string[];
   grammarFields: string[];
   chatFields: string[];
+  flags: string[];
   exampleMarker: string | null;
 };
 
+// Mirrors module-convert/shared/module_format.ebnf (format v2).
 export const ebnfSpec: EbnfSpec = {
-  markers: ["CHAT", "DIALOGUE", "EXERCISE", "GRAMMAR", "LESSON", "MODULE"],
+  markers: ["CHAT", "DIALOGUE", "GRAMMAR", "LESSON", "MODULE", "PRODUCE", "SELECT"],
   headerFields: [
     "DESCRIPTION",
     "DIOCO_DOC_ID",
@@ -30,29 +33,46 @@ export const ebnfSpec: EbnfSpec = {
     "VOICE_SPEAKER",
   ],
   dialogueFields: [
+    "AUDIO",
     "IMAGE",
     "INSTRUCTION",
     "INTRO",
     "LINE",
-    "LINE_T",
     "NOTES",
     "SPEAKER",
     "TTS_PROMPT",
     "VOCAB",
-    "VOCAB_T",
   ],
-  exerciseFields: [
+  selectFields: [
+    "ANSWER",
+    "AUDIO",
+    "FEEDBACK",
+    "IMAGE",
+    "INSTRUCTION",
+    "INTRO",
+    "OPTION",
+    "OPTION_IMAGE",
+    "PROMPT",
+    "PROMPT_IMAGE",
+  ],
+  produceFields: [
+    "ACCEPT",
+    "AUDIO",
+    "CHECK",
+    "IMAGE",
+    "INPUT",
     "INSTRUCTION",
     "INTRO",
     "PROMPT",
     "PROMPT_IMAGE",
-    "PROMPT_T",
     "RESPONSE",
-    "RESPONSE_IMAGE",
-    "RESPONSE_T",
+    "RESPONSE_AUDIO",
+    "RUBRIC",
+    "TEMPLATE",
     "TTS_PROMPT",
   ],
   grammarFields: ["INTRO"],
   chatFields: ["INITIAL_PROMPT", "INTRO", "SCENARIO"],
+  flags: ["AUDIO_ONLY", "MULTI", "REPEAT"],
   exampleMarker: "EXAMPLE",
 };

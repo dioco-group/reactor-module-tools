@@ -1,18 +1,9 @@
 /**
- * Parser for .module and .course files
+ * Parser for .module and .course files (format v2).
  *
- * .course file format:
- * ```
- * $COURSE
- * DIOCO_PLAYLIST_ID: lc_fsi_spanish_basic
- * TITLE: FSI Spanish Basic Course
- * DESCRIPTION: ...
- * IMAGE: cover.jpg
- * TARGET_LANG_G: es
- * HOME_LANG_G: en
- * ```
- *
- * .module file format: See samples/example.module
+ * Markers: $MODULE $LESSON $DIALOGUE $GRAMMAR $SELECT $PRODUCE $CHAT
+ * Flags (no colon): REPEAT, AUDIO_ONLY, MULTI, EXAMPLE
+ * Modules are monolingual (no *_T fields); translations are added downstream.
  *
  * Note: HOME_LANG_G (preferred) and USER_LANG_G (legacy) are both supported.
  */
@@ -24,18 +15,23 @@ import {
   LessonContent,
   Activity,
   DialogueActivity,
-  GrammarActivity,
-  ExerciseActivity,
-  ChatActivity,
   DialogueLine,
-  ExerciseItem,
+  GrammarActivity,
+  SelectActivity,
+  SelectOption,
+  SelectItem,
+  ProduceActivity,
+  ProduceItem,
+  ProduceInput,
+  ProduceCheck,
+  ChatActivity,
 } from "./types";
 import { langCode_G_t } from "./lang";
 
 const log = {
   e: (...args: any[]) => console.error("[LC_PARSER]", ...args),
   w: (...args: any[]) => console.warn("[LC_PARSER]", ...args),
-  d: (...args: any[]) => {},
+  d: (..._args: any[]) => {},
 };
 
 // =============================================================================
@@ -48,19 +44,13 @@ export function parseCourseFile(content: string): Course {
 
   for (const line of lines) {
     const trimmed = line.trim();
-
-    // Skip empty lines and comments
     if (!trimmed || trimmed.startsWith("#")) continue;
-
-    // Skip $COURSE marker
     if (trimmed === "$COURSE") continue;
 
-    // Parse field: value pairs
     const colonIndex = trimmed.indexOf(":");
     if (colonIndex > 0) {
       const field = trimmed.slice(0, colonIndex).trim();
       const value = trimmed.slice(colonIndex + 1).trim();
-
       switch (field) {
         case "DIOCO_PLAYLIST_ID":
           result.diocoPlaylistId = value;
@@ -78,14 +68,13 @@ export function parseCourseFile(content: string): Course {
           result.targetLang_G = value as langCode_G_t;
           break;
         case "HOME_LANG_G":
-        case "USER_LANG_G": // Legacy support
+        case "USER_LANG_G":
           result.homeLang_G = value as langCode_G_t;
           break;
       }
     }
   }
 
-  // Validate required fields
   if (!result.diocoPlaylistId)
     throw new Error("Missing DIOCO_PLAYLIST_ID in .course file");
   if (!result.title) throw new Error("Missing TITLE in .course file");
@@ -95,8 +84,6 @@ export function parseCourseFile(content: string): Course {
     throw new Error("Missing HOME_LANG_G in .course file");
 
   return {
-    // Server derives a stable diocoDocId from the repo; in the extension we don't
-    // have repo context here, so we keep it as an empty placeholder.
     diocoDocId: "",
     diocoPlaylistId: result.diocoPlaylistId,
     title: result.title,
@@ -116,54 +103,42 @@ interface ParserState {
   voiceConfig: ModuleVoiceConfig;
   currentLesson: LessonContent | null;
   currentActivity: Partial<Activity> | null;
-  activityContentBuffer: string[];
+  buffer: string[];
 }
 
-/**
- * Parse a .module file into a Module object
- */
+const FLAGS = new Set(["REPEAT", "AUDIO_ONLY", "MULTI", "EXAMPLE"]);
+
 export function parseModuleFile(content: string): Module {
   const lines = content.split("\n");
   const state: ParserState = {
-    module: {
-      lessons: [],
-    },
-    voiceConfig: {
-      default: null,
-      prompt: null,
-      response: null,
-      introVoice: null,
-      speakers: {},
-    },
+    module: { lessons: [] },
+    voiceConfig: { default: null, prompt: null, response: null, introVoice: null, speakers: {} },
     currentLesson: null,
     currentActivity: null,
-    activityContentBuffer: [],
+    buffer: [],
   };
 
   let lineNum = 0;
   for (const line of lines) {
     lineNum++;
     try {
-      processLine(line, state, lineNum);
+      processLine(line, state);
     } catch (e) {
       log.e("Parse error at line %d: %s", lineNum, e);
       throw new Error(`Parse error at line ${lineNum}: ${e}`);
     }
   }
 
-  // Finalize any pending activity/lesson
   finalizeActivity(state);
   finalizeLesson(state);
 
-  // Validate module
   const mod = state.module;
   if (!mod.title) throw new Error("Missing TITLE in .module file");
-  if (!mod.targetLang_G)
-    throw new Error("Missing TARGET_LANG_G in .module file");
+  if (!mod.targetLang_G) throw new Error("Missing TARGET_LANG_G in .module file");
   if (!mod.homeLang_G) throw new Error("Missing HOME_LANG_G in .module file");
 
   return {
-    moduleKey: (mod as any).diocoDocId || (mod as any).moduleKey || '',
+    moduleKey: (mod as any).diocoDocId || (mod as any).moduleKey || "",
     title: mod.title,
     description: mod.description || null,
     image: mod.image || null,
@@ -175,51 +150,50 @@ export function parseModuleFile(content: string): Module {
   };
 }
 
-function processLine(line: string, state: ParserState, lineNum: number): void {
+function processLine(line: string, state: ParserState): void {
   const trimmed = line.trimEnd();
+  const t = trimmed.trimStart();
 
-  // Skip comments
-  if (trimmed.trimStart().startsWith("#")) return;
-
-  // Handle section markers (must be at start of line)
+  if (t.startsWith("#")) return;
+  if (t === "") {
+    if (state.currentActivity?.type === "GRAMMAR") state.buffer.push("");
+    return;
+  }
   if (trimmed.startsWith("$")) {
     handleSectionMarker(trimmed, state);
     return;
   }
-
-  // Handle EXAMPLE marker (no colon, no value)
-  if (trimmed === "EXAMPLE" && state.currentActivity?.type === "EXERCISE") {
-    state.activityContentBuffer.push("EXAMPLE:");
+  if (FLAGS.has(t)) {
+    handleFlag(t, state);
     return;
   }
-
-  // Handle field: value pairs at start of line
   const fieldMatch = trimmed.match(/^([A-Z_]+):\s*(.*)?$/);
   if (fieldMatch) {
     handleField(fieldMatch[1], fieldMatch[2] || "", state);
     return;
   }
+  if (state.currentActivity) state.buffer.push(line);
+}
 
-  // Otherwise, it's content for the current activity
-  if (state.currentActivity) {
-    state.activityContentBuffer.push(line);
-  }
+function handleFlag(flag: string, state: ParserState): void {
+  const a = state.currentActivity;
+  if (!a) return;
+  if (flag === "REPEAT" && a.type === "DIALOGUE") (a as DialogueActivity).repeat = true;
+  else if (flag === "AUDIO_ONLY" && (a.type === "SELECT" || a.type === "PRODUCE"))
+    (a as SelectActivity | ProduceActivity).audioOnly = true;
+  else if (flag === "MULTI" && a.type === "SELECT") (a as SelectActivity).multi = true;
+  else if (flag === "EXAMPLE") state.buffer.push("EXAMPLE");
 }
 
 function handleSectionMarker(line: string, state: ParserState): void {
-  // Match patterns like "$MODULE", "$LESSON Title", "$DIALOGUE Title"
   const match = line.match(/^\$(\w+)(?:\s+(.*))?$/);
   if (!match) return;
-
   const [, marker, title] = match;
 
   switch (marker) {
     case "MODULE":
-      // Module header - nothing to do, fields follow
       break;
-
     case "LESSON":
-      // Start a new lesson
       finalizeActivity(state);
       finalizeLesson(state);
       state.currentLesson = {
@@ -228,30 +202,32 @@ function handleSectionMarker(line: string, state: ParserState): void {
         activities: [],
       };
       break;
-
     case "DIALOGUE":
       startActivity(state, "DIALOGUE", title || "Dialogue");
       break;
-
     case "GRAMMAR":
       startActivity(state, "GRAMMAR", title || "Grammar");
       break;
-
-    case "EXERCISE":
-      startActivity(state, "EXERCISE", title || "Exercise");
+    case "SELECT":
+      startActivity(state, "SELECT", title || "Select");
       break;
-
+    case "PRODUCE":
+      startActivity(state, "PRODUCE", title || "Produce");
+      break;
     case "CHAT":
       startActivity(state, "CHAT", title || "Chat");
       break;
-
     default:
       log.w("Unknown section marker: $%s", marker);
   }
 }
 
+function parseVoiceSpec(value: string): { voice: string; prompt: string | null } | null {
+  const m = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
+  return m ? { voice: m[1].trim(), prompt: m[2] ? m[2].trim() : null } : null;
+}
+
 function handleField(field: string, value: string, state: ParserState): void {
-  // Module-level fields (only when no activity is active, or for certain fields)
   if (!state.currentActivity && !state.currentLesson) {
     switch (field) {
       case "DIOCO_DOC_ID":
@@ -270,80 +246,40 @@ function handleField(field: string, value: string, state: ParserState): void {
         state.module.targetLang_G = value as langCode_G_t;
         return;
       case "HOME_LANG_G":
-      case "USER_LANG_G": // Legacy support
+      case "USER_LANG_G":
         state.module.homeLang_G = value as langCode_G_t;
         return;
       case "TTS_PROMPT":
         (state.module as any).ttsPrompt = value;
         return;
-      case "VOICE_DEFAULT": {
-        const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-        if (match) {
-          state.voiceConfig.default = {
-            voice: match[1].trim(),
-            prompt: match[2] ? match[2].trim() : null,
+      case "VOICE_DEFAULT":
+        state.voiceConfig.default = parseVoiceSpec(value);
+        return;
+      case "VOICE_PROMPT":
+        state.voiceConfig.prompt = parseVoiceSpec(value);
+        return;
+      case "VOICE_RESPONSE":
+        state.voiceConfig.response = parseVoiceSpec(value);
+        return;
+      case "VOICE_INTRO":
+        state.voiceConfig.introVoice = parseVoiceSpec(value);
+        return;
+      case "VOICE_SPEAKER": {
+        const m = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
+        if (m) {
+          state.voiceConfig.speakers[m[1].trim()] = {
+            voice: m[2].trim(),
+            prompt: m[3] ? m[3].trim() : null,
           };
         }
         return;
       }
-      case "VOICE_PROMPT": {
-        const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-        if (match) {
-          state.voiceConfig.prompt = {
-            voice: match[1].trim(),
-            prompt: match[2] ? match[2].trim() : null,
-          };
-        }
-        return;
-      }
-      case "VOICE_RESPONSE": {
-        const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-        if (match) {
-          state.voiceConfig.response = {
-            voice: match[1].trim(),
-            prompt: match[2] ? match[2].trim() : null,
-          };
-        }
-        return;
-      }
-      case "VOICE_INTRO": {
-        const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-        if (match) {
-          state.voiceConfig.introVoice = {
-            voice: match[1].trim(),
-            prompt: match[2] ? match[2].trim() : null,
-          };
-        }
-        return;
-      }
-      case "VOICE_SPEAKER":
-        // Format: "SpeakerName = voice-name" or "SpeakerName = voice-name | Optional Prompt"
-        // e.g. "Narrator = Aoede" or "Carlos = Achernar | Speak with a Texan accent"
-        const speakerMatch = value.match(
-          /^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/,
-        );
-        if (speakerMatch) {
-          const [, speakerName, voiceName, prompt] = speakerMatch;
-          state.voiceConfig.speakers[speakerName.trim()] = {
-            voice: voiceName.trim(),
-            prompt: prompt ? prompt.trim() : null,
-          };
-        }
-        return;
-
       case "VOICE": {
-        // Speaker mapping format:
-        // VOICE: <speakerId> | <voiceName> | <optionalPrompt>
-        // Example:
-        // VOICE: M_Dupre | Achernar | Speak warmly
         const parts = value.split("|").map((s) => s.trim());
         if (parts.length >= 2) {
-          const speakerId = parts[0];
-          const voiceName = parts[1];
-          const prompt = parts.slice(2).join(" | ") || null;
-          state.voiceConfig.speakers[speakerId] = {
-            voice: voiceName,
-            prompt,
+          state.voiceConfig.speakers[parts[0]] = {
+            voice: parts[1],
+            prompt: parts.slice(2).join(" | ") || null,
             displayName: null,
           };
         }
@@ -352,191 +288,106 @@ function handleField(field: string, value: string, state: ParserState): void {
     }
   }
 
-  // Activity-level fields
-  if (state.currentActivity) {
-    const activity = state.currentActivity;
+  const a = state.currentActivity;
+  if (!a) return;
 
-    switch (field) {
-      case "IMAGE":
-        if (activity.type === "DIALOGUE") {
-          state.activityContentBuffer.push(`IMAGE:${value}`);
-        }
-        return;
-
-      case "PROMPT_IMAGE":
-        if (activity.type === "EXERCISE") {
-          state.activityContentBuffer.push(`PROMPT_IMAGE:${value}`);
-        }
-        return;
-
-      case "RESPONSE_IMAGE":
-        if (activity.type === "EXERCISE") {
-          state.activityContentBuffer.push(`RESPONSE_IMAGE:${value}`);
-        }
-        return;
-
-      case "TTS_PROMPT":
-        if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
-          (activity as any).ttsPrompt = value;
-        }
-        return;
-      case "INSTRUCTION":
-        if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
-          (activity as DialogueActivity | ExerciseActivity).instruction = value;
-        }
-        return;
-
-      case "INTRO":
-        // Spoken introduction for the activity
-        activity.intro = value;
-        return;
-
-      case "SCENARIO":
-        if (activity.type === "CHAT") {
-          (activity as ChatActivity).scenario = value;
-        }
-        return;
-
-      case "INITIAL_PROMPT":
-        if (activity.type === "CHAT") {
-          (activity as ChatActivity).initialPrompt = value;
-        }
-        return;
-
-      // Dialogue fields
-      case "SPEAKER":
-        state.activityContentBuffer.push(`SPEAKER:${value}`);
-        return;
-
-      case "LINE":
-        state.activityContentBuffer.push(`LINE:${value}`);
-        return;
-
-      case "LINE_T":
-        state.activityContentBuffer.push(`LINE_T:${value}`);
-        return;
-
-      case "NOTES":
-        state.activityContentBuffer.push(`NOTES:${value}`);
-        return;
-
-      case "VOCAB":
-        state.activityContentBuffer.push(`VOCAB:${value}`);
-        return;
-
-      case "VOCAB_T":
-        state.activityContentBuffer.push(`VOCAB_T:${value}`);
-        return;
-
-      case "PROMPT":
-        state.activityContentBuffer.push(`PROMPT:${value}`);
-        return;
-
-      case "PROMPT_T":
-        state.activityContentBuffer.push(`PROMPT_T:${value}`);
-        return;
-
-      case "RESPONSE":
-        state.activityContentBuffer.push(`RESPONSE:${value}`);
-        return;
-
-      case "RESPONSE_T":
-        state.activityContentBuffer.push(`RESPONSE_T:${value}`);
-        return;
-    }
+  switch (field) {
+    case "INTRO":
+      a.intro = value;
+      return;
+    case "INSTRUCTION":
+      if (a.type === "DIALOGUE" || a.type === "SELECT" || a.type === "PRODUCE")
+        (a as any).instruction = value;
+      return;
+    case "TTS_PROMPT":
+      if (a.type === "DIALOGUE" || a.type === "PRODUCE") (a as any).ttsPrompt = value;
+      return;
+    case "INPUT":
+      if (a.type === "PRODUCE") (a as ProduceActivity).input = normalizeInput(value);
+      return;
+    case "CHECK":
+      if (a.type === "PRODUCE") (a as ProduceActivity).check = normalizeCheck(value);
+      return;
+    case "SCENARIO":
+      if (a.type === "CHAT") (a as ChatActivity).scenario = value;
+      return;
+    case "INITIAL_PROMPT":
+      if (a.type === "CHAT") (a as ChatActivity).initialPrompt = value;
+      return;
+    default:
+      state.buffer.push(`${field}:${value}`);
+      return;
   }
 }
 
-function startActivity(
-  state: ParserState,
-  type: Activity["type"],
-  title: string,
-): void {
-  // Finalize previous activity
+function normalizeInput(v: string): ProduceInput {
+  const x = v.trim().toLowerCase();
+  return x === "type" || x === "either" ? (x as ProduceInput) : "speak";
+}
+function normalizeCheck(v: string): ProduceCheck {
+  const x = v.trim().toLowerCase();
+  return x === "exact" || x === "llm" ? (x as ProduceCheck) : "reveal";
+}
+
+function startActivity(state: ParserState, type: Activity["type"], title: string): void {
   finalizeActivity(state);
-
-  // Ensure we have a lesson
   if (!state.currentLesson) {
-    state.currentLesson = {
-      id: "default-lesson",
-      title: "Default Lesson",
-      activities: [],
-    };
+    state.currentLesson = { id: "default-lesson", title: "Default Lesson", activities: [] };
   }
-
-  // Initialize activity with type-specific defaults
-  const baseActivity = {
-    type,
-    id: generateActivityId(type, title),
-    title,
-    intro: null,
-  };
-
-  if (type === "DIALOGUE") {
-    state.currentActivity = {
-      ...baseActivity,
-      instruction: null,
-      ttsPrompt: null,
-      lines: [],
-    } as Partial<DialogueActivity>;
-  } else if (type === "EXERCISE") {
-    state.currentActivity = {
-      ...baseActivity,
-      instruction: null,
-      ttsPrompt: null,
-      items: [],
-    } as Partial<ExerciseActivity>;
-  } else if (type === "GRAMMAR") {
-    state.currentActivity = {
-      ...baseActivity,
-      content: "",
-    } as Partial<GrammarActivity>;
-  } else if (type === "CHAT") {
-    state.currentActivity = {
-      ...baseActivity,
-      scenario: "",
-      initialPrompt: "",
-    } as Partial<ChatActivity>;
-  } else {
-    state.currentActivity = baseActivity;
+  const base = { type, id: generateActivityId(type, title), title, intro: null };
+  switch (type) {
+    case "DIALOGUE":
+      state.currentActivity = { ...base, instruction: null, ttsPrompt: null, repeat: false, lines: [] } as Partial<DialogueActivity>;
+      break;
+    case "GRAMMAR":
+      state.currentActivity = { ...base, content: "" } as Partial<GrammarActivity>;
+      break;
+    case "SELECT":
+      state.currentActivity = { ...base, instruction: null, audioOnly: false, multi: false, image: null, options: [], items: [] } as Partial<SelectActivity>;
+      break;
+    case "PRODUCE":
+      state.currentActivity = { ...base, instruction: null, ttsPrompt: null, input: "speak", check: "reveal", audioOnly: false, items: [] } as Partial<ProduceActivity>;
+      break;
+    case "CHAT":
+      state.currentActivity = { ...base, scenario: "", initialPrompt: "" } as Partial<ChatActivity>;
+      break;
   }
-
-  state.activityContentBuffer = [];
+  state.buffer = [];
 }
 
 function finalizeActivity(state: ParserState): void {
   if (!state.currentActivity || !state.currentLesson) return;
+  const a = state.currentActivity;
+  const buf = state.buffer;
 
-  const activity = state.currentActivity;
-  const buffer = state.activityContentBuffer;
-
-  switch (activity.type) {
+  switch (a.type) {
     case "DIALOGUE":
-      (activity as DialogueActivity).lines = parseDialogueLines(buffer);
+      (a as DialogueActivity).lines = parseDialogueLines(buf);
       break;
-
     case "GRAMMAR":
-      (activity as GrammarActivity).content = parseGrammarContent(buffer);
+      (a as GrammarActivity).content = buf.join("\n").trim();
       break;
-
-    case "EXERCISE":
-      (activity as ExerciseActivity).items = parseExerciseItems(buffer);
+    case "SELECT": {
+      const { image, options, items } = parseSelect(buf);
+      const sa = a as SelectActivity;
+      if (image && !sa.image) sa.image = image;
+      sa.options = options;
+      sa.items = items;
       break;
-
+    }
+    case "PRODUCE":
+      (a as ProduceActivity).items = parseProduce(buf);
+      break;
     case "CHAT":
-      // Chat activities get their content from fields (SCENARIO, INITIAL_PROMPT)
-      // No additional content parsing needed
       break;
   }
-
-  state.currentLesson.activities.push(activity as Activity);
+  state.currentLesson.activities.push(a as Activity);
   state.currentActivity = null;
-  state.activityContentBuffer = [];
+  state.buffer = [];
 }
 
 function finalizeLesson(state: ParserState): void {
   if (!state.currentLesson) return;
-
   state.module.lessons = state.module.lessons || [];
   state.module.lessons.push(state.currentLesson);
   state.currentLesson = null;
@@ -546,137 +397,180 @@ function finalizeLesson(state: ParserState): void {
 // CONTENT PARSERS
 // =============================================================================
 
+// Audio values are bare filenames; defensively strip any leaked timing suffix.
+function audioName(v: string): string {
+  return v.split("|")[0].trim();
+}
+
+function pushDialogueLine(lines: DialogueLine[], cur: Partial<DialogueLine>): void {
+  if (!cur.text) return;
+  lines.push({
+    speaker: cur.speaker || null,
+    text: cur.text,
+    translation: null,
+    notes: cur.notes || null,
+    image: cur.image || null,
+    vocab: cur.vocab || null,
+    audio: cur.audio || null,
+  });
+}
+
 function parseDialogueLines(buffer: string[]): DialogueLine[] {
   const lines: DialogueLine[] = [];
-  let currentLine: Partial<DialogueLine> = {};
-  let pendingVocab: { word: string; definition: string }[] = [];
-  // For VOCAB_T that may arrive before VOCAB (order matters for vocab pairing)
-  let pendingVocabDefinition: string | null = null;
+  let cur: Partial<DialogueLine> = {};
+  let pendingVocab: { word: string; definition: string | null }[] = [];
+
+  const attachVocab = () => {
+    if (pendingVocab.length) {
+      cur.vocab = pendingVocab;
+      pendingVocab = [];
+    }
+  };
 
   for (const item of buffer) {
     if (item.startsWith("VOCAB:")) {
-      const word = item.slice(6).trim();
-      pendingVocab.push({ word, definition: pendingVocabDefinition || "" });
-      pendingVocabDefinition = null;
-    } else if (item.startsWith("VOCAB_T:")) {
-      const definition = item.slice(8).trim();
-      if (pendingVocab.length > 0) {
-        pendingVocab[pendingVocab.length - 1].definition = definition;
-      } else {
-        pendingVocabDefinition = definition;
-      }
+      pendingVocab.push({ word: item.slice(6).trim(), definition: null });
     } else if (item.startsWith("IMAGE:")) {
-      currentLine.image = item.slice(6).trim();
-    } else if (item.startsWith("LINE_T:")) {
-      currentLine.translation = item.slice(7).trim();
+      cur.image = item.slice(6).trim();
+    } else if (item.startsWith("AUDIO:")) {
+      cur.audio = audioName(item.slice(6));
     } else if (item.startsWith("NOTES:")) {
-      currentLine.notes = item.slice(6).trim();
+      cur.notes = item.slice(6).trim();
     } else if (item.startsWith("SPEAKER:")) {
-      if (currentLine.text) {
-        lines.push({
-          speaker: currentLine.speaker || null,
-          text: currentLine.text,
-          translation: currentLine.translation || "",
-          notes: currentLine.notes || null,
-          image: currentLine.image || null,
-          vocab: currentLine.vocab || null,
-        });
-        currentLine = {};
+      if (cur.text) {
+        pushDialogueLine(lines, cur);
+        cur = {};
       }
-      currentLine.speaker = item.slice(8).trim();
-      if (pendingVocab.length > 0) {
-        currentLine.vocab = pendingVocab;
-        pendingVocab = [];
-      }
+      cur.speaker = item.slice(8).trim();
+      attachVocab();
     } else if (item.startsWith("LINE:")) {
-      if (currentLine.text) {
-        lines.push({
-          speaker: currentLine.speaker || null,
-          text: currentLine.text,
-          translation: currentLine.translation || "",
-          notes: currentLine.notes || null,
-          image: currentLine.image || null,
-          vocab: currentLine.vocab || null,
-        });
-        currentLine = { speaker: currentLine.speaker };
+      if (cur.text) {
+        pushDialogueLine(lines, cur);
+        cur = { speaker: cur.speaker };
       }
-      currentLine.text = item.slice(5).trim();
-      if (pendingVocab.length > 0) {
-        currentLine.vocab = pendingVocab;
-        pendingVocab = [];
-      }
+      cur.text = item.slice(5).trim();
+      attachVocab();
     }
   }
-
-  if (currentLine.text) {
-    lines.push({
-      speaker: currentLine.speaker || null,
-      text: currentLine.text,
-      translation: currentLine.translation || "",
-      notes: currentLine.notes || null,
-      image: currentLine.image || null,
-      vocab: currentLine.vocab || null,
-    });
-  }
-
+  pushDialogueLine(lines, cur);
   return lines;
 }
 
-function parseGrammarContent(buffer: string[]): string {
-  // Join all lines as markdown content (images should be in markdown format)
-  return buffer.join("\n").trim();
+function parseOption(line: string, isImage: boolean): SelectOption | null {
+  const body = line.slice(line.indexOf(":") + 1);
+  const parts = body.split("|").map((s) => s.trim());
+  if (parts.length < 2) return null;
+  const id = parts[0];
+  const val = parts.slice(1).join(" | ");
+  return isImage
+    ? { id, text: null, translation: null, image: val }
+    : { id, text: val, translation: null, image: null };
 }
 
-function parseExerciseItems(buffer: string[]): ExerciseItem[] {
-  const items: ExerciseItem[] = [];
-  let currentItem: Partial<ExerciseItem> = {};
-  let isExample = false; // Tracks if current/next item is an example
+function pushSelectItem(items: SelectItem[], cur: Partial<SelectItem>): void {
+  if (cur.prompt == null) return;
+  items.push({
+    prompt: cur.prompt,
+    promptTranslation: null,
+    promptImage: cur.promptImage || null,
+    options: cur.options && cur.options.length ? cur.options : null,
+    answer: cur.answer || [],
+    feedback: cur.feedback || null,
+    feedbackTranslation: null,
+    audio: cur.audio || null,
+    isExample: cur.isExample || false,
+  });
+}
+
+function parseSelect(buffer: string[]): { image: string | null; options: SelectOption[]; items: SelectItem[] } {
+  const pool: SelectOption[] = [];
+  const items: SelectItem[] = [];
+  let cur: Partial<SelectItem> | null = null;
+  let activityImage: string | null = null;
+  let isExample = false;
 
   for (const item of buffer) {
-    if (item.startsWith("EXAMPLE:")) {
+    if (item === "EXAMPLE") {
       isExample = true;
-    } else if (item.startsWith("PROMPT:")) {
-      if (currentItem.prompt && currentItem.response) {
-        items.push({
-          prompt: currentItem.prompt,
-          promptTranslation: currentItem.promptTranslation || null,
-          promptImage: currentItem.promptImage || null,
-          response: currentItem.response,
-          responseTranslation: currentItem.responseTranslation || null,
-          responseImage: currentItem.responseImage || null,
-          isExample: currentItem.isExample || false,
-        });
-      }
-      currentItem = {
-        prompt: item.slice(7).trim(),
-        isExample: isExample,
-      };
-      isExample = false;
-    } else if (item.startsWith("PROMPT_T:")) {
-      currentItem.promptTranslation = item.slice(9).trim();
+    } else if (item.startsWith("OPTION_IMAGE:") || item.startsWith("OPTION:")) {
+      const opt = parseOption(item, item.startsWith("OPTION_IMAGE:"));
+      if (!opt) continue;
+      if (!cur) pool.push(opt);
+      else (cur.options = cur.options || []).push(opt);
+    } else if (item.startsWith("IMAGE:")) {
+      const v = item.slice(6).trim();
+      if (!cur) activityImage = v;
+      else cur.promptImage = v;
     } else if (item.startsWith("PROMPT_IMAGE:")) {
-      currentItem.promptImage = item.slice(13).trim();
-    } else if (item.startsWith("RESPONSE:")) {
-      currentItem.response = item.slice(9).trim();
-    } else if (item.startsWith("RESPONSE_T:")) {
-      currentItem.responseTranslation = item.slice(11).trim();
-    } else if (item.startsWith("RESPONSE_IMAGE:")) {
-      currentItem.responseImage = item.slice(15).trim();
+      if (cur) cur.promptImage = item.slice(13).trim();
+    } else if (item.startsWith("PROMPT:")) {
+      if (cur) pushSelectItem(items, cur);
+      cur = { prompt: item.slice(7).trim(), options: [], answer: [], isExample };
+      isExample = false;
+    } else if (item.startsWith("AUDIO:")) {
+      if (cur) cur.audio = audioName(item.slice(6));
+    } else if (item.startsWith("ANSWER:")) {
+      if (cur) cur.answer = item.slice(7).split(",").map((s) => s.trim()).filter(Boolean);
+    } else if (item.startsWith("FEEDBACK:")) {
+      if (cur) cur.feedback = item.slice(9).trim();
     }
   }
+  if (cur) pushSelectItem(items, cur);
+  return { image: activityImage, options: pool, items };
+}
 
-  if (currentItem.prompt && currentItem.response) {
-    items.push({
-      prompt: currentItem.prompt,
-      promptTranslation: currentItem.promptTranslation || null,
-      promptImage: currentItem.promptImage || null,
-      response: currentItem.response,
-      responseTranslation: currentItem.responseTranslation || null,
-      responseImage: currentItem.responseImage || null,
-      isExample: currentItem.isExample || false,
-    });
+function pushProduceItem(items: ProduceItem[], cur: Partial<ProduceItem>): void {
+  if (cur.prompt == null && cur.template == null) return;
+  items.push({
+    prompt: cur.prompt ?? null,
+    promptTranslation: null,
+    promptImage: cur.promptImage || null,
+    template: cur.template ?? null,
+    audio: cur.audio || null,
+    response: cur.response ?? null,
+    responseTranslation: null,
+    responseAudio: cur.responseAudio || null,
+    accept: cur.accept || null,
+    rubric: cur.rubric || null,
+    isExample: cur.isExample || false,
+  });
+}
+
+function parseProduce(buffer: string[]): ProduceItem[] {
+  const items: ProduceItem[] = [];
+  let cur: Partial<ProduceItem> | null = null;
+  let isExample = false;
+
+  for (const item of buffer) {
+    if (item === "EXAMPLE") {
+      isExample = true;
+      continue;
+    }
+    if (item.startsWith("PROMPT:") || item.startsWith("TEMPLATE:")) {
+      const kind = item.startsWith("PROMPT:") ? "prompt" : "template";
+      const val = item.slice(item.indexOf(":") + 1).trim();
+      if (cur && (cur.response != null || (cur as any)[kind] != null)) {
+        pushProduceItem(items, cur);
+        cur = null;
+      }
+      if (!cur) {
+        cur = { isExample };
+        isExample = false;
+      }
+      (cur as any)[kind] = val;
+      continue;
+    }
+
+    if (!cur) continue;
+    if (item.startsWith("PROMPT_IMAGE:")) cur.promptImage = item.slice(13).trim();
+    else if (item.startsWith("IMAGE:")) cur.promptImage = item.slice(6).trim();
+    else if (item.startsWith("RESPONSE_AUDIO:")) cur.responseAudio = audioName(item.slice(15));
+    else if (item.startsWith("RESPONSE:")) cur.response = item.slice(9).trim();
+    else if (item.startsWith("AUDIO:")) cur.audio = audioName(item.slice(6));
+    else if (item.startsWith("ACCEPT:")) cur.accept = item.slice(7).split("|").map((s) => s.trim()).filter(Boolean);
+    else if (item.startsWith("RUBRIC:")) cur.rubric = item.slice(7).trim();
   }
-
+  if (cur) pushProduceItem(items, cur);
   return items;
 }
 

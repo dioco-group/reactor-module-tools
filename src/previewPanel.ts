@@ -4,14 +4,16 @@ import { parseModuleFile } from "./parser/moduleParser";
 import { lintModuleText } from "./parser/diagnostics";
 import {
   Module,
-  ModuleVoiceConfig,
   Activity,
   DialogueActivity,
-  ExerciseActivity,
+  SelectActivity,
+  SelectItem,
+  SelectOption,
+  ProduceActivity,
+  ProduceItem,
   GrammarActivity,
   ChatActivity,
   DialogueLine,
-  ExerciseItem,
   VoiceSpec,
 } from "./parser/types";
 import { Diagnostic } from "./parser/diagnostics";
@@ -151,8 +153,11 @@ export class ModulePreviewPanel {
       case "DIALOGUE":
         html += this.renderDialogue(act);
         break;
-      case "EXERCISE":
-        html += this.renderExercise(act);
+      case "SELECT":
+        html += this.renderSelect(act);
+        break;
+      case "PRODUCE":
+        html += this.renderProduce(act);
         break;
       case "GRAMMAR":
         html += this.renderGrammar(act);
@@ -169,6 +174,7 @@ export class ModulePreviewPanel {
     let html = "";
     if (act.instruction)
       html += `<div class="instruction"><span class="field-label">INSTRUCTION</span> ${esc(act.instruction)}</div>`;
+    if (act.repeat) html += `<div class="flags"><span class="flag">REPEAT</span></div>`;
     html += `<div class="dialogue-lines">`;
     for (const line of act.lines) {
       html += this.renderDialogueLine(line);
@@ -198,45 +204,104 @@ export class ModulePreviewPanel {
     html += `<div class="line-text">${esc(line.text)}</div>`;
     if (line.translation)
       html += `<div class="line-translation">${esc(line.translation)}</div>`;
+    if (line.audio)
+      html += `<div class="audio-ref"><span class="field-label">AUDIO</span> <code>${esc(line.audio)}</code></div>`;
     if (line.notes) html += `<div class="line-notes">${esc(line.notes)}</div>`;
     html += `</div>`;
     return html;
   }
 
-  private renderExercise(act: ExerciseActivity): string {
+  private renderSelect(act: SelectActivity): string {
     let html = "";
     if (act.instruction)
       html += `<div class="instruction"><span class="field-label">INSTRUCTION</span> ${esc(act.instruction)}</div>`;
+    const flags: string[] = [];
+    if (act.multi) flags.push("MULTI");
+    if (act.audioOnly) flags.push("AUDIO_ONLY");
+    if (flags.length) html += `<div class="flags">${flags.map((f) => `<span class="flag">${f}</span>`).join(" ")}</div>`;
+    if (act.image) {
+      const src = this.resolveAssetSrc(act.image);
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" /><div class="asset-cap"><span class="field-label">IMAGE</span> <code>${esc(act.image)}</code></div></div>`;
+    }
+    if (act.options.length) html += this.renderOptions(act.options, "Options");
     html += `<div class="exercise-items">`;
     for (let i = 0; i < act.items.length; i++) {
-      html += this.renderExerciseItem(act.items[i], i + 1);
+      html += this.renderSelectItem(act.items[i], i + 1);
     }
     html += `</div>`;
     return html;
   }
 
-  private renderExerciseItem(item: ExerciseItem, num: number): string {
+  private renderOptions(options: SelectOption[], label: string): string {
+    let html = `<div class="options"><span class="field-label">${esc(label)}</span> `;
+    html += options
+      .map((o) => {
+        const val = o.image ? `<code>${esc(o.image)}</code>` : esc(o.text || "");
+        return `<span class="option"><b>${esc(o.id)}</b> ${val}</span>`;
+      })
+      .join(" ");
+    html += `</div>`;
+    return html;
+  }
+
+  private renderSelectItem(item: SelectItem, num: number): string {
     const cls = item.isExample ? "exercise-item example" : "exercise-item";
     let html = `<div class="${cls}">`;
     if (item.isExample) html += `<div class="example-badge">Example</div>`;
     html += `<div class="exercise-num">${num}</div>`;
     html += `<div class="exercise-body">`;
-    html += `<div class="prompt"><span class="field-label">P</span> ${esc(item.prompt)}</div>`;
-    if (item.promptTranslation)
-      html += `<div class="prompt-t">${esc(item.promptTranslation)}</div>`;
+    html += `<div class="prompt"><span class="field-label">PROMPT</span> ${esc(item.prompt)}</div>`;
     if (item.promptImage) {
       const src = this.resolveAssetSrc(item.promptImage);
-      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" />`;
-      html += `<div class="asset-cap"><span class="field-label">PROMPT_IMAGE</span> <code>${esc(item.promptImage)}</code></div></div>`;
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" /><div class="asset-cap"><code>${esc(item.promptImage)}</code></div></div>`;
     }
-    html += `<div class="response"><span class="field-label">R</span> ${esc(item.response)}</div>`;
-    if (item.responseTranslation)
-      html += `<div class="response-t">${esc(item.responseTranslation)}</div>`;
-    if (item.responseImage) {
-      const src = this.resolveAssetSrc(item.responseImage);
-      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" />`;
-      html += `<div class="asset-cap"><span class="field-label">RESPONSE_IMAGE</span> <code>${esc(item.responseImage)}</code></div></div>`;
+    if (item.audio)
+      html += `<div class="audio-ref"><span class="field-label">AUDIO</span> <code>${esc(item.audio)}</code></div>`;
+    if (item.options && item.options.length) html += this.renderOptions(item.options, "Options");
+    html += `<div class="response"><span class="field-label">ANSWER</span> ${esc(item.answer.join(", "))}</div>`;
+    if (item.feedback)
+      html += `<div class="prompt-t"><span class="field-label">FEEDBACK</span> ${esc(item.feedback)}</div>`;
+    html += `</div></div>`;
+    return html;
+  }
+
+  private renderProduce(act: ProduceActivity): string {
+    let html = "";
+    if (act.instruction)
+      html += `<div class="instruction"><span class="field-label">INSTRUCTION</span> ${esc(act.instruction)}</div>`;
+    const flags = [`INPUT: ${act.input}`, `CHECK: ${act.check}`];
+    if (act.audioOnly) flags.push("AUDIO_ONLY");
+    html += `<div class="flags">${flags.map((f) => `<span class="flag">${esc(f)}</span>`).join(" ")}</div>`;
+    html += `<div class="exercise-items">`;
+    for (let i = 0; i < act.items.length; i++) {
+      html += this.renderProduceItem(act.items[i], i + 1);
     }
+    html += `</div>`;
+    return html;
+  }
+
+  private renderProduceItem(item: ProduceItem, num: number): string {
+    const cls = item.isExample ? "exercise-item example" : "exercise-item";
+    let html = `<div class="${cls}">`;
+    if (item.isExample) html += `<div class="example-badge">Example</div>`;
+    html += `<div class="exercise-num">${num}</div>`;
+    html += `<div class="exercise-body">`;
+    if (item.prompt)
+      html += `<div class="prompt"><span class="field-label">PROMPT</span> ${esc(item.prompt)}</div>`;
+    if (item.template)
+      html += `<div class="prompt"><span class="field-label">TEMPLATE</span> <code>${esc(item.template)}</code></div>`;
+    if (item.promptImage) {
+      const src = this.resolveAssetSrc(item.promptImage);
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" /><div class="asset-cap"><code>${esc(item.promptImage)}</code></div></div>`;
+    }
+    if (item.audio)
+      html += `<div class="audio-ref"><span class="field-label">AUDIO</span> <code>${esc(item.audio)}</code></div>`;
+    if (item.response != null)
+      html += `<div class="response"><span class="field-label">RESPONSE</span> ${esc(item.response)}</div>`;
+    if (item.accept && item.accept.length)
+      html += `<div class="prompt-t"><span class="field-label">ACCEPT</span> ${esc(item.accept.join(" | "))}</div>`;
+    if (item.rubric)
+      html += `<div class="prompt-t"><span class="field-label">RUBRIC</span> ${esc(item.rubric)}</div>`;
     html += `</div></div>`;
     return html;
   }
@@ -318,7 +383,9 @@ function activityIcon(type: string): string {
   switch (type) {
     case "DIALOGUE":
       return "\u{1F4AC}";
-    case "EXERCISE":
+    case "SELECT":
+      return "\u{2611}\u{FE0F}";
+    case "PRODUCE":
       return "\u{270F}\u{FE0F}";
     case "GRAMMAR":
       return "\u{1F4D6}";
@@ -457,8 +524,13 @@ body { font-family: var(--vscode-font-family, system-ui); font-size: 13px; color
 .exercise-num { color: var(--muted); font-size: 12px; min-width: 20px; padding-top: 2px; }
 .exercise-body { flex: 1; }
 .prompt { margin-bottom: 2px; }
-.prompt-t, .response-t { color: var(--muted); font-size: 12px; padding-left: 24px; }
+.prompt-t, .response-t { color: var(--muted); font-size: 12px; padding-left: 4px; }
 .response { color: var(--success); }
+.flags { margin: 4px 0 8px; }
+.flag { font-size: 10px; font-weight: 600; color: var(--accent); background: rgba(79,193,255,0.1); border: 1px solid rgba(79,193,255,0.25); border-radius: 3px; padding: 1px 6px; margin-right: 4px; }
+.options { margin: 4px 0; font-size: 12px; }
+.option { display: inline-block; margin: 0 6px 4px 0; padding: 1px 6px; background: var(--badge-bg); border-radius: 3px; }
+.audio-ref { color: var(--muted); font-size: 11px; margin: 2px 0; }
 
 .grammar-content { line-height: 1.7; }
 .grammar-content h4, .grammar-content h5 { margin: 12px 0 6px; }

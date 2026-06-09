@@ -1,5 +1,7 @@
-# Example .module file for Language Reactor courses
-# Lines starting with # are comments
+# Example .module file for Language Reactor courses (format v2)
+# Lines starting with # are comments.
+# Modules are monolingual: no translation (*_T) fields — translations are
+# generated downstream.
 
 $MODULE
 DIOCO_DOC_ID: lc_example_my-course_01-greetings
@@ -7,49 +9,46 @@ TITLE: Greetings and Introductions
 DESCRIPTION: Learn basic greetings and how to introduce yourself
 TARGET_LANG_G: fr
 HOME_LANG_G: en
-VOICE_DEFAULT: Aoede
-VOICE: Narrator | Narrator | Fenrir | Speak slowly and clearly
-VOICE: Marie | Marie | Kore | Young French woman, friendly tone
-VOICE: Pierre | Pierre | Achernar | Middle-aged French man
+VOICE_DEFAULT: aoede
+VOICE: Marie | kore | Young French woman, friendly tone
+VOICE: Pierre | achernar | Middle-aged French man
 
 $LESSON Greetings
 
 $DIALOGUE Meeting Someone
 INTRO: Listen to Marie and Pierre meeting for the first time.
 INSTRUCTION: Pay attention to the formal greetings used.
+REPEAT
 
 SPEAKER: Marie
 VOCAB: Bonjour
-VOCAB_T: Hello / Good day
 LINE: Bonjour, je m'appelle Marie.
-LINE_T: Hello, my name is Marie.
 
 SPEAKER: Pierre
 LINE: Bonjour Marie. Je m'appelle Pierre. Comment allez-vous ?
-LINE_T: Hello Marie. My name is Pierre. How are you?
-NOTES: "Comment allez-vous" is the formal way to ask "how are you"
+NOTES: "Comment allez-vous" is the formal way to ask "how are you".
 
-SPEAKER: Marie
-VOCAB: très bien
-VOCAB_T: very well
-LINE: Je vais très bien, merci. Et vous ?
-LINE_T: I'm doing very well, thank you. And you?
+$SELECT Formal or Informal?
+INSTRUCTION: Tap whether each greeting is formal or informal.
+OPTION: f | Formal
+OPTION: i | Informal
 
-$EXERCISE Practice Greetings
-INSTRUCTION: Complete the responses using what you learned.
+PROMPT: Comment allez-vous ?
+ANSWER: f
+
+PROMPT: Ça va ?
+ANSWER: i
+FEEDBACK: "Ça va ?" is very informal — use it with friends.
+
+$PRODUCE Practice Greetings
+INSTRUCTION: Listen, then say the French aloud.
 
 EXAMPLE
-PROMPT: Hello, my name is Marie.
-PROMPT_T: (Introduce yourself)
+PROMPT: Say "Hello, my name is Marie."
 RESPONSE: Bonjour, je m'appelle Marie.
-RESPONSE_T: Hello, my name is Marie.
 
-PROMPT: How are you? (formal)
+PROMPT: Ask "How are you?" formally.
 RESPONSE: Comment allez-vous ?
-RESPONSE_T: How are you?
-
-PROMPT: I'm doing very well, thank you.
-RESPONSE: Je vais très bien, merci.
 
 $GRAMMAR Formal vs Informal
 
@@ -62,9 +61,8 @@ French has two words for "you":
 
 | French | English | Register |
 |--------|---------|----------|
-| Comment allez-vous ? | How are you? | Formal |
-| Comment vas-tu ? | How are you? | Informal |
-| Ça va ? | How's it going? | Very informal |
+| {Comment allez-vous ?} | How are you? | Formal |
+| {Comment vas-tu ?} | How are you? | Informal |
 
 When in doubt, use **vous**. It's always polite.
 
@@ -75,12 +73,10 @@ INTRO: Marie and Pierre say goodbye after their conversation.
 
 SPEAKER: Pierre
 LINE: Au revoir, Marie. Bonne journée !
-LINE_T: Goodbye, Marie. Have a good day!
 
 SPEAKER: Marie
 LINE: Au revoir, Pierre. À bientôt !
-LINE_T: Goodbye, Pierre. See you soon!
 
 $CHAT Free Practice
-SCENARIO: You are at a café in Paris. A French person sits down next to you and says "Bonjour!" Practice introducing yourself and having a simple conversation using greetings.
+SCENARIO: You are at a café in Paris. A French person sits down and says "Bonjour!" Practice introducing yourself.
 INITIAL_PROMPT: Bonjour ! Je m'appelle Claude. Et vous, comment vous appelez-vous ?

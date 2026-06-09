@@ -45,11 +45,22 @@ export class ModuleDocumentSymbolProvider
         );
         if (currentLesson) currentLesson.children.push(sym);
         else symbols.push(sym);
-      } else if (text.startsWith("$EXERCISE")) {
-        const title = text.slice(9).trim() || "Exercise";
+      } else if (text.startsWith("$SELECT")) {
+        const title = text.slice(7).trim() || "Select";
         const sym = new vscode.DocumentSymbol(
           title,
-          "Exercise",
+          "Select",
+          vscode.SymbolKind.Function,
+          line.range,
+          line.range,
+        );
+        if (currentLesson) currentLesson.children.push(sym);
+        else symbols.push(sym);
+      } else if (text.startsWith("$PRODUCE")) {
+        const title = text.slice(8).trim() || "Produce";
+        const sym = new vscode.DocumentSymbol(
+          title,
+          "Produce",
           vscode.SymbolKind.Function,
           line.range,
           line.range,
