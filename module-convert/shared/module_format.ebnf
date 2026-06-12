@@ -1,9 +1,16 @@
-(* 
+(*
  * EBNF Grammar for .module File Format
- * Language Course Module Specification v1.0
- * 
- * This grammar describes the input format for language learning modules.
- * Files following this format are parsed by src/modules/lc_parser.ts
+ * Language Course Module Specification v2.0 (orthogonal 5-type model)
+ *
+ * v2 replaces the v1 $EXERCISE drill marker with two response types:
+ *   $SELECT  — tap one or more options
+ *   $PRODUCE — produce an answer (typed/spoken), graded by reveal/exact/llm
+ *
+ * Modules are MONOLINGUAL: text is authored in HOME_LANG_G and target-language
+ * content in TARGET_LANG_G. Student-language translations are generated
+ * downstream (lc_translate_v2), so there are NO *_T translation fields here.
+ *
+ * Parsed by dioco-base/src/modules/lc_parser_v2.ts (and the preview parser).
  *)
 
 (* ==========================================================================
@@ -17,7 +24,8 @@ module              = module_header , { voice_config } , { lesson } ;
    ========================================================================== *)
 
 module_header       = "$MODULE" , newline ,
-                      dioco_doc_id ,
+                      format_field ,
+                      [ dioco_doc_id ] ,
                       title_field ,
                       [ description_field ] ,
                       [ image_field ] ,
@@ -25,6 +33,7 @@ module_header       = "$MODULE" , newline ,
                       home_lang_field ,
                       [ tts_prompt_field ] ;
 
+format_field        = "FORMAT:" , whitespace , "2" , newline ;   (* declarative format version *)
 dioco_doc_id        = "DIOCO_DOC_ID:" , whitespace , identifier , newline ;
 title_field         = "TITLE:" , whitespace , text_value , newline ;
 description_field   = "DESCRIPTION:" , whitespace , text_value , newline ;
@@ -44,14 +53,13 @@ voice_intro         = "VOICE_INTRO:" , whitespace , voice_spec , newline ;
 voice_prompt        = "VOICE_PROMPT:" , whitespace , voice_spec , newline ;
 voice_response      = "VOICE_RESPONSE:" , whitespace , voice_spec , newline ;
 voice_speaker       = "VOICE_SPEAKER:" , whitespace , speaker_name , whitespace , "=" , whitespace , voice_spec , newline ;
-voice_entry         = "VOICE:" , whitespace , speaker_id , whitespace , "|" , whitespace , display_name , whitespace , "|" , whitespace , voice_name , [ whitespace , "|" , whitespace , voice_style_prompt ] , newline ;
+voice_entry         = "VOICE:" , whitespace , speaker_id , whitespace , "|" , whitespace , voice_name , [ whitespace , "|" , whitespace , voice_style_prompt ] , newline ;
 
 voice_spec          = voice_name , [ whitespace , "|" , whitespace , voice_style_prompt ] ;
 voice_name          = letter , { letter | digit | "_" } ;  (* case-insensitive, no spaces *)
 voice_style_prompt  = text_value ;
 speaker_name        = letter , { letter | digit | "_" } ;  (* case-insensitive, no spaces *)
 speaker_id          = speaker_name ;
-display_name        = text_value ;  (* human-readable, may contain spaces/punctuation/accents *)
 
 (* ==========================================================================
    LESSONS
@@ -63,43 +71,60 @@ lesson              = "$LESSON" , whitespace , lesson_title , newline ,
 lesson_title        = text_value ;
 
 (* ==========================================================================
+   SHARED FIELDS
+   ========================================================================== *)
+
+intro_field         = "INTRO:" , whitespace , text_value , newline ;
+instruction_field   = "INSTRUCTION:" , whitespace , text_value , newline ;
+image_field_shared  = "IMAGE:" , whitespace , filename , newline ;   (* activity-level ($DIALOGUE/$SELECT/$PRODUCE) / header cover ONLY *)
+activity_title      = text_value ;
+
+(* Inline assets: attached at the END of a content line, in curly braces,
+   routed by file extension — image first, audio LAST; at most one of each.
+     inline_image: .jpg .jpeg .png .gif .webp .svg
+     inline_audio: .mp3 .wav .ogg .opus .m4a  (drafts: "@start-end" timing,
+     stripped by the slicer)                                                  *)
+inline_image        = "{" , filename , "}" ;
+inline_audio        = "{" , filename , [ "@" , number , "-" , number ] , "}" ;
+inline_assets       = [ inline_image ] , [ whitespace , inline_audio ] ;
+number              = digit , { digit | "." } ;
+
+(* ==========================================================================
    ACTIVITIES
    ========================================================================== *)
 
-activity            = dialogue_activity 
-                    | grammar_activity 
-                    | exercise_activity 
+activity            = dialogue_activity
+                    | grammar_activity
+                    | select_activity
+                    | produce_activity
                     | chat_activity ;
 
 (* --------------------------------------------------------------------------
-   DIALOGUE ACTIVITY
+   DIALOGUE ACTIVITY  (listen / read / repeat; also reading passages + vocab)
    -------------------------------------------------------------------------- *)
 
 dialogue_activity   = "$DIALOGUE" , whitespace , activity_title , newline ,
                       [ intro_field ] ,
                       [ instruction_field ] ,
                       [ tts_prompt_field ] ,
+                      [ repeat_flag ] ,
+                      [ image_field_shared ] ,        (* activity-wide image shown for ALL lines *)
                       { vocab_entry } ,
                       { dialogue_line } ;
 
-activity_title      = text_value ;
+repeat_flag         = "REPEAT" , newline ;
 
-intro_field         = "INTRO:" , whitespace , text_value , newline ;
-instruction_field   = "INSTRUCTION:" , whitespace , text_value , newline ;
+vocab_entry         = "VOCAB:" , whitespace , text_value , newline ;
 
-vocab_entry         = "VOCAB:" , whitespace , text_value , newline ,
-                      "VOCAB_T:" , whitespace , text_value , newline ;
-
-dialogue_line       = [ speaker_field ] ,
-                      { vocab_entry } ,
-                      line_field ,
-                      [ line_translation ] ,
-                      [ image_field ] ,
+dialogue_line       = { vocab_entry } ,
+                      ( speaker_line | line_field ) ,
                       [ notes_field ] ;
 
-speaker_field       = "SPEAKER:" , whitespace , speaker_name , newline ;
-line_field          = "LINE:" , whitespace , text_value , newline ;
-line_translation    = "LINE_T:" , whitespace , text_value , newline ;
+(* Screenplay style: the speaker id prefixes the line. The id is alnum/underscore
+   with at least one LOWERCASE letter (ALL-CAPS identifiers are reserved for
+   fields). A bare line_field continues the current speaker. *)
+speaker_line        = speaker_name , ":" , whitespace , text_value , [ whitespace , inline_assets ] , newline ;
+line_field          = "LINE:" , whitespace , text_value , [ whitespace , inline_assets ] , newline ;
 notes_field         = "NOTES:" , whitespace , text_value , newline ;
 
 (* --------------------------------------------------------------------------
@@ -114,31 +139,68 @@ markdown_content    = { markdown_line } ;
 markdown_line       = ( ? any text not starting with "$" or known field ? ) , newline ;
 
 (* --------------------------------------------------------------------------
-   EXERCISE ACTIVITY
+   SELECT ACTIVITY  (tap one or more options)
    -------------------------------------------------------------------------- *)
 
-exercise_activity   = "$EXERCISE" , whitespace , activity_title , newline ,
+select_activity     = "$SELECT" , whitespace , activity_title , newline ,
+                      [ intro_field ] ,
+                      [ instruction_field ] ,
+                      [ multi_flag ] ,
+                      [ show_prompt_flag ] ,
+                      [ image_field_shared ] ,        (* activity-level shared image *)
+                      { option_line } ,               (* activity-level shared option pool *)
+                      { select_item } ;
+
+multi_flag          = "MULTI" , newline ;
+show_prompt_flag    = "SHOW_PROMPT" , newline ;   (* book printed the stimulus: show PROMPT text from the start *)
+
+(* An option carries its text and/or inline image plus an optional spoken clip
+   on ONE line: "OPTION: e | soccer {page_008_005.jpg} {clip.mp3}". *)
+option_line         = "OPTION:" , whitespace ,
+                      option_id , whitespace , "|" , whitespace , [ text_value ] , [ whitespace , inline_assets ] , newline ;
+option_id           = { letter | digit | "_" | "-" } ;
+
+select_item         = [ example_marker ] ,
+                      ( prompt_field | template_field ) , [ prompt_field | template_field ] ,
+                      { option_line } ,               (* per-item options override the pool *)
+                      answer_field ,
+                      [ feedback_field ] ;
+
+prompt_field        = "PROMPT:" , whitespace , text_value , [ whitespace , inline_assets ] , newline ;
+answer_field        = "ANSWER:" , whitespace , option_id , { "," , whitespace , option_id } , newline ;
+feedback_field      = "FEEDBACK:" , whitespace , text_value , newline ;
+
+(* --------------------------------------------------------------------------
+   PRODUCE ACTIVITY  (produce an answer; typed/spoken)
+   -------------------------------------------------------------------------- *)
+
+produce_activity    = "$PRODUCE" , whitespace , activity_title , newline ,
                       [ intro_field ] ,
                       [ instruction_field ] ,
                       [ tts_prompt_field ] ,
-                      { exercise_item } ;
+                      [ input_field ] ,
+                      [ check_field ] ,
+                      [ show_prompt_flag ] ,        (* book printed the stimulus *)
+                      [ image_field_shared ] ,      (* activity-wide grounding image shown for ALL items *)
+                      { produce_item } ;
 
-exercise_item       = [ example_marker ] ,
-                      prompt_field ,
-                      [ prompt_translation ] ,
-                      [ prompt_image ] ,
+input_field         = "INPUT:" , whitespace , ( "type" | "speak" | "either" ) , newline ;
+check_field         = "CHECK:" , whitespace , ( "reveal" | "exact" | "llm" ) , newline ;
+
+produce_item        = [ example_marker ] ,
+                      ( prompt_field | template_field ) , { prompt_field | template_field } ,
                       response_field ,
-                      [ response_translation ] ,
-                      [ response_image ] ;
+                      [ accept_field ] ,
+                      [ rubric_field ] ;
 
-prompt_image        = "PROMPT_IMAGE:" , whitespace , filename , newline ;
-response_image      = "RESPONSE_IMAGE:" , whitespace , filename , newline ;
+(* TEMPLATE is display-only: it may carry an inline_image but NEVER audio. *)
+template_field      = "TEMPLATE:" , whitespace , text_value , [ whitespace , inline_image ] , newline ;
+(* RESPONSE may carry audio only — no images. *)
+response_field      = "RESPONSE:" , whitespace , text_value , [ whitespace , inline_audio ] , newline ;
+accept_field        = "ACCEPT:" , whitespace , text_value , { "|" , text_value } , newline ;
+rubric_field        = "RUBRIC:" , whitespace , text_value , newline ;
 
 example_marker      = "EXAMPLE" , newline ;
-prompt_field        = "PROMPT:" , whitespace , text_value , newline ;
-prompt_translation  = "PROMPT_T:" , whitespace , text_value , newline ;
-response_field      = "RESPONSE:" , whitespace , text_value , newline ;
-response_translation = "RESPONSE_T:" , whitespace , text_value , newline ;
 
 (* --------------------------------------------------------------------------
    CHAT ACTIVITY
@@ -161,8 +223,8 @@ lang_code           = letter , letter , [ "-" , letter , letter ] ;  (* e.g., "e
 filename            = { letter | digit | "_" | "-" | "." } ;
 text_value          = { ? any character except newline ? } ;
 
-letter              = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" 
-                    | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" 
+letter              = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J"
+                    | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T"
                     | "U" | "V" | "W" | "X" | "Y" | "Z"
                     | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j"
                     | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t"
@@ -176,30 +238,60 @@ newline             = "\n" | "\r\n" ;
 (* ==========================================================================
    NOTES
    ==========================================================================
-   
-   1. Section markers ($MODULE, $LESSON, $DIALOGUE, etc.) must start at 
-      column 0 with NO colon after the marker name.
-   
-   2. Field names (TITLE:, SPEAKER:, LINE:, etc.) must start at column 0
-      and include the colon as part of the field marker.
-   
-   3. Voice names are case-insensitive and must not contain spaces.
-      Examples: aoede, Achernar, ACHIRD
-   
-   4. Comments are lines starting with # (after optional whitespace).
-      They are ignored by the parser.
-   
-   5. Blank lines are permitted anywhere and are ignored.
-   
-   6. The EXAMPLE marker applies to the immediately following exercise item.
-   
-   7. VOCAB/VOCAB_T pairs before a LINE are attached to that line.
-   
-   8. Grammar content is free-form markdown. Images should use standard
-      markdown syntax: ![alt](filename.png)
-   
-   9. Legacy support:
-      - USER_LANG_G: is accepted as alias for HOME_LANG_G:
-   
-   ========================================================================== *)
 
+   1. Section markers ($MODULE, $LESSON, $DIALOGUE, $GRAMMAR, $SELECT,
+      $PRODUCE, $CHAT) must start at column 0 with NO colon after the marker.
+
+   2. Field names (TITLE:, SPEAKER:, LINE:, PROMPT:, OPTION:, etc.) must start
+      at column 0 and include the colon as part of the field marker.
+
+   3. Flag lines have NO colon and no value: REPEAT (dialogue), MULTI /
+      SHOW_PROMPT (select/produce), EXAMPLE (next select/produce item). Spoken PROMPT text is hidden until answered/revealed by DEFAULT; SHOW_PROMPT shows it (the book printed the stimulus).
+
+   4. Voice names are case-insensitive and must not contain spaces.
+
+   5. Comments are lines starting with # (after optional whitespace), ignored.
+
+   6. Blank lines are permitted anywhere and are ignored.
+
+   7. EXAMPLE applies to the immediately following SELECT/PRODUCE item.
+
+   8. VOCAB entries before a LINE attach to that line. v2 uses ONE word/phrase
+      per VOCAB (no VOCAB_T — definitions are generated downstream).
+
+   9. Assets are INLINE: trailing "{file}" tokens on a content line, routed by
+      extension — "{page.jpg}" attaches an image, "{clip.mp3}" a cassette clip
+      played in full. Image first, audio LAST; at most one of each per line.
+      There are no AUDIO:/RESPONSE_AUDIO:/OPTION_AUDIO:/OPTION_IMAGE:/
+      PROMPT_IMAGE: fields, and no per-line IMAGE: — "IMAGE:" survives only as
+      the header cover and the activity-level shared image in $DIALOGUE /
+      $SELECT / $PRODUCE (placed before the first line/item; shows for ALL
+      lines/items, overridden per line/item by an inline {page.jpg}).
+      Drafts carry "{clip.mp3@start-end}" timing which the slicer strips.
+
+   9b. Dialogue speakers are SCREENPLAY-STYLE: "Jim: Hello." (id = alnum/_,
+      must contain a lowercase letter — ALL-CAPS is reserved for fields).
+      A bare "LINE:" continues the current speaker. There is no SPEAKER: field.
+
+   10. $SELECT options may be declared once at the activity level (shared pool)
+       or inside an item (overrides the pool). ANSWER lists correct option ids.
+
+   11. $PRODUCE behavior: INPUT (type/speak/either, default speak) and CHECK
+       (reveal/exact/llm, default reveal).
+
+   12. TEMPLATE (in $SELECT and $PRODUCE items) is on-screen text shown but
+       never read aloud — a cloze gap (____) or context/reading text the learner
+       reads to answer. An item needs a PROMPT (spoken) and/or a TEMPLATE
+       (display-only). A cloze stimulus with ____ gaps must be a TEMPLATE,
+       not a PROMPT (a PROMPT without a clip gets TTS).
+
+   13. MONOLINGUAL: no *_T fields. Translations to student languages are
+       generated downstream; do not author them here.
+
+   14. Legacy: USER_LANG_G: is accepted as an alias for HOME_LANG_G:.
+
+   15. FORMAT: 2 declares the format version (deterministic detection — readers
+       must not have to sniff for v2-only markers). Files lacking it are treated
+       as legacy and version-detected heuristically.
+
+   ========================================================================== *)

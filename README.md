@@ -167,10 +167,10 @@ After generating `.module` files, use the preview tool to quickly review convers
 
 **Features:**
 - Uses the real `lc_parser` logic (copied from `dioco-base`)
-- **Dense review UI** for Dialogue/Exercise (no “study mode” hiding)
+- **Dense review UI** for Dialogue/Select/Produce (no “study mode” hiding)
 - **Grammar renders as real markdown**
 - **EBNF-driven diagnostics** with line numbers + inline source snippets
-- Per-activity **Raw** toggles (e.g. show raw `$EXERCISE` block)
+- Per-activity **Raw** toggles (e.g. show raw `$SELECT` / `$PRODUCE` block)
 
 ```bash
 # Build the static preview page

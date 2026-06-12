@@ -1,5 +1,5 @@
 import { parseModuleFile } from './lc_parser';
-import type { Module, Activity, DialogueActivity, ExerciseActivity, GrammarActivity, ChatActivity, VoiceSpec } from './lc_types';
+import type { Module, Activity, DialogueActivity, SelectActivity, ProduceActivity, GrammarActivity, ChatActivity, VoiceSpec } from './lc_types';
 import { marked } from 'marked';
 import { lintModuleText, type Diagnostic } from './diagnostics';
 import { buildActivityRawIndex, type RawBlock } from './source_index';
@@ -45,8 +45,10 @@ function activityCardCount(a: Activity): number | null {
     switch (a.type) {
         case 'DIALOGUE':
             return (a as DialogueActivity).lines.length;
-        case 'EXERCISE':
-            return (a as ExerciseActivity).items.length;
+        case 'SELECT':
+            return (a as SelectActivity).items.length;
+        case 'PRODUCE':
+            return (a as ProduceActivity).items.length;
         case 'GRAMMAR':
         case 'CHAT':
             return null;
@@ -340,7 +342,7 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
             ]),
             el('div', { class: 'activityTools' }, [
                 raw ? el('span', { class: 'toolPill mono' }, [`L${raw.startLine}–L${raw.endLine}`]) : null,
-                activity.type === 'EXERCISE' && raw
+                (activity.type === 'SELECT' || activity.type === 'PRODUCE') && raw
                     ? el('details', { class: 'rawDetails' }, [
                           el('summary', { class: 'toolBtn mono' }, ['Raw']),
                           el('pre', { class: 'rawPre mono' }, [raw.text]),
@@ -352,21 +354,20 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
 
     const body: HTMLElement[] = [];
 
+    const kvRow = (k: string, v: string | null | undefined) =>
+        el('div', { class: 'kv' }, [
+            el('div', { class: 'k' }, [k]),
+            el('div', { class: 'v' }, [v ?? el('span', { class: 'muted' }, ['—'])]),
+        ]);
+    const flagPill = (label: string, on: boolean) =>
+        on ? el('span', { class: 'pill' }, [label]) : null;
+
     if (activity.type === 'DIALOGUE') {
         const a = activity as DialogueActivity;
-        body.push(
-            el('div', { class: 'kv' }, [
-                el('div', { class: 'k' }, ['INSTRUCTION']),
-                el('div', { class: 'v' }, [a.instruction ?? el('span', { class: 'muted' }, ['—'])]),
-            ])
-        );
-        body.push(
-            el('div', { class: 'kv' }, [
-                el('div', { class: 'k' }, ['TTS_PROMPT']),
-                el('div', { class: 'v' }, [a.ttsPrompt ?? el('span', { class: 'muted' }, ['—'])]),
-            ])
-        );
-        // Review mode: show everything (speaker/text/translation/notes) with no hidden reveal.
+        body.push(kvRow('INSTRUCTION', a.instruction));
+        body.push(kvRow('TTS_PROMPT', a.ttsPrompt));
+        body.push(el('div', { class: 'pillRow' }, [flagPill('REPEAT', a.repeat)]));
+        if (a.image) body.push(kvRow('IMAGE (activity-wide)', a.image));
         body.push(
             el('div', { class: 'tableWrap' }, [
                 el('table', { class: 'table mono' }, [
@@ -375,10 +376,9 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                             el('th', { class: 'colIdx' }, ['#']),
                             el('th', { class: 'colSpeaker' }, ['SPEAKER']),
                             el('th', {}, ['LINE']),
-                            el('th', {}, ['TRANSLATION']),
                             el('th', {}, ['IMAGE']),
+                            el('th', {}, ['AUDIO']),
                             el('th', {}, ['VOCAB']),
-                            el('th', {}, ['VOCAB_T']),
                             el('th', {}, ['NOTES']),
                         ]),
                     ]),
@@ -390,15 +390,10 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                                 el('td', { class: 'colIdx muted' }, [String(i + 1)]),
                                 el('td', { class: 'cellMuted' }, [line.speaker ?? '—']),
                                 el('td', { class: 'cellStrong' }, [line.text]),
-                                el('td', { class: 'cellMuted' }, [line.translation || '—']),
                                 el('td', { class: 'cellMuted mono' }, [line.image ?? '—']),
+                                el('td', { class: 'cellMuted mono' }, [line.audio ?? '—']),
                                 el('td', { class: 'cellMuted' }, [
                                     line.vocab?.length ? line.vocab.map((v) => v.word).join(', ') : '—',
-                                ]),
-                                el('td', { class: 'cellMuted' }, [
-                                    line.vocab?.length
-                                        ? line.vocab.map((v) => v.definition || '—').join('\n')
-                                        : '—',
                                 ]),
                                 el('td', { class: 'cellMuted' }, [line.notes ?? '—']),
                             ])
@@ -407,21 +402,14 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                 ]),
             ])
         );
-    } else if (activity.type === 'EXERCISE') {
-        const a = activity as ExerciseActivity;
-        body.push(
-            el('div', { class: 'kv' }, [
-                el('div', { class: 'k' }, ['INSTRUCTION']),
-                el('div', { class: 'v' }, [a.instruction ?? el('span', { class: 'muted' }, ['—'])]),
-            ])
-        );
-        body.push(
-            el('div', { class: 'kv' }, [
-                el('div', { class: 'k' }, ['TTS_PROMPT']),
-                el('div', { class: 'v' }, [a.ttsPrompt ?? el('span', { class: 'muted' }, ['—'])]),
-            ])
-        );
-        // Review mode: show everything (prompt/response + translations) with no hidden reveal.
+    } else if (activity.type === 'SELECT') {
+        const a = activity as SelectActivity;
+        body.push(kvRow('INSTRUCTION', a.instruction));
+        body.push(el('div', { class: 'pillRow' }, [flagPill('MULTI', a.multi), flagPill('SHOW_PROMPT', a.showPrompt)]));
+        if (a.image) body.push(kvRow('IMAGE', a.image));
+        if (a.options.length) {
+            body.push(kvRow('OPTIONS (shared)', a.options.map((o) => `${o.id} = ${o.text ?? o.image ?? ''}`).join('  •  ')));
+        }
         body.push(
             el('div', { class: 'tableWrap' }, [
                 el('table', { class: 'table mono' }, [
@@ -430,11 +418,11 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                             el('th', { class: 'colIdx' }, ['#']),
                             el('th', { class: 'colEx' }, ['EX']),
                             el('th', {}, ['PROMPT']),
-                            el('th', {}, ['PROMPT_T']),
-                            el('th', {}, ['PROMPT_IMG']),
-                            el('th', {}, ['RESPONSE']),
-                            el('th', {}, ['RESPONSE_T']),
-                            el('th', {}, ['RESPONSE_IMG']),
+                            el('th', {}, ['TEMPLATE']),
+                            el('th', {}, ['AUDIO']),
+                            el('th', {}, ['OPTIONS']),
+                            el('th', {}, ['ANSWER']),
+                            el('th', {}, ['FEEDBACK']),
                         ]),
                     ]),
                     el(
@@ -444,12 +432,58 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
                             el('tr', { class: item.isExample ? 'rowExample' : '' }, [
                                 el('td', { class: 'colIdx muted' }, [String(i + 1)]),
                                 el('td', { class: 'colEx' }, [item.isExample ? 'EX' : '']),
-                                el('td', { class: 'cellStrong' }, [item.prompt]),
-                                el('td', { class: 'cellMuted' }, [item.promptTranslation ?? '—']),
-                                el('td', { class: 'cellMuted mono' }, [item.promptImage ?? '—']),
-                                el('td', { class: 'cellStrong' }, [item.response]),
-                                el('td', { class: 'cellMuted' }, [item.responseTranslation ?? '—']),
-                                el('td', { class: 'cellMuted mono' }, [item.responseImage ?? '—']),
+                                el('td', { class: 'cellStrong' }, [item.prompt ?? '—']),
+                                el('td', { class: 'cellMuted' }, [item.template ?? '—']),
+                                el('td', { class: 'cellMuted mono' }, [item.audio ?? '—']),
+                                el('td', { class: 'cellMuted' }, [
+                                    item.options?.length ? item.options.map((o) => `${o.id}=${o.text ?? o.image ?? ''}`).join(', ') : '(shared)',
+                                ]),
+                                el('td', { class: 'cellStrong mono' }, [item.answer.join(', ') || '—']),
+                                el('td', { class: 'cellMuted' }, [item.feedback ?? '—']),
+                            ])
+                        )
+                    ),
+                ]),
+            ])
+        );
+    } else if (activity.type === 'PRODUCE') {
+        const a = activity as ProduceActivity;
+        body.push(kvRow('INSTRUCTION', a.instruction));
+        body.push(kvRow('TTS_PROMPT', a.ttsPrompt));
+        if (a.image) body.push(kvRow('IMAGE', a.image));
+        body.push(el('div', { class: 'pillRow' }, [
+            el('span', { class: 'pill' }, [`INPUT: ${a.input}`]),
+            el('span', { class: 'pill' }, [`CHECK: ${a.check}`]),
+            flagPill('SHOW_PROMPT', a.showPrompt),
+        ]));
+        body.push(
+            el('div', { class: 'tableWrap' }, [
+                el('table', { class: 'table mono' }, [
+                    el('thead', {}, [
+                        el('tr', {}, [
+                            el('th', { class: 'colIdx' }, ['#']),
+                            el('th', { class: 'colEx' }, ['EX']),
+                            el('th', {}, ['PROMPT']),
+                            el('th', {}, ['TEMPLATE']),
+                            el('th', {}, ['AUDIO']),
+                            el('th', {}, ['RESPONSE']),
+                            el('th', {}, ['ACCEPT']),
+                            el('th', {}, ['RUBRIC']),
+                        ]),
+                    ]),
+                    el(
+                        'tbody',
+                        {},
+                        a.items.map((item, i) =>
+                            el('tr', { class: item.isExample ? 'rowExample' : '' }, [
+                                el('td', { class: 'colIdx muted' }, [String(i + 1)]),
+                                el('td', { class: 'colEx' }, [item.isExample ? 'EX' : '']),
+                                el('td', { class: 'cellStrong' }, [item.prompt ?? '—']),
+                                el('td', { class: 'cellMuted' }, [item.template ?? '—']),
+                                el('td', { class: 'cellMuted mono' }, [item.audio ?? '—']),
+                                el('td', { class: 'cellStrong' }, [item.response ?? '—']),
+                                el('td', { class: 'cellMuted' }, [item.accept?.length ? item.accept.join(' | ') : '—']),
+                                el('td', { class: 'cellMuted' }, [item.rubric ?? '—']),
                             ])
                         )
                     ),
@@ -555,30 +589,41 @@ function setup(): void {
         // Works even when opened as a local file (file://), where fetch() is blocked.
         const embeddedDemo = `
 $MODULE
+FORMAT: 2
 DIOCO_DOC_ID: lc_demo
 TITLE: Demo Module
 DESCRIPTION: Quick demo content for the preview UI
-TARGET_LANG_G: es
+TARGET_LANG_G: en
 HOME_LANG_G: en
 
 $LESSON Lesson 1: Greetings
 
 $DIALOGUE Basic Greetings
 INSTRUCTION: Listen and repeat.
-VOCAB: buenos días
-VOCAB_T: good morning
-SPEAKER: Ana
-LINE: Hola, buenos días.
-LINE_T: Hello, good morning.
-NOTES: "Buenos días" is used until noon.
+REPEAT
+VOCAB: good morning
+Ana: Good morning.
+NOTES: Used until noon.
 
-$EXERCISE Practice
-INSTRUCTION: Translate the following.
+$SELECT Same or Different?
+INSTRUCTION: Tap Same or Different.
+OPTION: s | Same
+OPTION: d | Different
+
+PROMPT: wed ... red
+ANSWER: d
+
+PROMPT: wake ... wake
+ANSWER: s
+
+$PRODUCE Answer the questions
+INSTRUCTION: Listen, then answer aloud.
 EXAMPLE
-PROMPT: Good morning
-PROMPT_T: (English) Good morning
-RESPONSE: Buenos días
-RESPONSE_T: (English) Good morning
+PROMPT: Does she work here?
+RESPONSE: Yes, she works here.
+
+PROMPT: Do they live in Houston?
+RESPONSE: Yes, they live in Houston.
 
 $LESSON Lesson 2: Chat
 

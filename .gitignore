@@ -7,10 +7,21 @@ node_modules/
 # Output files
 *.module
 *.error.txt
+# ...but keep the gold worked examples (embedded in converter prompts)
+!module-convert/format-comparison/*.module
 
 # Local course data (PDFs + extracted assets + generated outputs)
 data/**
 !data/**/.gitkeep
+
+# Source materials (large binaries, kept local)
+*.pdf
+*.zip
+
+# alc-video generated outputs
+alc-video/out/
+alc-video/data/
+alc-video/public/modules/
 
 # OS files
 .DS_Store

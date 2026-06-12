@@ -19,68 +19,28 @@
     return method;
   };
 
-  // module-preview/utils/logs.ts
-  function diocoLogger(section) {
-    const prefix = `[DIOCO_${section}]`;
-    const log2 = (...args) => console.log(prefix, ...args);
-    const warn = (...args) => console.warn(prefix, ...args);
-    const err = (...args) => console.error(prefix, ...args);
-    function time(label, fn) {
-      const start = performance.now();
-      try {
-        return fn();
-      } finally {
-        const duration = performance.now() - start;
-        log2(`${label} took ${duration.toFixed(2)}ms`);
-      }
-    }
-    async function timeAsync(label, fn) {
-      const start = performance.now();
-      try {
-        return await fn();
-      } finally {
-        const duration = performance.now() - start;
-        log2(`${label} took ${duration.toFixed(2)}ms`);
-      }
-    }
-    return {
-      crit: err,
-      e: err,
-      w: warn,
-      i: log2,
-      d: log2,
-      v: log2,
-      time,
-      timeAsync
-    };
-  }
-
-  // module-preview/src/lc_parser.ts
-  var log = diocoLogger("LC_PARSER");
+  // src/module_parser.ts
+  var log = {
+    e: (...args) => console.error("[MODULE_PARSER]", ...args),
+    w: (...args) => console.warn("[MODULE_PARSER]", ...args)
+  };
+  var FLAGS = /* @__PURE__ */ new Set(["REPEAT", "SHOW_PROMPT", "MULTI", "EXAMPLE"]);
   function parseModuleFile(content) {
     const lines = content.split("\n");
     const state = {
-      module: {
-        lessons: []
-      },
-      voiceConfig: {
-        default: null,
-        prompt: null,
-        response: null,
-        introVoice: null,
-        speakers: {}
-      },
+      module: { lessons: [], formatVersion: 2 },
+      voiceConfig: { default: null, prompt: null, response: null, introVoice: null, speakers: {} },
       currentLesson: null,
       currentActivity: null,
-      activityContentBuffer: []
+      buffer: []
     };
     let lineNum = 0;
     for (const line of lines) {
       lineNum++;
       try {
-        processLine(line, state, lineNum);
+        processLine(line, state);
       } catch (e) {
-        log.e("Parse error at line %d: %s", lineNum, e);
+        log.e(`Parse error at line ${lineNum}:`, e);
         throw new Error(`Parse error at line ${lineNum}: ${e}`);
       }
     }
@@ -102,19 +62,26 @@
       homeLang_G: mod.homeLang_G,
       voiceConfig: state.voiceConfig,
       ttsPrompt: mod.ttsPrompt ?? null,
-      lessons: mod.lessons || []
+      lessons: mod.lessons || [],
+      formatVersion: 2
     };
   }
-  function processLine(line, state, lineNum) {
+  function processLine(line, state) {
     const trimmed = line.trimEnd();
-    if (trimmed.trimStart().startsWith("#"))
+    const t = trimmed.trimStart();
+    if (t.startsWith("#"))
       return;
+    if (t === "") {
+      if (state.currentActivity?.type === "GRAMMAR")
+        state.buffer.push("");
+      return;
+    }
     if (trimmed.startsWith("$")) {
       handleSectionMarker(trimmed, state);
       return;
     }
-    if (trimmed === "EXAMPLE" && state.currentActivity?.type === "EXERCISE") {
-      state.activityContentBuffer.push("EXAMPLE:");
+    if (FLAGS.has(t)) {
+      handleFlag(t, state);
       return;
     }
     const fieldMatch = trimmed.match(/^([A-Z_]+):\s*(.*)?$/);
@@ -122,9 +89,21 @@
       handleField(fieldMatch[1], fieldMatch[2] || "", state);
       return;
     }
-    if (state.currentActivity) {
-      state.activityContentBuffer.push(line);
-    }
+    if (state.currentActivity)
+      state.buffer.push(line);
+  }
+  function handleFlag(flag, state) {
+    const a = state.currentActivity;
+    if (!a)
+      return;
+    if (flag === "REPEAT" && a.type === "DIALOGUE")
+      a.repeat = true;
+    else if (flag === "SHOW_PROMPT" && (a.type === "SELECT" || a.type === "PRODUCE"))
+      a.showPrompt = true;
+    else if (flag === "MULTI" && a.type === "SELECT")
+      a.multi = true;
+    else if (flag === "EXAMPLE")
+      state.buffer.push("EXAMPLE");
   }
   function handleSectionMarker(line, state) {
     const match = line.match(/^\$(\w+)(?:\s+(.*))?$/);
@@ -138,7 +117,7 @@
         finalizeActivity(state);
         finalizeLesson(state);
         state.currentLesson = {
-          id: generateLessonId(title || "Untitled"),
+          id: generateId(title || "Untitled"),
           title: title || "Untitled Lesson",
           activities: []
         };
@@ -149,19 +128,28 @@
       case "GRAMMAR":
         startActivity(state, "GRAMMAR", title || "Grammar");
         break;
-      case "EXERCISE":
-        startActivity(state, "EXERCISE", title || "Exercise");
+      case "SELECT":
+        startActivity(state, "SELECT", title || "Select");
+        break;
+      case "PRODUCE":
+        startActivity(state, "PRODUCE", title || "Produce");
         break;
       case "CHAT":
         startActivity(state, "CHAT", title || "Chat");
         break;
       default:
-        log.w("Unknown section marker: $%s", marker);
+        log.w(`Unknown section marker: $${marker}`);
     }
+  }
+  function parseVoiceSpec(value) {
+    const m = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
+    return m ? { voice: m[1].trim(), prompt: m[2] ? m[2].trim() : null } : null;
   }
   function handleField(field, value, state) {
     if (!state.currentActivity && !state.currentLesson) {
       switch (field) {
+        case "FORMAT":
+          return;
         case "DIOCO_DOC_ID":
           state.module.diocoDocId = value;
           return;
@@ -184,67 +172,34 @@
         case "TTS_PROMPT":
           state.module.ttsPrompt = value;
           return;
-        case "VOICE_DEFAULT": {
-          const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-          if (match) {
-            state.voiceConfig.default = {
-              voice: match[1].trim(),
-              prompt: match[2] ? match[2].trim() : null
+        case "VOICE_DEFAULT":
+          state.voiceConfig.default = parseVoiceSpec(value);
+          return;
+        case "VOICE_PROMPT":
+          state.voiceConfig.prompt = parseVoiceSpec(value);
+          return;
+        case "VOICE_RESPONSE":
+          state.voiceConfig.response = parseVoiceSpec(value);
+          return;
+        case "VOICE_INTRO":
+          state.voiceConfig.introVoice = parseVoiceSpec(value);
+          return;
+        case "VOICE_SPEAKER": {
+          const m = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
+          if (m) {
+            state.voiceConfig.speakers[m[1].trim()] = {
+              voice: m[2].trim(),
+              prompt: m[3] ? m[3].trim() : null
             };
           }
           return;
         }
-        case "VOICE_PROMPT": {
-          const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-          if (match) {
-            state.voiceConfig.prompt = {
-              voice: match[1].trim(),
-              prompt: match[2] ? match[2].trim() : null
-            };
-          }
-          return;
-        }
-        case "VOICE_RESPONSE": {
-          const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-          if (match) {
-            state.voiceConfig.response = {
-              voice: match[1].trim(),
-              prompt: match[2] ? match[2].trim() : null
-            };
-          }
-          return;
-        }
-        case "VOICE_INTRO": {
-          const match = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-          if (match) {
-            state.voiceConfig.introVoice = {
-              voice: match[1].trim(),
-              prompt: match[2] ? match[2].trim() : null
-            };
-          }
-          return;
-        }
-        case "VOICE_SPEAKER":
-          const speakerMatch = value.match(
-            /^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/
-          );
-          if (speakerMatch) {
-            const [, speakerName, voiceName, prompt] = speakerMatch;
-            state.voiceConfig.speakers[speakerName.trim()] = {
-              voice: voiceName.trim(),
-              prompt: prompt ? prompt.trim() : null
-            };
-          }
-          return;
         case "VOICE": {
           const parts = value.split("|").map((s) => s.trim());
           if (parts.length >= 2) {
-            const speakerId = parts[0];
-            const voiceName = parts[1];
-            const prompt = parts.slice(2).join(" | ") || null;
-            state.voiceConfig.speakers[speakerId] = {
-              voice: voiceName,
-              prompt,
+            state.voiceConfig.speakers[parts[0]] = {
+              voice: parts[1],
+              prompt: parts.slice(2).join(" | ") || null,
               displayName: null
             };
           }
@@ -252,146 +207,110 @@
         }
       }
     }
-    if (state.currentActivity) {
-      const activity = state.currentActivity;
-      switch (field) {
-        case "IMAGE":
-          if (activity.type === "DIALOGUE") {
-            state.activityContentBuffer.push(`IMAGE:${value}`);
-          }
-          return;
-        case "PROMPT_IMAGE":
-          if (activity.type === "EXERCISE") {
-            state.activityContentBuffer.push(`PROMPT_IMAGE:${value}`);
-          }
-          return;
-        case "RESPONSE_IMAGE":
-          if (activity.type === "EXERCISE") {
-            state.activityContentBuffer.push(`RESPONSE_IMAGE:${value}`);
-          }
-          return;
-        case "TTS_PROMPT":
-          if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
-            activity.ttsPrompt = value;
-          }
-          return;
-        case "INSTRUCTION":
-          if (activity.type === "DIALOGUE" || activity.type === "EXERCISE") {
-            activity.instruction = value;
-          }
-          return;
-        case "INTRO":
-          activity.intro = value;
-          return;
-        case "SCENARIO":
-          if (activity.type === "CHAT") {
-            activity.scenario = value;
-          }
-          return;
-        case "INITIAL_PROMPT":
-          if (activity.type === "CHAT") {
-            activity.initialPrompt = value;
-          }
-          return;
-        case "SPEAKER":
-          state.activityContentBuffer.push(`SPEAKER:${value}`);
-          return;
-        case "LINE":
-          state.activityContentBuffer.push(`LINE:${value}`);
-          return;
-        case "LINE_T":
-          state.activityContentBuffer.push(`LINE_T:${value}`);
-          return;
-        case "NOTES":
-          state.activityContentBuffer.push(`NOTES:${value}`);
-          return;
-        case "VOCAB":
-          state.activityContentBuffer.push(`VOCAB:${value}`);
-          return;
-        case "VOCAB_T":
-          state.activityContentBuffer.push(`VOCAB_T:${value}`);
-          return;
-        case "PROMPT":
-          state.activityContentBuffer.push(`PROMPT:${value}`);
-          return;
-        case "PROMPT_T":
-          state.activityContentBuffer.push(`PROMPT_T:${value}`);
-          return;
-        case "RESPONSE":
-          state.activityContentBuffer.push(`RESPONSE:${value}`);
-          return;
-        case "RESPONSE_T":
-          state.activityContentBuffer.push(`RESPONSE_T:${value}`);
-          return;
-      }
+    const a = state.currentActivity;
+    if (!a)
+      return;
+    switch (field) {
+      case "INTRO":
+        a.intro = value;
+        return;
+      case "INSTRUCTION":
+        if (a.type === "DIALOGUE" || a.type === "SELECT" || a.type === "PRODUCE")
+          a.instruction = value;
+        return;
+      case "TTS_PROMPT":
+        if (a.type === "DIALOGUE" || a.type === "PRODUCE")
+          a.ttsPrompt = value;
+        return;
+      case "INPUT":
+        if (a.type === "PRODUCE")
+          a.input = normalizeInput(value);
+        return;
+      case "CHECK":
+        if (a.type === "PRODUCE")
+          a.check = normalizeCheck(value);
+        return;
+      case "SCENARIO":
+        if (a.type === "CHAT")
+          a.scenario = value;
+        return;
+      case "INITIAL_PROMPT":
+        if (a.type === "CHAT")
+          a.initialPrompt = value;
+        return;
+      default:
+        state.buffer.push(`${field}:${value}`);
+        return;
     }
+  }
+  function normalizeInput(v) {
+    const x = v.trim().toLowerCase();
+    return x === "type" || x === "either" ? x : "speak";
+  }
+  function normalizeCheck(v) {
+    const x = v.trim().toLowerCase();
+    return x === "exact" || x === "llm" ? x : "reveal";
   }
   function startActivity(state, type, title) {
     finalizeActivity(state);
     if (!state.currentLesson) {
-      state.currentLesson = {
-        id: "default-lesson",
-        title: "Default Lesson",
-        activities: []
-      };
+      state.currentLesson = { id: "default-lesson", title: "Default Lesson", activities: [] };
     }
-    const baseActivity = {
-      type,
-      id: generateActivityId(type, title),
-      title,
-      intro: null
-    };
-    if (type === "DIALOGUE") {
-      state.currentActivity = {
-        ...baseActivity,
-        instruction: null,
-        ttsPrompt: null,
-        lines: []
-      };
-    } else if (type === "EXERCISE") {
-      state.currentActivity = {
-        ...baseActivity,
-        instruction: null,
-        ttsPrompt: null,
-        items: []
-      };
-    } else if (type === "GRAMMAR") {
-      state.currentActivity = {
-        ...baseActivity,
-        content: ""
-      };
-    } else if (type === "CHAT") {
-      state.currentActivity = {
-        ...baseActivity,
-        scenario: "",
-        initialPrompt: ""
-      };
-    } else {
-      state.currentActivity = baseActivity;
+    const base = { type, id: generateId(`${type}-${title}`), title, intro: null, introTtsDataURL: null };
+    switch (type) {
+      case "DIALOGUE":
+        state.currentActivity = { ...base, instruction: null, ttsPrompt: null, repeat: false, lines: [] };
+        break;
+      case "GRAMMAR":
+        state.currentActivity = { ...base, content: "", phrases: [] };
+        break;
+      case "SELECT":
+        state.currentActivity = { ...base, instruction: null, showPrompt: false, multi: false, image: null, options: [], items: [] };
+        break;
+      case "PRODUCE":
+        state.currentActivity = { ...base, instruction: null, ttsPrompt: null, input: "speak", check: "reveal", showPrompt: false, image: null, items: [] };
+        break;
+      case "CHAT":
+        state.currentActivity = { ...base, scenario: "", initialPrompt: "" };
+        break;
     }
-    state.activityContentBuffer = [];
+    state.buffer = [];
   }
   function finalizeActivity(state) {
     if (!state.currentActivity || !state.currentLesson)
       return;
-    const activity = state.currentActivity;
-    const buffer = state.activityContentBuffer;
-    switch (activity.type) {
+    const a = state.currentActivity;
+    const buf = state.buffer;
+    switch (a.type) {
       case "DIALOGUE":
-        activity.lines = parseDialogueLines(buffer);
+        a.lines = parseDialogueLines(buf);
         break;
       case "GRAMMAR":
-        activity.content = parseGrammarContent(buffer);
+        a.content = buf.join("\n").trim();
         break;
-      case "EXERCISE":
-        activity.items = parseExerciseItems(buffer);
+      case "SELECT": {
+        const { image, options: options2, items } = parseSelect(buf);
+        const sa = a;
+        if (image && !sa.image)
+          sa.image = image;
+        sa.options = options2;
+        sa.items = items;
         break;
+      }
+      case "PRODUCE": {
+        const { image, items } = parseProduce(buf);
+        const pa = a;
+        if (image && !pa.image)
+          pa.image = image;
+        pa.items = items;
+        break;
+      }
       case "CHAT":
         break;
     }
-    state.currentLesson.activities.push(activity);
+    state.currentLesson.activities.push(a);
     state.currentActivity = null;
-    state.activityContentBuffer = [];
+    state.buffer = [];
   }
   function finalizeLesson(state) {
     if (!state.currentLesson)
@@ -400,166 +319,278 @@
     state.module.lessons.push(state.currentLesson);
     state.currentLesson = null;
   }
+  function pushDialogueLine(lines, cur) {
+    if (!cur.text)
+      return;
+    lines.push({
+      speaker: cur.speaker || null,
+      text: cur.text,
+      translation: null,
+      notes: cur.notes || null,
+      image: cur.image || null,
+      vocab: cur.vocab || null,
+      audio: cur.audio || null,
+      nlp: null,
+      ttsDataURL: null
+    });
+  }
+  var SPEAKER_LINE_RE = /^([A-Za-z][A-Za-z0-9_]*):\s*(.*)$/;
+  function matchSpeakerLine(item) {
+    const m = item.match(SPEAKER_LINE_RE);
+    if (m && /[a-z]/.test(m[1]))
+      return { speaker: m[1], rest: m[2] };
+    return null;
+  }
   function parseDialogueLines(buffer) {
     const lines = [];
-    let currentLine = {};
+    let cur = {};
     let pendingVocab = [];
-    let pendingVocabDefinition = null;
+    const attachVocab = () => {
+      if (pendingVocab.length) {
+        cur.vocab = pendingVocab;
+        pendingVocab = [];
+      }
+    };
+    const setLine = (raw) => {
+      const { text, audio, image } = extractInlineAssets(raw);
+      cur.text = text;
+      cur.audio = audio;
+      if (image)
+        cur.image = image;
+      attachVocab();
+    };
     for (const item of buffer) {
       if (item.startsWith("VOCAB:")) {
-        const word = item.slice(6).trim();
-        pendingVocab.push({ word, definition: pendingVocabDefinition || "" });
-        pendingVocabDefinition = null;
-      } else if (item.startsWith("VOCAB_T:")) {
-        const definition = item.slice(8).trim();
-        if (pendingVocab.length > 0) {
-          pendingVocab[pendingVocab.length - 1].definition = definition;
-        } else {
-          pendingVocabDefinition = definition;
-        }
-      } else if (item.startsWith("IMAGE:")) {
-        currentLine.image = item.slice(6).trim();
-      } else if (item.startsWith("LINE_T:")) {
-        currentLine.translation = item.slice(7).trim();
+        pendingVocab.push({ word: item.slice(6).trim(), definition: null, ttsDataURL: null });
       } else if (item.startsWith("NOTES:")) {
-        currentLine.notes = item.slice(6).trim();
-      } else if (item.startsWith("SPEAKER:")) {
-        if (currentLine.text) {
-          lines.push({
-            speaker: currentLine.speaker || null,
-            text: currentLine.text,
-            translation: currentLine.translation || "",
-            notes: currentLine.notes || null,
-            image: currentLine.image || null,
-            vocab: currentLine.vocab || null,
-            nlp: null,
-            // Added by backend
-            ttsDataURL: null
-            // Added by backend
-          });
-          currentLine = {};
-        }
-        currentLine.speaker = item.slice(8).trim();
-        if (pendingVocab.length > 0) {
-          currentLine.vocab = pendingVocab;
-          pendingVocab = [];
-        }
+        cur.notes = item.slice(6).trim();
       } else if (item.startsWith("LINE:")) {
-        if (currentLine.text) {
-          lines.push({
-            speaker: currentLine.speaker || null,
-            text: currentLine.text,
-            translation: currentLine.translation || "",
-            notes: currentLine.notes || null,
-            image: currentLine.image || null,
-            vocab: currentLine.vocab || null,
-            nlp: null,
-            // Added by backend
-            ttsDataURL: null
-            // Added by backend
-          });
-          currentLine = { speaker: currentLine.speaker };
+        if (cur.text) {
+          pushDialogueLine(lines, cur);
+          cur = { speaker: cur.speaker };
         }
-        currentLine.text = item.slice(5).trim();
-        if (pendingVocab.length > 0) {
-          currentLine.vocab = pendingVocab;
-          pendingVocab = [];
+        setLine(item.slice(5));
+      } else {
+        const sp = matchSpeakerLine(item);
+        if (sp) {
+          if (cur.text) {
+            pushDialogueLine(lines, cur);
+            cur = {};
+          }
+          cur.speaker = sp.speaker;
+          setLine(sp.rest);
         }
       }
     }
-    if (currentLine.text) {
-      lines.push({
-        speaker: currentLine.speaker || null,
-        text: currentLine.text,
-        translation: currentLine.translation || "",
-        notes: currentLine.notes || null,
-        image: currentLine.image || null,
-        vocab: currentLine.vocab || null,
-        nlp: null,
-        // Added by backend
-        ttsDataURL: null
-        // Added by backend
-      });
-    }
+    pushDialogueLine(lines, cur);
     return lines;
   }
-  function parseGrammarContent(buffer) {
-    return buffer.join("\n").trim();
+  function parseOption(line) {
+    const colon = line.indexOf(":");
+    const parts = line.slice(colon + 1).split("|").map((s) => s.trim());
+    if (parts.length < 2)
+      return null;
+    const id = parts[0];
+    const val = parts.slice(1).join(" | ");
+    const { text, audio, image } = extractInlineAssets(val);
+    return { id, text: text || null, translation: null, image, audio, ttsDataURL: null };
   }
-  function parseExerciseItems(buffer) {
+  function upsertOption(list2, opt) {
+    const existing = list2.find((o) => o.id === opt.id);
+    if (!existing) {
+      list2.push(opt);
+      return;
+    }
+    if (opt.text != null)
+      existing.text = opt.text;
+    if (opt.image != null)
+      existing.image = opt.image;
+    if (opt.audio != null)
+      existing.audio = opt.audio;
+  }
+  function pushSelectItem(items, cur) {
+    if (cur.prompt == null && cur.template == null)
+      return;
+    items.push({
+      prompt: cur.prompt ?? null,
+      promptTranslation: null,
+      promptImage: cur.promptImage || null,
+      template: cur.template ?? null,
+      options: cur.options && cur.options.length ? cur.options : null,
+      answer: cur.answer || [],
+      feedback: cur.feedback || null,
+      feedbackTranslation: null,
+      audio: cur.audio || null,
+      isExample: cur.isExample || false,
+      promptNlp: null,
+      promptTtsDataURL: null
+    });
+  }
+  function parseSelect(buffer) {
+    const pool = [];
     const items = [];
-    let currentItem = {};
+    let cur = null;
+    let activityImage = null;
     let isExample = false;
     for (const item of buffer) {
-      if (item.startsWith("EXAMPLE:")) {
+      if (item === "EXAMPLE") {
         isExample = true;
-      } else if (item.startsWith("PROMPT:")) {
-        if (currentItem.prompt && currentItem.response) {
-          items.push({
-            prompt: currentItem.prompt,
-            promptTranslation: currentItem.promptTranslation || null,
-            promptImage: currentItem.promptImage || null,
-            response: currentItem.response,
-            responseTranslation: currentItem.responseTranslation || null,
-            responseImage: currentItem.responseImage || null,
-            isExample: currentItem.isExample || false,
-            promptNlp: null,
-            // Added by backend
-            responseNlp: null,
-            // Added by backend
-            promptTtsDataURL: null,
-            // Added by backend
-            responseTtsDataURL: null
-            // Added by backend
-          });
+      } else if (item.startsWith("OPTION:")) {
+        const opt = parseOption(item);
+        if (!opt)
+          continue;
+        if (!cur)
+          upsertOption(pool, opt);
+        else
+          upsertOption(cur.options = cur.options || [], opt);
+      } else if (item.startsWith("IMAGE:")) {
+        if (!cur)
+          activityImage = item.slice(6).trim();
+      } else if (item.startsWith("PROMPT:") || item.startsWith("TEMPLATE:")) {
+        const kind = item.startsWith("PROMPT:") ? "prompt" : "template";
+        const raw = item.slice(item.indexOf(":") + 1);
+        if (cur && (cur.answer && cur.answer.length || cur[kind] != null)) {
+          pushSelectItem(items, cur);
+          cur = null;
         }
-        currentItem = {
-          prompt: item.slice(7).trim(),
-          isExample
-        };
-        isExample = false;
-      } else if (item.startsWith("PROMPT_T:")) {
-        currentItem.promptTranslation = item.slice(9).trim();
-      } else if (item.startsWith("PROMPT_IMAGE:")) {
-        currentItem.promptImage = item.slice(13).trim();
-      } else if (item.startsWith("RESPONSE:")) {
-        currentItem.response = item.slice(9).trim();
-      } else if (item.startsWith("RESPONSE_T:")) {
-        currentItem.responseTranslation = item.slice(11).trim();
-      } else if (item.startsWith("RESPONSE_IMAGE:")) {
-        currentItem.responseImage = item.slice(15).trim();
+        if (!cur) {
+          cur = { prompt: null, template: null, options: [], answer: [], isExample };
+          isExample = false;
+        }
+        if (kind === "prompt") {
+          const { text, audio, image } = extractInlineAssets(raw);
+          cur.prompt = text;
+          cur.audio = audio;
+          if (image)
+            cur.promptImage = image;
+        } else {
+          const { text, image } = extractInlineAssets(raw, { audio: false });
+          cur.template = text;
+          if (image && !cur.promptImage)
+            cur.promptImage = image;
+        }
+      } else if (item.startsWith("ANSWER:")) {
+        if (cur)
+          cur.answer = item.slice(7).split(",").map((s) => s.trim()).filter(Boolean);
+      } else if (item.startsWith("FEEDBACK:")) {
+        if (cur)
+          cur.feedback = item.slice(9).trim();
       }
     }
-    if (currentItem.prompt && currentItem.response) {
-      items.push({
-        prompt: currentItem.prompt,
-        promptTranslation: currentItem.promptTranslation || null,
-        promptImage: currentItem.promptImage || null,
-        response: currentItem.response,
-        responseTranslation: currentItem.responseTranslation || null,
-        responseImage: currentItem.responseImage || null,
-        isExample: currentItem.isExample || false,
-        promptNlp: null,
-        // Added by backend
-        responseNlp: null,
-        // Added by backend
-        promptTtsDataURL: null,
-        // Added by backend
-        responseTtsDataURL: null
-        // Added by backend
-      });
+    if (cur)
+      pushSelectItem(items, cur);
+    return { image: activityImage, options: pool, items };
+  }
+  function pushProduceItem(items, cur) {
+    if (cur.prompt == null && cur.template == null)
+      return;
+    items.push({
+      prompt: cur.prompt ?? null,
+      promptTranslation: null,
+      promptImage: cur.promptImage || null,
+      template: cur.template ?? null,
+      audio: cur.audio || null,
+      response: cur.response ?? null,
+      responseTranslation: null,
+      responseAudio: cur.responseAudio || null,
+      accept: cur.accept || null,
+      rubric: cur.rubric || null,
+      isExample: cur.isExample || false,
+      promptNlp: null,
+      responseNlp: null,
+      promptTtsDataURL: null,
+      responseTtsDataURL: null
+    });
+  }
+  function parseProduce(buffer) {
+    const items = [];
+    let cur = null;
+    let activityImage = null;
+    let isExample = false;
+    for (const item of buffer) {
+      if (item === "EXAMPLE") {
+        isExample = true;
+        continue;
+      }
+      if (item.startsWith("IMAGE:")) {
+        if (!cur)
+          activityImage = item.slice(6).trim();
+        continue;
+      }
+      if (item.startsWith("PROMPT:") || item.startsWith("TEMPLATE:")) {
+        const kind = item.startsWith("PROMPT:") ? "prompt" : "template";
+        const raw = item.slice(item.indexOf(":") + 1);
+        if (cur && (cur.response != null || cur[kind] != null)) {
+          pushProduceItem(items, cur);
+          cur = null;
+        }
+        if (!cur) {
+          cur = { isExample };
+          isExample = false;
+        }
+        if (kind === "prompt") {
+          const { text, audio, image } = extractInlineAssets(raw);
+          cur.prompt = text;
+          if (audio)
+            cur.audio = audio;
+          if (image)
+            cur.promptImage = image;
+        } else {
+          const { text, image } = extractInlineAssets(raw, { audio: false });
+          cur.template = text;
+          if (image && !cur.promptImage)
+            cur.promptImage = image;
+        }
+        continue;
+      }
+      if (!cur)
+        continue;
+      if (item.startsWith("RESPONSE:")) {
+        const { text, audio } = extractInlineAssets(item.slice(9), { image: false });
+        cur.response = text;
+        if (audio)
+          cur.responseAudio = audio;
+      } else if (item.startsWith("ACCEPT:"))
+        cur.accept = item.slice(7).split("|").map((s) => s.trim()).filter(Boolean);
+      else if (item.startsWith("RUBRIC:"))
+        cur.rubric = item.slice(7).trim();
     }
-    return items;
+    if (cur)
+      pushProduceItem(items, cur);
+    return { image: activityImage, items };
   }
-  function generateLessonId(title) {
-    return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  function generateId(s) {
+    return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
-  function generateActivityId(type, title) {
-    const slug3 = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    return `${type}-${slug3}`;
+  var AUDIO_EXT_RE = /\.(?:mp3|wav|ogg|opus|m4a)$/i;
+  var IMAGE_EXT_RE = /\.(?:jpe?g|png|gif|webp|svg)$/i;
+  function extractInlineAssets(value, allow = {}) {
+    const allowAudio = allow.audio !== false;
+    const allowImage = allow.image !== false;
+    let text = value.trim();
+    let audio = null;
+    let image = null;
+    for (; ; ) {
+      const m = text.match(/^(.*?)\s*\{\s*([^{}]+?)\s*\}$/);
+      if (!m)
+        break;
+      const file = m[2].split("@")[0].trim();
+      if (allowAudio && audio === null && AUDIO_EXT_RE.test(file)) {
+        audio = file;
+        text = m[1].trim();
+        continue;
+      }
+      if (allowImage && image === null && IMAGE_EXT_RE.test(file)) {
+        image = file;
+        text = m[1].trim();
+        continue;
+      }
+      break;
+    }
+    return { text, audio, image };
   }
 
-  // node_modules/marked/lib/marked.esm.js
+  // ../node_modules/marked/lib/marked.esm.js
   function _getDefaults() {
     return {
       async: false,
@@ -2573,19 +2604,13 @@ ${content}</tr>
   var parser = _Parser.parse;
   var lexer = _Lexer.lex;
 
-  // module-preview/src/spec_from_ebnf.ts
+  // src/module_spec.ts
   var ebnfSpec = {
-    "markers": [
-      "CHAT",
-      "DIALOGUE",
-      "EXERCISE",
-      "GRAMMAR",
-      "LESSON",
-      "MODULE"
-    ],
-    "headerFields": [
+    markers: ["CHAT", "DIALOGUE", "GRAMMAR", "LESSON", "MODULE", "PRODUCE", "SELECT"],
+    headerFields: [
       "DESCRIPTION",
       "DIOCO_DOC_ID",
+      "FORMAT",
       "HOME_LANG_G",
       "IMAGE",
       "TARGET_LANG_G",
@@ -2593,7 +2618,7 @@ ${content}</tr>
       "TTS_PROMPT",
       "USER_LANG_G"
     ],
-    "voiceFields": [
+    voiceFields: [
       "VOICE",
       "VOICE_DEFAULT",
       "VOICE_INTRO",
@@ -2601,40 +2626,50 @@ ${content}</tr>
       "VOICE_RESPONSE",
       "VOICE_SPEAKER"
     ],
-    "dialogueFields": [
-      "IMAGE",
+    // Speakers are screenplay-style (`Jim: text`), images/audio ride content
+    // lines inline ({page.jpg} / {clip.mp3}) — so no SPEAKER / *_IMAGE fields.
+    dialogueFields: [
       "INSTRUCTION",
       "INTRO",
       "LINE",
-      "LINE_T",
       "NOTES",
-      "SPEAKER",
-      "VOCAB",
-      "VOCAB_T"
+      "TTS_PROMPT",
+      "VOCAB"
     ],
-    "exerciseFields": [
+    selectFields: [
+      "ANSWER",
+      "FEEDBACK",
+      "IMAGE",
+      // activity-level shared reference image only
+      "INSTRUCTION",
+      "INTRO",
+      "OPTION",
+      "PROMPT",
+      "TEMPLATE"
+    ],
+    produceFields: [
+      "ACCEPT",
+      "CHECK",
+      "IMAGE",
+      // activity-level shared grounding image only
+      "INPUT",
       "INSTRUCTION",
       "INTRO",
       "PROMPT",
-      "PROMPT_IMAGE",
-      "PROMPT_T",
       "RESPONSE",
-      "RESPONSE_IMAGE",
-      "RESPONSE_T"
+      "RUBRIC",
+      "TEMPLATE",
+      "TTS_PROMPT"
     ],
-    "grammarFields": [
-      "INTRO"
-    ],
-    "chatFields": [
-      "INITIAL_PROMPT",
-      "INTRO",
-      "SCENARIO"
-    ],
-    "exampleMarker": "EXAMPLE"
+    grammarFields: ["INTRO"],
+    chatFields: ["INITIAL_PROMPT", "INTRO", "SCENARIO"],
+    flags: ["MULTI", "REPEAT", "SHOW_PROMPT"],
+    exampleMarker: "EXAMPLE"
   };
 
-  // module-preview/src/diagnostics.ts
+  // src/module_diagnostics.ts
   var sectionNames = new Set(ebnfSpec.markers);
+  var flagNames = new Set(ebnfSpec.flags);
   var idNoSpacesRe = /^[A-Za-z][A-Za-z0-9_]*$/;
   var VALID_GEMINI_VOICES = /* @__PURE__ */ new Set([
     "Zephyr",
@@ -2668,15 +2703,56 @@ ${content}</tr>
     "Sadaltager",
     "Sulafat"
   ]);
-  var headerFields = /* @__PURE__ */ new Set([
-    ...ebnfSpec.headerFields,
-    ...ebnfSpec.voiceFields
-  ]);
+  var VALID_GEMINI_VOICES_LC = new Set([...VALID_GEMINI_VOICES].map((v) => v.toLowerCase()));
+  var isValidVoice = (v) => VALID_GEMINI_VOICES_LC.has(v.toLowerCase());
+  var headerFields = /* @__PURE__ */ new Set([...ebnfSpec.headerFields, ...ebnfSpec.voiceFields]);
   var voiceFields = new Set(ebnfSpec.voiceFields);
   var dialogueFields = new Set(ebnfSpec.dialogueFields);
-  var exerciseFields = new Set(ebnfSpec.exerciseFields);
+  var selectFields = new Set(ebnfSpec.selectFields);
+  var produceFields = new Set(ebnfSpec.produceFields);
   var chatFields = new Set(ebnfSpec.chatFields);
   var grammarFields = new Set(ebnfSpec.grammarFields);
+  var PRODUCE_INPUTS = /* @__PURE__ */ new Set(["type", "speak", "either"]);
+  var PRODUCE_CHECKS = /* @__PURE__ */ new Set(["reveal", "exact", "llm"]);
+  var AUDIO_EXT_RE2 = /\.(?:mp3|wav|ogg|opus|m4a)$/i;
+  var IMAGE_EXT_RE2 = /\.(?:jpe?g|png|gif|webp|svg)$/i;
+  var ASSET_TOKEN_RE = /\{\s*([^{}]+?)\s*\}/g;
+  var isAudioFile = (s) => AUDIO_EXT_RE2.test(s.split("@")[0].trim());
+  var isImageFile = (s) => IMAGE_EXT_RE2.test(s.split("@")[0].trim());
+  var ASSET_FIELDS = /* @__PURE__ */ new Set(["LINE", "PROMPT", "RESPONSE", "OPTION", "TEMPLATE"]);
+  function analyzeInlineAssets(value) {
+    let total = 0;
+    for (const m of value.matchAll(ASSET_TOKEN_RE)) {
+      if (isAudioFile(m[1]) || isImageFile(m[1]))
+        total++;
+    }
+    let rest = value.trimEnd();
+    let trailing = 0, audio = 0, image = 0;
+    for (; ; ) {
+      const m = rest.match(/^(.*?)\s*\{\s*([^{}]+?)\s*\}$/);
+      if (!m)
+        break;
+      if (isAudioFile(m[2]))
+        audio++;
+      else if (isImageFile(m[2]))
+        image++;
+      else
+        break;
+      trailing++;
+      rest = m[1].trimEnd();
+    }
+    return { total, trailing, audio, image };
+  }
+  var SPEAKER_LINE_RE2 = /^([A-Za-z][A-Za-z0-9_]*):\s*(.*)$/;
+  function matchSpeakerLine2(s) {
+    const m = s.match(SPEAKER_LINE_RE2);
+    if (m && /[a-z]/.test(m[1]))
+      return { speaker: m[1], rest: m[2] };
+    return null;
+  }
+  function generateId2(s) {
+    return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
   function lintModuleText(text) {
     const diags = [];
     const lines = String(text ?? "").split("\n");
@@ -2687,115 +2763,110 @@ ${content}</tr>
     let currentLessonLine = null;
     const seenHeader = {};
     const seenVoiceSpeaker = /* @__PURE__ */ new Map();
-    let lastDialogueHadLine = false;
-    let pendingVocabWord = null;
-    let pendingExercisePrompt = null;
-    let pendingExerciseExample = null;
+    const declaredSpeakers = /* @__PURE__ */ new Set();
+    const warnedSpeakers = /* @__PURE__ */ new Set();
+    let lessonActivityIds = /* @__PURE__ */ new Map();
+    let selItem = null;
+    let prodItem = null;
+    let pendingExample = null;
+    let hadBlankBefore = true;
     const push = (severity, line, message, code) => {
       diags.push({ severity, line, message, code });
+    };
+    const closeItems = () => {
+      if (selItem && !selItem.answered) {
+        push("warning", selItem.stimulusLine, "SELECT item has no ANSWER.", "select-missing-answer");
+      }
+      selItem = null;
+      prodItem = null;
     };
     for (let i = 0; i < lines.length; i++) {
       const lineNo = i + 1;
       const raw = lines[i];
       const trimmedEnd = raw.trimEnd();
       const trimmed = trimmedEnd.trim();
-      if (!trimmed)
+      if (!trimmed) {
+        hadBlankBefore = true;
         continue;
+      }
       if (trimmed.startsWith("#"))
         continue;
       const startsWithWs = raw.length > 0 && (raw[0] === " " || raw[0] === "	");
       if (startsWithWs) {
         const t = raw.trimStart();
         if (t.startsWith("$")) {
-          push(
-            "error",
-            lineNo,
-            "Section marker must start at column 0 (no leading whitespace).",
-            "section-indent"
-          );
+          push("error", lineNo, "Section marker must start at column 0 (no leading whitespace).", "section-indent");
         } else if (/^[A-Z_]+:/.test(t)) {
-          push(
-            "error",
-            lineNo,
-            "Field must start at column 0 (no leading whitespace).",
-            "field-indent"
-          );
+          push("error", lineNo, "Field must start at column 0 (no leading whitespace).", "field-indent");
         }
       }
       if (trimmedEnd.startsWith("$")) {
         sawAnySectionMarker = true;
-        if (/^\$(LESSON|DIALOGUE|EXERCISE|GRAMMAR|CHAT)\s*:/.test(trimmedEnd)) {
-          push(
-            "error",
-            lineNo,
-            "Section markers must not use a colon (use `$LESSON Title`, not `$LESSON: Title`).",
-            "section-colon"
-          );
+        hadBlankBefore = true;
+        if (/^\$(LESSON|DIALOGUE|GRAMMAR|SELECT|PRODUCE|CHAT)\s*:/.test(trimmedEnd)) {
+          push("error", lineNo, "Section markers must not use a colon (use `$LESSON Title`, not `$LESSON: Title`).", "section-colon");
         }
         const m = trimmedEnd.match(/^\$(\w+)(?:\s+(.*))?$/);
         if (!m) {
-          push(
-            "warning",
-            lineNo,
-            "Unrecognized section marker format.",
-            "section-format"
-          );
+          push("warning", lineNo, "Unrecognized section marker format.", "section-format");
           continue;
         }
         const marker = m[1];
+        const title = (m[2] ?? "").trim();
         if (!sectionNames.has(marker)) {
-          push(
-            "warning",
-            lineNo,
-            `Unknown section marker: $${marker}`,
-            "section-unknown"
-          );
-        }
-        if (pendingVocabWord) {
-          push(
-            "warning",
-            pendingVocabWord.line,
-            "VOCAB must be followed immediately by VOCAB_T (pair).",
-            "vocab-missing-vocab_t"
-          );
-          pendingVocabWord = null;
+          push("warning", lineNo, `Unknown section marker: $${marker}`, "section-unknown");
         }
         if (marker === "MODULE") {
           sawModuleMarker = true;
           inHeader = true;
           currentActivity = null;
         } else if (marker === "LESSON") {
+          closeItems();
           inHeader = false;
           currentActivity = null;
           currentLessonLine = lineNo;
-        } else if (marker === "DIALOGUE" || marker === "EXERCISE" || marker === "GRAMMAR" || marker === "CHAT") {
+          lessonActivityIds = /* @__PURE__ */ new Map();
+        } else if (marker === "DIALOGUE" || marker === "GRAMMAR" || marker === "SELECT" || marker === "PRODUCE" || marker === "CHAT") {
+          closeItems();
           inHeader = false;
           currentActivity = marker;
           if (!currentLessonLine) {
-            push(
-              "warning",
-              lineNo,
-              `Found $${marker} before any $LESSON; parser will create a "Default Lesson".`,
-              "implicit-lesson"
-            );
+            push("warning", lineNo, `Found $${marker} before any $LESSON; parser will create a "Default Lesson".`, "implicit-lesson");
           }
-          lastDialogueHadLine = false;
-          pendingVocabWord = null;
-          pendingExercisePrompt = null;
-          pendingExerciseExample = null;
+          pendingExample = null;
+          const id = generateId2(`${marker}-${title || marker.toLowerCase()}`);
+          const prev = lessonActivityIds.get(id);
+          if (prev) {
+            push("warning", lineNo, `Activity id collides with the $${marker} at L${prev} (same type + title). Make the title unique.`, "dup-activity-id");
+          } else {
+            lessonActivityIds.set(id, lineNo);
+          }
         }
         continue;
       }
+      if (flagNames.has(trimmed)) {
+        if (trimmed === "REPEAT" && currentActivity !== "DIALOGUE") {
+          push("warning", lineNo, "REPEAT is only meaningful inside $DIALOGUE.", "repeat-outside-dialogue");
+        }
+        if (trimmed === "MULTI" && currentActivity !== "SELECT") {
+          push("warning", lineNo, "MULTI is only meaningful inside $SELECT.", "flag-outside-select");
+        }
+        if (trimmed === "SHOW_PROMPT" && currentActivity !== "SELECT" && currentActivity !== "PRODUCE") {
+          push("warning", lineNo, "SHOW_PROMPT is only meaningful inside $SELECT or $PRODUCE.", "flag-outside-show-prompt");
+        }
+        hadBlankBefore = false;
+        continue;
+      }
+      if (trimmed === "AUDIO_ONLY") {
+        push("error", lineNo, "AUDIO_ONLY was removed \u2014 hidden PROMPT text is now the DEFAULT. Use SHOW_PROMPT when the book printed the stimulus.", "legacy-audio-only");
+        hadBlankBefore = false;
+        continue;
+      }
       if (ebnfSpec.exampleMarker && trimmed === ebnfSpec.exampleMarker) {
-        if (currentActivity !== "EXERCISE") {
-          push(
-            "warning",
-            lineNo,
-            "EXAMPLE marker is only meaningful inside $EXERCISE.",
-            "example-outside-exercise"
-          );
+        if (currentActivity !== "SELECT" && currentActivity !== "PRODUCE") {
+          push("warning", lineNo, "EXAMPLE marker is only meaningful inside $SELECT or $PRODUCE.", "example-outside-item");
         } else {
-          pendingExerciseExample = { line: lineNo };
+          pendingExample = { line: lineNo };
         }
         continue;
       }
@@ -2803,342 +2874,255 @@ ${content}</tr>
       if (fm) {
         const field = fm[1];
         const value = (fm[2] ?? "").trim();
+        const blankBefore = hadBlankBefore;
+        hadBlankBefore = false;
+        if (currentActivity && ASSET_FIELDS.has(field)) {
+          const a = analyzeInlineAssets(value);
+          if (a.total > a.trailing) {
+            push("warning", lineNo, "Inline {assets} must sit at the END of the line to be attached.", "asset-not-trailing");
+          }
+          if (field === "TEMPLATE" && a.audio > 0) {
+            push("warning", lineNo, "TEMPLATE is display-only and never read aloud; an inline {clip} here is NOT attached.", "template-with-clip");
+          } else if (a.audio > 1) {
+            push("warning", lineNo, "Multiple inline clips on one line; only ONE audio clip is attached.", "multiple-inline-clips");
+          }
+          if (a.image > 1) {
+            push("warning", lineNo, "Multiple inline images on one line; only ONE image is attached.", "multiple-inline-images");
+          }
+          if (field === "RESPONSE" && a.image > 0) {
+            push("warning", lineNo, "Images are not supported on RESPONSE; put the image on the PROMPT/TEMPLATE.", "response-with-image");
+          }
+        }
         if (inHeader && !currentLessonLine && !currentActivity) {
           if (!headerFields.has(field)) {
-            push(
-              "warning",
-              lineNo,
-              `Unknown header field: ${field}`,
-              "unknown-header-field"
-            );
-          } else {
-            if (field !== "VOICE_SPEAKER" && field !== "VOICE") {
-              if (seenHeader[field])
-                push(
-                  "warning",
-                  lineNo,
-                  `Duplicate header field: ${field}`,
-                  "dup-header-field"
-                );
-              seenHeader[field] = lineNo;
-            }
+            push("warning", lineNo, `Unknown header field: ${field}`, "unknown-header-field");
+          } else if (field !== "VOICE_SPEAKER" && field !== "VOICE") {
+            if (seenHeader[field])
+              push("warning", lineNo, `Duplicate header field: ${field}`, "dup-header-field");
+            seenHeader[field] = lineNo;
           }
-          if (field === "VOICE_SPEAKER") {
-            push(
-              "warning",
-              lineNo,
-              "VOICE_SPEAKER is deprecated; use VOICE: SpeakerId | Display Name | VoiceName | Optional prompt.",
-              "voice_speaker-deprecated"
-            );
-            const m = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
-            if (!m) {
-              push(
-                "error",
-                lineNo,
-                "VOICE_SPEAKER must be `VOICE_SPEAKER: SpeakerName = VoiceName | Optional prompt`.",
-                "voice_speaker-format"
-              );
-            } else {
-              const speakerName = m[1].trim();
-              const voiceName = m[2].trim();
-              if (!idNoSpacesRe.test(speakerName))
-                push(
-                  "warning",
-                  lineNo,
-                  `VOICE_SPEAKER label must be alnum only (no spaces): "${speakerName}"`,
-                  "voice_speaker-label"
-                );
-              if (!idNoSpacesRe.test(voiceName))
-                push(
-                  "warning",
-                  lineNo,
-                  `Voice name must be alnum only (no spaces): "${voiceName}"`,
-                  "voice_name"
-                );
-              if (!VALID_GEMINI_VOICES.has(voiceName))
-                push(
-                  "error",
-                  lineNo,
-                  `Unknown Gemini voice: "${voiceName}". Valid voices: ${[...VALID_GEMINI_VOICES].slice(0, 5).join(", ")}...`,
-                  "voice-invalid"
-                );
-              const key = speakerName.toLowerCase();
-              const prev = seenVoiceSpeaker.get(key);
-              if (prev) {
-                push(
-                  "warning",
-                  lineNo,
-                  `Duplicate VOICE_SPEAKER mapping for "${prev.original}" (previous at L${prev.line}).`,
-                  "voice_speaker-dup"
-                );
-              } else {
-                seenVoiceSpeaker.set(key, {
-                  line: lineNo,
-                  original: speakerName
-                });
-              }
-              if (prev && prev.original !== speakerName) {
-                push(
-                  "warning",
-                  lineNo,
-                  `VOICE_SPEAKER label casing differs ("${prev.original}" vs "${speakerName}"). Use consistent casing.`,
-                  "voice_speaker-case"
-                );
-              }
-            }
+          if (field === "FORMAT" && value !== "2") {
+            push("error", lineNo, `FORMAT must be 2 (got "${value}"). This toolchain parses format v2 only.`, "format-invalid");
           }
-          if (field === "VOICE") {
-            const parts = value.split("|").map((s) => s.trim());
-            if (parts.length < 3) {
-              push(
-                "error",
-                lineNo,
-                "VOICE must be `VOICE: SpeakerId | Display Name | VoiceName | Optional prompt`.",
-                "voice-format"
-              );
-            } else {
-              const speakerId = parts[0];
-              const displayName = parts[1];
-              const voiceName = parts[2];
-              if (!idNoSpacesRe.test(speakerId))
-                push(
-                  "warning",
-                  lineNo,
-                  `VOICE speakerId must be alnum/_ only (no spaces): "${speakerId}"`,
-                  "voice-speaker-id"
-                );
-              if (!displayName)
-                push(
-                  "warning",
-                  lineNo,
-                  "VOICE display name is empty; provide a display name for readable speaker labels.",
-                  "voice-display-empty"
-                );
-              if (!idNoSpacesRe.test(voiceName))
-                push(
-                  "warning",
-                  lineNo,
-                  `Voice name must be alnum/_ only (no spaces): "${voiceName}"`,
-                  "voice_name"
-                );
-              if (!VALID_GEMINI_VOICES.has(voiceName))
-                push(
-                  "error",
-                  lineNo,
-                  `Unknown Gemini voice: "${voiceName}". Valid voices: ${[...VALID_GEMINI_VOICES].slice(0, 5).join(", ")}...`,
-                  "voice-invalid"
-                );
-            }
-          }
-          if (voiceFields.has(field) && field !== "VOICE_SPEAKER" && field !== "VOICE") {
-            const m = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
-            if (m) {
-              const voiceName = m[1].trim();
-              if (!idNoSpacesRe.test(voiceName))
-                push(
-                  "warning",
-                  lineNo,
-                  `Voice name must be alnum only (no spaces): "${voiceName}"`,
-                  "voice_name"
-                );
-              if (!VALID_GEMINI_VOICES.has(voiceName))
-                push(
-                  "error",
-                  lineNo,
-                  `Unknown Gemini voice: "${voiceName}". Valid voices: ${[...VALID_GEMINI_VOICES].slice(0, 5).join(", ")}...`,
-                  "voice-invalid"
-                );
-            }
-          }
+          validateVoiceField(field, value, lineNo, push, seenVoiceSpeaker, declaredSpeakers);
         } else if (currentActivity) {
-          const allowed = currentActivity === "DIALOGUE" ? dialogueFields : currentActivity === "EXERCISE" ? exerciseFields : currentActivity === "CHAT" ? chatFields : currentActivity === "GRAMMAR" ? grammarFields : null;
+          if (field === "SPEAKER") {
+            push("error", lineNo, "SPEAKER was removed \u2014 write screenplay style instead: `Jim: line text`.", "legacy-speaker-field");
+            continue;
+          }
+          if (field === "OPTION_IMAGE" || field === "PROMPT_IMAGE") {
+            push("error", lineNo, `${field} was removed \u2014 attach the image inline at the end of the ${field === "OPTION_IMAGE" ? "OPTION" : "PROMPT"} text: \`{page.jpg}\`.`, "legacy-image-field");
+            continue;
+          }
+          if (field === "IMAGE" && currentActivity === "DIALOGUE") {
+            push("error", lineNo, "IMAGE field was removed in $DIALOGUE \u2014 attach the image inline: `{page.jpg}` at the end of the line.", "legacy-image-field");
+            continue;
+          }
+          if (field === "IMAGE" && (currentActivity === "SELECT" && selItem || currentActivity === "PRODUCE" && prodItem)) {
+            push("warning", lineNo, `IMAGE inside a $${currentActivity} item is ignored \u2014 activity-level only. Attach per-item images inline on the PROMPT/TEMPLATE.`, "image-inside-item");
+            continue;
+          }
+          const allowed = currentActivity === "DIALOGUE" ? dialogueFields : currentActivity === "SELECT" ? selectFields : currentActivity === "PRODUCE" ? produceFields : currentActivity === "CHAT" ? chatFields : currentActivity === "GRAMMAR" ? grammarFields : null;
           if (allowed && !allowed.has(field)) {
             if (currentActivity === "GRAMMAR" && field === "IMAGE") {
-              push(
-                "warning",
-                lineNo,
-                "IMAGE inside $GRAMMAR is not in the formal grammar and is ignored by lc_parser. Use markdown image syntax `![alt](file.png)`.",
-                "grammar-image-ignored"
-              );
+              push("warning", lineNo, "IMAGE inside $GRAMMAR is not in the formal grammar and is ignored. Use markdown image syntax `![alt](file.png)`.", "grammar-image-ignored");
             } else {
-              push(
-                "warning",
-                lineNo,
-                `Field ${field} is not expected inside $${currentActivity}.`,
-                "field-unexpected"
-              );
+              push("warning", lineNo, `Field ${field} is not expected inside $${currentActivity}.`, "field-unexpected");
             }
           }
           if (currentActivity === "GRAMMAR" && field !== "INTRO") {
-            push(
-              "warning",
-              lineNo,
-              `Line looks like a field (${field}:) inside $GRAMMAR. lc_parser will likely NOT include it in markdown content.`,
-              "grammar-field-swallowed"
-            );
+            push("warning", lineNo, `Line looks like a field (${field}:) inside $GRAMMAR; it will NOT be included in markdown content.`, "grammar-field-swallowed");
+          }
+          if (currentActivity === "SELECT") {
+            if (field === "PROMPT" || field === "TEMPLATE") {
+              if (value === "")
+                push("warning", lineNo, `${field} is empty.`, "empty-prompt");
+              const kind = field === "PROMPT" ? "hasPrompt" : "hasTemplate";
+              if (selItem && (selItem.answered || selItem[kind])) {
+                if (!selItem.answered) {
+                  push("warning", selItem.stimulusLine, "SELECT item has no ANSWER.", "select-missing-answer");
+                }
+                if (!blankBefore) {
+                  push("warning", lineNo, "New item should start after a blank line (keeps item boundaries unambiguous).", "item-needs-blank-line");
+                }
+                selItem = null;
+              }
+              if (!selItem)
+                selItem = { stimulusLine: lineNo, hasPrompt: false, hasTemplate: false, answered: false };
+              if (field === "PROMPT")
+                selItem.hasPrompt = true;
+              else
+                selItem.hasTemplate = true;
+              if (pendingExample)
+                pendingExample = null;
+            }
+            if (field === "ANSWER") {
+              if (!selItem)
+                push("warning", lineNo, "ANSWER appears before a PROMPT or TEMPLATE.", "answer-before-prompt");
+              else
+                selItem.answered = true;
+              if (value === "")
+                push("warning", lineNo, "ANSWER is empty (list correct option id(s)).", "empty-answer");
+            }
+            if (field === "OPTION") {
+              if (!/^[^|]+\|/.test(value))
+                push("warning", lineNo, `OPTION must be \`OPTION: <id> | <value>\`.`, "option-format");
+            }
+          } else if (currentActivity === "PRODUCE") {
+            if (field === "INPUT" && value && !PRODUCE_INPUTS.has(value.toLowerCase()))
+              push("warning", lineNo, `INPUT must be one of: type, speak, either.`, "input-invalid");
+            if (field === "CHECK" && value && !PRODUCE_CHECKS.has(value.toLowerCase()))
+              push("warning", lineNo, `CHECK must be one of: reveal, exact, llm.`, "check-invalid");
+            if (field === "PROMPT" || field === "TEMPLATE") {
+              const kind = field === "PROMPT" ? "hasPrompt" : "hasTemplate";
+              if (prodItem && (prodItem.hasResponse || prodItem[kind])) {
+                if (!blankBefore) {
+                  push("warning", lineNo, "New item should start after a blank line (keeps item boundaries unambiguous).", "item-needs-blank-line");
+                }
+                prodItem = null;
+              }
+              if (!prodItem)
+                prodItem = { stimulusLine: lineNo, hasPrompt: false, hasTemplate: false, hasResponse: false };
+              if (field === "PROMPT")
+                prodItem.hasPrompt = true;
+              else
+                prodItem.hasTemplate = true;
+              if (pendingExample)
+                pendingExample = null;
+            }
+            if (field === "RESPONSE") {
+              if (!prodItem)
+                push("warning", lineNo, "RESPONSE appears before a PROMPT or TEMPLATE.", "response-before-stimulus");
+              else
+                prodItem.hasResponse = true;
+              if (value === "")
+                push("warning", lineNo, "RESPONSE is empty.", "empty-response");
+            }
           }
         } else {
           if (!sawModuleMarker && headerFields.has(field)) {
-            push(
-              "warning",
-              lineNo,
-              `Header field ${field} appears before $MODULE. Add a $MODULE header.`,
-              "header-before-module"
-            );
+            push("warning", lineNo, `Header field ${field} appears before $MODULE. Add a $MODULE header.`, "header-before-module");
           } else {
-            push(
-              "warning",
-              lineNo,
-              `Field ${field} appears outside an activity; it will likely be ignored.`,
-              "field-outside-activity"
-            );
-          }
-        }
-        if (currentActivity === "DIALOGUE") {
-          if (field === "LINE")
-            lastDialogueHadLine = true;
-          if (field === "LINE_T" && !lastDialogueHadLine) {
-            push(
-              "warning",
-              lineNo,
-              "LINE_T appears without a preceding LINE in the current dialogue context.",
-              "line_t-without-line"
-            );
-          }
-          if (field === "VOCAB") {
-            if (pendingVocabWord) {
-              push(
-                "warning",
-                pendingVocabWord.line,
-                "VOCAB must be followed immediately by VOCAB_T (pair).",
-                "vocab-missing-vocab_t"
-              );
-            }
-            pendingVocabWord = { line: lineNo };
-          }
-          if (field === "VOCAB_T" && !pendingVocabWord) {
-            push(
-              "warning",
-              lineNo,
-              "VOCAB_T appears without a preceding VOCAB.",
-              "vocab_t-without-vocab"
-            );
-          }
-          if (field === "VOCAB_T")
-            pendingVocabWord = null;
-          if ((field === "SPEAKER" || field === "LINE") && pendingVocabWord) {
-            push(
-              "warning",
-              pendingVocabWord.line,
-              "VOCAB must be followed immediately by VOCAB_T (pair).",
-              "vocab-missing-vocab_t"
-            );
-            pendingVocabWord = null;
-          }
-        } else if (currentActivity === "EXERCISE") {
-          if (field === "PROMPT")
-            pendingExercisePrompt = { line: lineNo };
-          if (field === "RESPONSE" && !pendingExercisePrompt) {
-            push(
-              "warning",
-              lineNo,
-              "RESPONSE appears before PROMPT.",
-              "response-before-prompt"
-            );
-          }
-          if (field === "PROMPT" && value === "")
-            push("warning", lineNo, "PROMPT is empty.", "empty-prompt");
-          if (field === "RESPONSE" && value === "")
-            push("warning", lineNo, "RESPONSE is empty.", "empty-response");
-          if (field === "RESPONSE")
-            pendingExercisePrompt = null;
-          if (field === "PROMPT" && pendingExerciseExample) {
-            pendingExerciseExample = null;
+            push("warning", lineNo, `Field ${field} appears outside an activity; it will likely be ignored.`, "field-outside-activity");
           }
         }
         continue;
       }
+      hadBlankBefore = false;
+      if (currentActivity === "DIALOGUE") {
+        const sp = matchSpeakerLine2(trimmedEnd);
+        if (sp) {
+          const a = analyzeInlineAssets(sp.rest);
+          if (a.total > a.trailing)
+            push("warning", lineNo, "Inline {assets} must sit at the END of the line to be attached.", "asset-not-trailing");
+          if (a.audio > 1)
+            push("warning", lineNo, "Multiple inline clips on one line; only ONE audio clip is attached.", "multiple-inline-clips");
+          if (a.image > 1)
+            push("warning", lineNo, "Multiple inline images on one line; only ONE image is attached.", "multiple-inline-images");
+          if (!sp.rest.trim())
+            push("warning", lineNo, `Speaker line for "${sp.speaker}" has no text.`, "speaker-empty-line");
+          if (declaredSpeakers.size > 0 && sp.speaker.toLowerCase() !== "narrator" && !declaredSpeakers.has(sp.speaker.toLowerCase()) && !warnedSpeakers.has(sp.speaker.toLowerCase())) {
+            warnedSpeakers.add(sp.speaker.toLowerCase());
+            push("warning", lineNo, `Speaker "${sp.speaker}" has no VOICE declaration (typo? or add \`VOICE: ${sp.speaker} | <VoiceName>\`).`, "speaker-undeclared");
+          }
+          continue;
+        }
+      }
       if (currentActivity === "GRAMMAR") {
-      } else if (currentActivity === "DIALOGUE" || currentActivity === "EXERCISE" || currentActivity === "CHAT") {
-        push(
-          "warning",
-          lineNo,
-          `Unstructured content line inside $${currentActivity}. Did you forget a FIELD: prefix?`,
-          "raw-content"
-        );
+      } else if (currentActivity === "DIALOGUE" || currentActivity === "SELECT" || currentActivity === "PRODUCE" || currentActivity === "CHAT") {
+        push("warning", lineNo, `Unstructured content line inside $${currentActivity}. Did you forget a FIELD: prefix${currentActivity === "DIALOGUE" ? " or `Speaker:` name" : ""}?`, "raw-content");
       } else {
-        push(
-          "warning",
-          lineNo,
-          "Content line appears outside any activity; it will be ignored.",
-          "content-outside"
-        );
+        push("warning", lineNo, "Content line appears outside any activity; it will be ignored.", "content-outside");
       }
     }
-    if (pendingVocabWord) {
-      push(
-        "warning",
-        pendingVocabWord.line,
-        "VOCAB must be followed immediately by VOCAB_T (pair).",
-        "vocab-missing-vocab_t"
-      );
-    }
-    if (pendingExerciseExample) {
-      push(
-        "warning",
-        pendingExerciseExample.line,
-        "EXAMPLE marker must be immediately followed by an exercise item (PROMPT...).",
-        "example-not-applied"
-      );
+    closeItems();
+    if (pendingExample) {
+      push("warning", pendingExample.line, "EXAMPLE marker must be followed by an item (PROMPT / TEMPLATE...).", "example-not-applied");
     }
     if (!sawAnySectionMarker) {
-      push(
-        "error",
-        1,
-        "No section markers found. A .module should contain at least `$MODULE` and `$LESSON`/activities.",
-        "no-sections"
-      );
+      push("error", 1, "No section markers found. A .module should contain at least `$MODULE` and `$LESSON`/activities.", "no-sections");
     }
     if (!sawModuleMarker) {
       push("error", 1, "Missing `$MODULE` header.", "missing-module");
     }
     if (sawModuleMarker) {
+      if (!seenHeader.FORMAT)
+        push("warning", 1, "Missing header field: FORMAT: 2 (declares the module format version)", "missing-format");
       if (!seenHeader.DIOCO_DOC_ID)
-        push(
-          "warning",
-          1,
-          "Missing header field: DIOCO_DOC_ID (optional, moduleKey is derived from filename)",
-          "missing-dioco-doc-id"
-        );
+        push("warning", 1, "Missing header field: DIOCO_DOC_ID (optional, moduleKey is derived from filename)", "missing-dioco-doc-id");
       if (!seenHeader.TITLE)
         push("error", 1, "Missing required header field: TITLE", "missing-title");
       if (!seenHeader.TARGET_LANG_G)
-        push(
-          "error",
-          1,
-          "Missing required header field: TARGET_LANG_G",
-          "missing-target-lang"
-        );
+        push("error", 1, "Missing required header field: TARGET_LANG_G", "missing-target-lang");
       if (!seenHeader.HOME_LANG_G && !seenHeader.USER_LANG_G)
-        push(
-          "error",
-          1,
-          "Missing required header field: HOME_LANG_G (or legacy USER_LANG_G)",
-          "missing-home-lang"
-        );
+        push("error", 1, "Missing required header field: HOME_LANG_G (or legacy USER_LANG_G)", "missing-home-lang");
     }
     return diags.sort(
       (a, b) => a.severity === b.severity ? a.line - b.line : a.severity === "error" ? -1 : 1
     );
   }
+  function validateVoiceField(field, value, lineNo, push, seenVoiceSpeaker, declaredSpeakers) {
+    if (field === "VOICE_SPEAKER") {
+      push("warning", lineNo, "VOICE_SPEAKER is legacy; prefer VOICE: SpeakerId | VoiceName | Optional prompt.", "voice_speaker-deprecated");
+      const m = value.match(/^(.+?)\s*=\s*([^|]+)(?:\s*\|\s*(.*))?$/);
+      if (!m) {
+        push("error", lineNo, "VOICE_SPEAKER must be `VOICE_SPEAKER: SpeakerName = VoiceName | Optional prompt`.", "voice_speaker-format");
+        return;
+      }
+      const speakerName = m[1].trim();
+      const voiceName = m[2].trim();
+      declaredSpeakers.add(speakerName.toLowerCase());
+      if (!idNoSpacesRe.test(speakerName))
+        push("warning", lineNo, `VOICE_SPEAKER label must be alnum only (no spaces): "${speakerName}"`, "voice_speaker-label");
+      if (!idNoSpacesRe.test(voiceName))
+        push("warning", lineNo, `Voice name must be alnum only (no spaces): "${voiceName}"`, "voice_name");
+      if (!isValidVoice(voiceName))
+        push("error", lineNo, `Unknown Gemini voice: "${voiceName}".`, "voice-invalid");
+      const key = speakerName.toLowerCase();
+      const prev = seenVoiceSpeaker.get(key);
+      if (prev)
+        push("warning", lineNo, `Duplicate VOICE_SPEAKER mapping for "${prev.original}" (previous at L${prev.line}).`, "voice_speaker-dup");
+      else
+        seenVoiceSpeaker.set(key, { line: lineNo, original: speakerName });
+      if (prev && prev.original !== speakerName)
+        push("warning", lineNo, `VOICE_SPEAKER label casing differs ("${prev.original}" vs "${speakerName}").`, "voice_speaker-case");
+      return;
+    }
+    if (field === "VOICE") {
+      const parts = value.split("|").map((s) => s.trim());
+      if (parts.length < 2) {
+        push("error", lineNo, "VOICE must be `VOICE: SpeakerId | VoiceName | Optional prompt`.", "voice-format");
+        return;
+      }
+      const speakerId = parts[0];
+      const voiceName = parts[1];
+      declaredSpeakers.add(speakerId.toLowerCase());
+      if (!idNoSpacesRe.test(speakerId))
+        push("warning", lineNo, `VOICE speakerId must be alnum/_ only (no spaces): "${speakerId}"`, "voice-speaker-id");
+      if (!idNoSpacesRe.test(voiceName))
+        push("warning", lineNo, `Voice name must be alnum/_ only (no spaces): "${voiceName}"`, "voice_name");
+      if (!isValidVoice(voiceName))
+        push("error", lineNo, `Unknown Gemini voice: "${voiceName}".`, "voice-invalid");
+      return;
+    }
+    if (voiceFields.has(field)) {
+      const m = value.match(/^([^|]+)(?:\s*\|\s*(.*))?$/);
+      if (m) {
+        const voiceName = m[1].trim();
+        if (!idNoSpacesRe.test(voiceName))
+          push("warning", lineNo, `Voice name must be alnum only (no spaces): "${voiceName}"`, "voice_name");
+        if (!isValidVoice(voiceName))
+          push("error", lineNo, `Unknown Gemini voice: "${voiceName}".`, "voice-invalid");
+      }
+    }
+  }
 
-  // module-preview/src/source_index.ts
+  // src/source_index.ts
   function slug(s) {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
-  function generateActivityId2(type, title) {
-    const s = slug(title || "untitled");
-    return `${type}-${s}`;
+  function generateActivityId(type, title) {
+    return slug(`${type}-${title || "untitled"}`);
   }
   function buildActivityRawIndex(text) {
     const lines = String(text ?? "").split("\n");
@@ -3168,8 +3152,8 @@ ${content}</tr>
         continue;
       const marker = m[1];
       const title = (m[2] ?? "").trim();
-      if (marker === "DIALOGUE" || marker === "GRAMMAR" || marker === "EXERCISE" || marker === "CHAT") {
-        current = { id: generateActivityId2(marker, title || marker), startIdx: i };
+      if (marker === "DIALOGUE" || marker === "GRAMMAR" || marker === "SELECT" || marker === "PRODUCE" || marker === "CHAT") {
+        current = { id: generateActivityId(marker, title || marker), startIdx: i };
       } else {
       }
     }
@@ -3178,7 +3162,7 @@ ${content}</tr>
     return map;
   }
 
-  // module-preview/src/app.ts
+  // src/app.ts
   function el(tag2, attrs = {}, children = []) {
     const node = document.createElement(tag2);
     for (const [k, v] of Object.entries(attrs)) {
@@ -3213,7 +3197,9 @@ ${content}</tr>
     switch (a.type) {
       case "DIALOGUE":
         return a.lines.length;
-      case "EXERCISE":
+      case "SELECT":
+        return a.items.length;
+      case "PRODUCE":
         return a.items.length;
       case "GRAMMAR":
       case "CHAT":
@@ -3458,7 +3444,7 @@ ${content}</tr>
         ]),
         el("div", { class: "activityTools" }, [
           raw ? el("span", { class: "toolPill mono" }, [`L${raw.startLine}\u2013L${raw.endLine}`]) : null,
-          activity.type === "EXERCISE" && raw ? el("details", { class: "rawDetails" }, [
+          (activity.type === "SELECT" || activity.type === "PRODUCE") && raw ? el("details", { class: "rawDetails" }, [
             el("summary", { class: "toolBtn mono" }, ["Raw"]),
             el("pre", { class: "rawPre mono" }, [raw.text])
           ]) : null
@@ -3466,20 +3452,16 @@ ${content}</tr>
       ])
     ]);
     const body = [];
+    const kvRow = (k, v) => el("div", { class: "kv" }, [
+      el("div", { class: "k" }, [k]),
+      el("div", { class: "v" }, [v ?? el("span", { class: "muted" }, ["\u2014"])])
+    ]);
+    const flagPill = (label, on) => on ? el("span", { class: "pill" }, [label]) : null;
     if (activity.type === "DIALOGUE") {
       const a = activity;
-      body.push(
-        el("div", { class: "kv" }, [
-          el("div", { class: "k" }, ["INSTRUCTION"]),
-          el("div", { class: "v" }, [a.instruction ?? el("span", { class: "muted" }, ["\u2014"])])
-        ])
-      );
-      body.push(
-        el("div", { class: "kv" }, [
-          el("div", { class: "k" }, ["TTS_PROMPT"]),
-          el("div", { class: "v" }, [a.ttsPrompt ?? el("span", { class: "muted" }, ["\u2014"])])
-        ])
-      );
+      body.push(kvRow("INSTRUCTION", a.instruction));
+      body.push(kvRow("TTS_PROMPT", a.ttsPrompt));
+      body.push(el("div", { class: "pillRow" }, [flagPill("REPEAT", a.repeat)]));
       body.push(
         el("div", { class: "tableWrap" }, [
           el("table", { class: "table mono" }, [
@@ -3488,10 +3470,9 @@ ${content}</tr>
                 el("th", { class: "colIdx" }, ["#"]),
                 el("th", { class: "colSpeaker" }, ["SPEAKER"]),
                 el("th", {}, ["LINE"]),
-                el("th", {}, ["TRANSLATION"]),
                 el("th", {}, ["IMAGE"]),
+                el("th", {}, ["AUDIO"]),
                 el("th", {}, ["VOCAB"]),
-                el("th", {}, ["VOCAB_T"]),
                 el("th", {}, ["NOTES"])
               ])
             ]),
@@ -3503,13 +3484,10 @@ ${content}</tr>
                   el("td", { class: "colIdx muted" }, [String(i + 1)]),
                   el("td", { class: "cellMuted" }, [line.speaker ?? "\u2014"]),
                   el("td", { class: "cellStrong" }, [line.text]),
-                  el("td", { class: "cellMuted" }, [line.translation || "\u2014"]),
                   el("td", { class: "cellMuted mono" }, [line.image ?? "\u2014"]),
+                  el("td", { class: "cellMuted mono" }, [line.audio ?? "\u2014"]),
                   el("td", { class: "cellMuted" }, [
                     line.vocab?.length ? line.vocab.map((v) => v.word).join(", ") : "\u2014"
-                  ]),
-                  el("td", { class: "cellMuted" }, [
-                    line.vocab?.length ? line.vocab.map((v) => v.definition || "\u2014").join("\n") : "\u2014"
                   ]),
                   el("td", { class: "cellMuted" }, [line.notes ?? "\u2014"])
                 ])
@@ -3518,20 +3496,15 @@ ${content}</tr>
           ])
         ])
       );
-    } else if (activity.type === "EXERCISE") {
+    } else if (activity.type === "SELECT") {
       const a = activity;
-      body.push(
-        el("div", { class: "kv" }, [
-          el("div", { class: "k" }, ["INSTRUCTION"]),
-          el("div", { class: "v" }, [a.instruction ?? el("span", { class: "muted" }, ["\u2014"])])
-        ])
-      );
-      body.push(
-        el("div", { class: "kv" }, [
-          el("div", { class: "k" }, ["TTS_PROMPT"]),
-          el("div", { class: "v" }, [a.ttsPrompt ?? el("span", { class: "muted" }, ["\u2014"])])
-        ])
-      );
+      body.push(kvRow("INSTRUCTION", a.instruction));
+      body.push(el("div", { class: "pillRow" }, [flagPill("MULTI", a.multi), flagPill("SHOW_PROMPT", a.showPrompt)]));
+      if (a.image)
+        body.push(kvRow("IMAGE", a.image));
+      if (a.options.length) {
+        body.push(kvRow("OPTIONS (shared)", a.options.map((o) => `${o.id} = ${o.text ?? o.image ?? ""}`).join("  \u2022  ")));
+      }
       body.push(
         el("div", { class: "tableWrap" }, [
           el("table", { class: "table mono" }, [
@@ -3540,11 +3513,11 @@ ${content}</tr>
                 el("th", { class: "colIdx" }, ["#"]),
                 el("th", { class: "colEx" }, ["EX"]),
                 el("th", {}, ["PROMPT"]),
-                el("th", {}, ["PROMPT_T"]),
-                el("th", {}, ["PROMPT_IMG"]),
-                el("th", {}, ["RESPONSE"]),
-                el("th", {}, ["RESPONSE_T"]),
-                el("th", {}, ["RESPONSE_IMG"])
+                el("th", {}, ["TEMPLATE"]),
+                el("th", {}, ["AUDIO"]),
+                el("th", {}, ["OPTIONS"]),
+                el("th", {}, ["ANSWER"]),
+                el("th", {}, ["FEEDBACK"])
               ])
             ]),
             el(
@@ -3554,12 +3527,59 @@ ${content}</tr>
                 (item, i) => el("tr", { class: item.isExample ? "rowExample" : "" }, [
                   el("td", { class: "colIdx muted" }, [String(i + 1)]),
                   el("td", { class: "colEx" }, [item.isExample ? "EX" : ""]),
-                  el("td", { class: "cellStrong" }, [item.prompt]),
-                  el("td", { class: "cellMuted" }, [item.promptTranslation ?? "\u2014"]),
-                  el("td", { class: "cellMuted mono" }, [item.promptImage ?? "\u2014"]),
-                  el("td", { class: "cellStrong" }, [item.response]),
-                  el("td", { class: "cellMuted" }, [item.responseTranslation ?? "\u2014"]),
-                  el("td", { class: "cellMuted mono" }, [item.responseImage ?? "\u2014"])
+                  el("td", { class: "cellStrong" }, [item.prompt ?? "\u2014"]),
+                  el("td", { class: "cellMuted" }, [item.template ?? "\u2014"]),
+                  el("td", { class: "cellMuted mono" }, [item.audio ?? "\u2014"]),
+                  el("td", { class: "cellMuted" }, [
+                    item.options?.length ? item.options.map((o) => `${o.id}=${o.text ?? o.image ?? ""}`).join(", ") : "(shared)"
+                  ]),
+                  el("td", { class: "cellStrong mono" }, [item.answer.join(", ") || "\u2014"]),
+                  el("td", { class: "cellMuted" }, [item.feedback ?? "\u2014"])
+                ])
+              )
+            )
+          ])
+        ])
+      );
+    } else if (activity.type === "PRODUCE") {
+      const a = activity;
+      body.push(kvRow("INSTRUCTION", a.instruction));
+      body.push(kvRow("TTS_PROMPT", a.ttsPrompt));
+      if (a.image)
+        body.push(kvRow("IMAGE", a.image));
+      body.push(el("div", { class: "pillRow" }, [
+        el("span", { class: "pill" }, [`INPUT: ${a.input}`]),
+        el("span", { class: "pill" }, [`CHECK: ${a.check}`]),
+        flagPill("SHOW_PROMPT", a.showPrompt)
+      ]));
+      body.push(
+        el("div", { class: "tableWrap" }, [
+          el("table", { class: "table mono" }, [
+            el("thead", {}, [
+              el("tr", {}, [
+                el("th", { class: "colIdx" }, ["#"]),
+                el("th", { class: "colEx" }, ["EX"]),
+                el("th", {}, ["PROMPT"]),
+                el("th", {}, ["TEMPLATE"]),
+                el("th", {}, ["AUDIO"]),
+                el("th", {}, ["RESPONSE"]),
+                el("th", {}, ["ACCEPT"]),
+                el("th", {}, ["RUBRIC"])
+              ])
+            ]),
+            el(
+              "tbody",
+              {},
+              a.items.map(
+                (item, i) => el("tr", { class: item.isExample ? "rowExample" : "" }, [
+                  el("td", { class: "colIdx muted" }, [String(i + 1)]),
+                  el("td", { class: "colEx" }, [item.isExample ? "EX" : ""]),
+                  el("td", { class: "cellStrong" }, [item.prompt ?? "\u2014"]),
+                  el("td", { class: "cellMuted" }, [item.template ?? "\u2014"]),
+                  el("td", { class: "cellMuted mono" }, [item.audio ?? "\u2014"]),
+                  el("td", { class: "cellStrong" }, [item.response ?? "\u2014"]),
+                  el("td", { class: "cellMuted" }, [item.accept?.length ? item.accept.join(" | ") : "\u2014"]),
+                  el("td", { class: "cellMuted" }, [item.rubric ?? "\u2014"])
                 ])
               )
             )
@@ -3657,30 +3677,41 @@ ${content}</tr>
     demoBtn?.addEventListener("click", async () => {
       const embeddedDemo = `
 $MODULE
+FORMAT: 2
 DIOCO_DOC_ID: lc_demo
 TITLE: Demo Module
 DESCRIPTION: Quick demo content for the preview UI
-TARGET_LANG_G: es
+TARGET_LANG_G: en
 HOME_LANG_G: en
 
 $LESSON Lesson 1: Greetings
 
 $DIALOGUE Basic Greetings
 INSTRUCTION: Listen and repeat.
-VOCAB: buenos d\xEDas
-VOCAB_T: good morning
-SPEAKER: Ana
-LINE: Hola, buenos d\xEDas.
-LINE_T: Hello, good morning.
-NOTES: "Buenos d\xEDas" is used until noon.
+REPEAT
+VOCAB: good morning
+Ana: Good morning.
+NOTES: Used until noon.
 
-$EXERCISE Practice
-INSTRUCTION: Translate the following.
+$SELECT Same or Different?
+INSTRUCTION: Tap Same or Different.
+OPTION: s | Same
+OPTION: d | Different
+
+PROMPT: wed ... red
+ANSWER: d
+
+PROMPT: wake ... wake
+ANSWER: s
+
+$PRODUCE Answer the questions
+INSTRUCTION: Listen, then answer aloud.
 EXAMPLE
-PROMPT: Good morning
-PROMPT_T: (English) Good morning
-RESPONSE: Buenos d\xEDas
-RESPONSE_T: (English) Good morning
+PROMPT: Does she work here?
+RESPONSE: Yes, she works here.
+
+PROMPT: Do they live in Houston?
+RESPONSE: Yes, they live in Houston.
 
 $LESSON Lesson 2: Chat
 

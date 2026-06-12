@@ -12,13 +12,13 @@ function slug(s: string): string {
 }
 
 function generateActivityId(type: string, title: string): string {
-    const s = slug(title || 'untitled');
-    return `${type}-${s}`;
+    // Match lc_parser.ts: it slugs the whole `${type}-${title}` (type is lowercased too).
+    return slug(`${type}-${title || 'untitled'}`);
 }
 
 /**
  * Best-effort: split the raw module file into activity blocks.
- * A block starts at `$DIALOGUE/$GRAMMAR/$EXERCISE/$CHAT` and ends right before the next `$...` marker.
+ * A block starts at `$DIALOGUE/$GRAMMAR/$SELECT/$PRODUCE/$CHAT` and ends right before the next `$...` marker.
  *
  * Keys are activity ids matching `lc_parser.ts`'s `generateActivityId(type, title)`.
  */
@@ -55,7 +55,7 @@ export function buildActivityRawIndex(text: string): Record<string, RawBlock> {
         const marker = m[1];
         const title = (m[2] ?? '').trim();
 
-        if (marker === 'DIALOGUE' || marker === 'GRAMMAR' || marker === 'EXERCISE' || marker === 'CHAT') {
+        if (marker === 'DIALOGUE' || marker === 'GRAMMAR' || marker === 'SELECT' || marker === 'PRODUCE' || marker === 'CHAT') {
             current = { id: generateActivityId(marker, title || marker), startIdx: i };
         } else {
             // $MODULE / $LESSON / unknown marker: not an activity block start.
