@@ -1,0 +1,193 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Module",
+  "scopeName": "source.module",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#section-markers" },
+    { "include": "#flags" },
+    { "include": "#field-markers" },
+    { "include": "#playable-audio" },
+    { "include": "#multiline-string" },
+    { "include": "#markdown-table" },
+    { "include": "#markdown-bold" }
+  ],
+  "repository": {
+    "comments": {
+      "name": "comment.line.number-sign.module",
+      "match": "^#.*$"
+    },
+    "section-markers": {
+      "patterns": [
+        {
+          "match": "^(\\$MODULE)\\b",
+          "captures": { "1": { "name": "keyword.control.module.module" } }
+        },
+        {
+          "match": "^(\\$LESSON)\\s+(.*)?$",
+          "captures": {
+            "1": { "name": "keyword.control.lesson.module" },
+            "2": { "name": "entity.name.section.lesson.module" }
+          }
+        },
+        {
+          "match": "^(\\$DIALOGUE)\\s+(.*)?$",
+          "captures": {
+            "1": { "name": "keyword.other.dialogue.module" },
+            "2": { "name": "entity.name.section.dialogue.module" }
+          }
+        },
+        {
+          "match": "^(\\$GRAMMAR)\\s+(.*)?$",
+          "captures": {
+            "1": { "name": "keyword.other.grammar.module" },
+            "2": { "name": "entity.name.section.grammar.module" }
+          }
+        },
+        {
+          "match": "^(\\$SELECT)\\s+(.*)?$",
+          "captures": {
+            "1": { "name": "keyword.other.select.module" },
+            "2": { "name": "entity.name.section.select.module" }
+          }
+        },
+        {
+          "match": "^(\\$PRODUCE)\\s+(.*)?$",
+          "captures": {
+            "1": { "name": "keyword.other.produce.module" },
+            "2": { "name": "entity.name.section.produce.module" }
+          }
+        },
+        {
+          "match": "^(\\$CHAT)\\s+(.*)?$",
+          "captures": {
+            "1": { "name": "keyword.other.chat.module" },
+            "2": { "name": "entity.name.section.chat.module" }
+          }
+        }
+      ]
+    },
+    "flags": {
+      "match": "^(REPEAT|MULTI|SHOW_PROMPT|EXAMPLE)\\s*$",
+      "captures": { "1": { "name": "keyword.control.flag.module" } }
+    },
+    "field-markers": {
+      "patterns": [
+        {
+          "match": "^(DIOCO_DOC_ID|TITLE|DESCRIPTION|IMAGE|TARGET_LANG_G|HOME_LANG_G|USER_LANG_G|TTS_PROMPT)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "variable.language.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.unquoted.module" }
+          }
+        },
+        {
+          "match": "^(VOICE_DEFAULT|VOICE_INTRO|VOICE_PROMPT|VOICE_RESPONSE|VOICE_SPEAKER|VOICE)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "support.type.voice.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.unquoted.module" }
+          }
+        },
+        {
+          "comment": "Screenplay speaker line: `Jim: Hello.` (id contains a lowercase letter)",
+          "match": "^([A-Za-z](?=[A-Za-z0-9_]*[a-z])[A-Za-z0-9_]*)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "entity.name.tag.speaker-name.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.quoted.line-text.module" }
+          }
+        },
+        {
+          "match": "^(LINE)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "support.function.line.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.quoted.line-text.module" }
+          }
+        },
+        {
+          "match": "^(VOCAB)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "support.function.vocab.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.quoted.vocab-text.module" }
+          }
+        },
+        {
+          "match": "^(PROMPT)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "constant.language.prompt.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.quoted.prompt-text.module" }
+          }
+        },
+        {
+          "match": "^(TEMPLATE)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "constant.language.template.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.quoted.template-text.module" }
+          }
+        },
+        {
+          "match": "^(RESPONSE)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "constant.language.response.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.quoted.response-text.module" }
+          }
+        },
+        {
+          "match": "^(OPTION)(:)\\s*([^|]+)(\\|)(.*)?$",
+          "captures": {
+            "1": { "name": "support.function.option.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "entity.name.tag.option-id.module" },
+            "4": { "name": "punctuation.separator.module" },
+            "5": { "name": "string.quoted.option-text.module" }
+          }
+        },
+        {
+          "match": "^(ANSWER|INPUT|CHECK)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "support.type.attribute.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "constant.other.module" }
+          }
+        },
+        {
+          "match": "^(INSTRUCTION|INTRO|NOTES|FEEDBACK|RUBRIC|ACCEPT|SCENARIO|INITIAL_PROMPT)(:)\\s*(.*)?$",
+          "captures": {
+            "1": { "name": "keyword.operator.instruction.module" },
+            "2": { "name": "punctuation.separator.key-value.module" },
+            "3": { "name": "string.unquoted.instruction-text.module" }
+          }
+        }
+      ]
+    },
+    "playable-audio": {
+      "match": "\\{([^}]+)\\}",
+      "captures": {
+        "0": { "name": "markup.italic.playable.module" },
+        "1": { "name": "string.interpolated.playable-text.module" }
+      }
+    },
+    "multiline-string": {
+      "name": "string.quoted.triple.module",
+      "begin": "\"\"\"",
+      "end": "\"\"\""
+    },
+    "markdown-table": {
+      "name": "markup.other.table.module",
+      "match": "^\\|.*\\|$"
+    },
+    "markdown-bold": {
+      "match": "\\*\\*([^*]+)\\*\\*",
+      "captures": {
+        "0": { "name": "markup.bold.module" },
+        "1": { "name": "markup.bold.text.module" }
+      }
+    }
+  }
+}

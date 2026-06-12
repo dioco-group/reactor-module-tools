@@ -1,0 +1,79 @@
+# Example .module file for Language Reactor courses (format v2)
+# Lines starting with # are comments.
+# Modules are monolingual: no translation (*_T) fields — translations are
+# generated downstream.
+
+$MODULE
+DIOCO_DOC_ID: lc_example_my-course_01-greetings
+TITLE: Greetings and Introductions
+DESCRIPTION: Learn basic greetings and how to introduce yourself
+TARGET_LANG_G: fr
+HOME_LANG_G: en
+VOICE_DEFAULT: aoede
+VOICE: Marie | kore | Young French woman, friendly tone
+VOICE: Pierre | achernar | Middle-aged French man
+
+$LESSON Greetings
+
+$DIALOGUE Meeting Someone
+INTRO: Listen to Marie and Pierre meeting for the first time.
+INSTRUCTION: Pay attention to the formal greetings used.
+REPEAT
+
+VOCAB: Bonjour
+Marie: Bonjour, je m'appelle Marie.
+
+Pierre: Bonjour Marie. Je m'appelle Pierre. Comment allez-vous ?
+NOTES: "Comment allez-vous" is the formal way to ask "how are you".
+
+$SELECT Formal or Informal?
+INSTRUCTION: Tap whether each greeting is formal or informal.
+SHOW_PROMPT
+OPTION: f | Formal
+OPTION: i | Informal
+
+PROMPT: Comment allez-vous ?
+ANSWER: f
+
+PROMPT: Ça va ?
+ANSWER: i
+FEEDBACK: "Ça va ?" is very informal — use it with friends.
+
+$PRODUCE Practice Greetings
+INSTRUCTION: Listen, then say the French aloud.
+
+EXAMPLE
+PROMPT: Say "Hello, my name is Marie."
+RESPONSE: Bonjour, je m'appelle Marie.
+
+PROMPT: Ask "How are you?" formally.
+RESPONSE: Comment allez-vous ?
+
+$GRAMMAR Formal vs Informal
+
+## Tu vs Vous
+
+French has two words for "you":
+
+- **Tu** — informal, used with friends, family, children
+- **Vous** — formal, used with strangers, elders, in professional settings
+
+| French | English | Register |
+|--------|---------|----------|
+| {Comment allez-vous ?} | How are you? | Formal |
+| {Comment vas-tu ?} | How are you? | Informal |
+
+When in doubt, use **vous**. It's always polite.
+
+$LESSON Farewells
+
+$DIALOGUE Saying Goodbye
+INTRO: Marie and Pierre say goodbye after their conversation.
+
+Pierre: Au revoir, Marie. Bonne journée !
+
+Marie: Au revoir, Pierre. À bientôt !
+
+$CHAT Free Practice
+SCENARIO: You are at a café in Paris. A French person sits down and says "Bonjour!" Practice introducing yourself.
+INITIAL_PROMPT: Bonjour ! Je m'appelle Claude. Et vous, comment vous appelez-vous ?

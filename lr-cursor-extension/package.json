@@ -1,0 +1,207 @@
+{
+  "name": "lr-course-editor",
+  "displayName": "Language Reactor Course Editor",
+  "description": "Edit, preview, and manage Language Reactor courses",
+  "version": "0.1.4",
+  "publisher": "language-reactor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dioco-group/lr-cursor-extension.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:module",
+    "onView:lr.courseExplorer"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "module",
+        "aliases": [
+          "LR Module",
+          "module"
+        ],
+        "extensions": [
+          ".module"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "module",
+        "scopeName": "source.module",
+        "path": "./syntaxes/module.tmLanguage.json"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "lr-courses",
+          "title": "LR Courses",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "lr-courses": [
+        {
+          "id": "lr.courseExplorer",
+          "name": "Course Manager"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "lr.signIn",
+        "title": "LR: Sign In",
+        "icon": "$(sign-in)"
+      },
+      {
+        "command": "lr.signOut",
+        "title": "LR: Sign Out",
+        "icon": "$(sign-out)"
+      },
+      {
+        "command": "lr.refreshCourses",
+        "title": "Refresh Courses",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "lr.createCourse",
+        "title": "LR: Create New Course",
+        "icon": "$(add)"
+      },
+      {
+        "command": "lr.downloadCourse",
+        "title": "Download",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "lr.openCourse",
+        "title": "Open in Explorer",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "lr.uploadChanges",
+        "title": "Upload Changes",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "lr.updateCourse",
+        "title": "Update",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "lr.forkCourse",
+        "title": "Fork Course",
+        "icon": "$(repo-forked)"
+      },
+      {
+        "command": "lr.createPR",
+        "title": "Create Pull Request",
+        "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "lr.openOnGitea",
+        "title": "Open on Gitea",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "lr.openPreview",
+        "title": "LR: Preview Module",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "lr.refreshCourses",
+          "when": "view == lr.courseExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "lr.createCourse",
+          "when": "view == lr.courseExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "lr.downloadCourse",
+          "when": "view == lr.courseExplorer && viewItem =~ /^course_remote/",
+          "group": "inline"
+        },
+        {
+          "command": "lr.openCourse",
+          "when": "view == lr.courseExplorer && viewItem =~ /^course_local/",
+          "group": "inline"
+        },
+        {
+          "command": "lr.uploadChanges",
+          "when": "view == lr.courseExplorer && viewItem =~ /course_local_dirty_push/",
+          "group": "inline"
+        },
+        {
+          "command": "lr.updateCourse",
+          "when": "view == lr.courseExplorer && viewItem =~ /course_local_(behind|conflict)/",
+          "group": "inline"
+        },
+        {
+          "command": "lr.forkCourse",
+          "when": "view == lr.courseExplorer && viewItem =~ /course_.*_readonly/",
+          "group": "1_actions"
+        },
+        {
+          "command": "lr.createPR",
+          "when": "view == lr.courseExplorer && viewItem =~ /course_.*_fork$/",
+          "group": "1_actions"
+        },
+        {
+          "command": "lr.uploadChanges",
+          "when": "view == lr.courseExplorer && viewItem =~ /course_local_dirty_push/",
+          "group": "1_actions"
+        },
+        {
+          "command": "lr.updateCourse",
+          "when": "view == lr.courseExplorer && viewItem =~ /course_local_(behind|conflict)/",
+          "group": "1_actions"
+        },
+        {
+          "command": "lr.openCourse",
+          "when": "view == lr.courseExplorer && viewItem =~ /^course_local/",
+          "group": "2_nav"
+        },
+        {
+          "command": "lr.openOnGitea",
+          "when": "view == lr.courseExplorer && viewItem =~ /^course_/",
+          "group": "2_nav"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "resourceExtname == .module",
+          "command": "lr.openPreview",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.7.1",
+    "typescript": "^5.3.0"
+  }
+}

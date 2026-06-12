@@ -1,0 +1,16 @@
+{
+  "comments": {
+    "lineComment": "#"
+  },
+  "folding": {
+    "markers": {
+      "start": "^\\$(?:MODULE|LESSON|DIALOGUE|EXERCISE|GRAMMAR|CHAT)\\b",
+      "end": "^(?=\\$(?:MODULE|LESSON|DIALOGUE|EXERCISE|GRAMMAR|CHAT)\\b)"
+    }
+  },
+  "wordPattern": "[a-zA-Z_][a-zA-Z0-9_]*",
+  "indentationRules": {
+    "increaseIndentPattern": "^$",
+    "decreaseIndentPattern": "^$"
+  }
+}

@@ -1,0 +1,57 @@
+# Rules for editing Language Reactor .module course files
+
+## File format
+- .module files use a custom plaintext format, NOT JSON/YAML
+- Section markers start with $ at column 0: $MODULE, $LESSON, $DIALOGUE, $EXERCISE, $GRAMMAR, $CHAT
+- Field names are UPPERCASE_WITH_UNDERSCORES followed by colon and space: FIELD: value
+- Comments start with #
+- Grammar sections contain markdown
+
+## Structure
+- Every file starts with $MODULE header containing metadata fields
+- Content is organized into $LESSON sections
+- Each lesson contains activities: $DIALOGUE, $EXERCISE, $GRAMMAR, or $CHAT
+
+## Required header fields
+- DIOCO_DOC_ID: optional identifier (moduleKey is derived from filename at runtime)
+- TITLE: human-readable module title
+- TARGET_LANG_G: target language code (e.g. fr, es, de, ja)
+- HOME_LANG_G: home/user language code (e.g. en)
+
+## Dialogue format
+- SPEAKER: speaker name (must match a VOICE entry)
+- LINE: text in target language
+- LINE_T: translation in home language
+- IMAGE: image filename for this dialogue card (optional)
+- NOTES: optional grammar/cultural notes
+- VOCAB: vocabulary word (immediately followed by VOCAB_T)
+- VOCAB_T: vocabulary translation
+
+## Exercise format
+- INSTRUCTION: instructions for the exercise
+- EXAMPLE marker on its own line marks the next item as an example
+- PROMPT: the prompt text
+- PROMPT_T: prompt translation (optional)
+- PROMPT_IMAGE: image filename for the prompt card (optional)
+- RESPONSE: the expected response
+- RESPONSE_T: response translation (optional)
+- RESPONSE_IMAGE: image filename for the response card (optional)
+
+## Voice configuration
+- VOICE: SpeakerId | Display Name | GeminiVoiceName | Optional speaking prompt
+- Valid Gemini voices: Zephyr, Puck, Charon, Kore, Fenrir, Leda, Orus, Aoede, Achernar, etc.
+- Speaker IDs must be alphanumeric with underscores only (no spaces)
+
+## Images
+- Course header IMAGE: is a cover image (usually stored in repo root)
+- Module header IMAGE: and activity images typically use bare filenames
+- Images are stored in a folder matching the module filename (e.g. 01-cafe.module → 01-cafe/) and bare filenames resolve to that folder
+- Grammar images use markdown syntax: ![alt](filename.png)
+- Paths with / are relative to repo root; bare filenames resolve to the module folder
+
+## Key rules
+- All fields and markers must start at column 0 (no leading whitespace)
+- Section markers do NOT use colons ($LESSON Title, not $LESSON: Title)
+- VOCAB and VOCAB_T must always appear as pairs
+- Grammar sections use markdown (headers, bold, lists, tables)
+- {curly brackets} in grammar mark audio phrases
