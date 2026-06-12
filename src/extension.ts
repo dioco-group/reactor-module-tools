@@ -318,7 +318,10 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.window.showWarningMessage("Open a .module file first.");
         return;
       }
-      const panel = ModulePreviewPanel.createOrShow(context.extensionUri);
+      const panel = ModulePreviewPanel.createOrShow(
+        context.extensionUri,
+        vscode.Uri.joinPath(editor.document.uri, ".."),
+      );
       panel.update(editor.document);
     }),
   );
@@ -354,7 +357,10 @@ export function activate(context: vscode.ExtensionContext): void {
       if (isModuleFile(doc) && !ModulePreviewPanel.currentPanel) {
         setTimeout(() => {
           if (vscode.window.activeTextEditor?.document === doc) {
-            const panel = ModulePreviewPanel.createOrShow(context.extensionUri);
+            const panel = ModulePreviewPanel.createOrShow(
+              context.extensionUri,
+              vscode.Uri.joinPath(doc.uri, ".."),
+            );
             panel.update(doc);
           }
         }, 500);

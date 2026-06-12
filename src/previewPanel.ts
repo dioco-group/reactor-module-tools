@@ -32,20 +32,24 @@ export class ModulePreviewPanel {
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
   }
 
-  static createOrShow(extensionUri: vscode.Uri): ModulePreviewPanel {
+  static createOrShow(extensionUri: vscode.Uri, docDir?: vscode.Uri): ModulePreviewPanel {
     const column = vscode.ViewColumn.Beside;
     if (ModulePreviewPanel.currentPanel) {
       ModulePreviewPanel.currentPanel.panel.reveal(column);
       return ModulePreviewPanel.currentPanel;
     }
     const workspaceRoots = (vscode.workspace.workspaceFolders || []).map((f) => f.uri);
+    const roots = [vscode.Uri.joinPath(extensionUri, "media"), ...workspaceRoots];
+    // Ensure the module's own folder (which holds its images/audio clips) is
+    // loadable even when no workspace folder is open.
+    if (docDir) roots.push(docDir);
     const panel = vscode.window.createWebviewPanel(
       "lr.modulePreview",
       "Module Preview",
       column,
       {
         enableScripts: false,
-        localResourceRoots: [vscode.Uri.joinPath(extensionUri, "media"), ...workspaceRoots],
+        localResourceRoots: roots,
       },
     );
     ModulePreviewPanel.currentPanel = new ModulePreviewPanel(
@@ -170,11 +174,24 @@ export class ModulePreviewPanel {
     return html;
   }
 
+  private renderAudio(file: string, label: string): string {
+    const src = this.resolveAssetSrc(file);
+    return (
+      `<div class="audio-ref"><span class="field-label">${esc(label)}</span> ` +
+      `<audio class="clip" controls preload="none" src="${esc(src)}"></audio> ` +
+      `<code>${esc(file)}</code></div>`
+    );
+  }
+
   private renderDialogue(act: DialogueActivity): string {
     let html = "";
     if (act.instruction)
       html += `<div class="instruction"><span class="field-label">INSTRUCTION</span> ${esc(act.instruction)}</div>`;
     if (act.repeat) html += `<div class="flags"><span class="flag">REPEAT</span></div>`;
+    if (act.image) {
+      const src = this.resolveAssetSrc(act.image);
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" /><div class="asset-cap"><span class="field-label">IMAGE</span> <code>${esc(act.image)}</code> <span class="muted">(activity-wide)</span></div></div>`;
+    }
     html += `<div class="dialogue-lines">`;
     for (const line of act.lines) {
       html += this.renderDialogueLine(line);
@@ -204,8 +221,7 @@ export class ModulePreviewPanel {
     html += `<div class="line-text">${esc(line.text)}</div>`;
     if (line.translation)
       html += `<div class="line-translation">${esc(line.translation)}</div>`;
-    if (line.audio)
-      html += `<div class="audio-ref"><span class="field-label">AUDIO</span> <code>${esc(line.audio)}</code></div>`;
+    if (line.audio) html += this.renderAudio(line.audio, "AUDIO");
     if (line.notes) html += `<div class="line-notes">${esc(line.notes)}</div>`;
     html += `</div>`;
     return html;
@@ -217,7 +233,7 @@ export class ModulePreviewPanel {
       html += `<div class="instruction"><span class="field-label">INSTRUCTION</span> ${esc(act.instruction)}</div>`;
     const flags: string[] = [];
     if (act.multi) flags.push("MULTI");
-    if (act.audioOnly) flags.push("AUDIO_ONLY");
+    if (act.showPrompt) flags.push("SHOW_PROMPT");
     if (flags.length) html += `<div class="flags">${flags.map((f) => `<span class="flag">${f}</span>`).join(" ")}</div>`;
     if (act.image) {
       const src = this.resolveAssetSrc(act.image);
@@ -250,13 +266,15 @@ export class ModulePreviewPanel {
     if (item.isExample) html += `<div class="example-badge">Example</div>`;
     html += `<div class="exercise-num">${num}</div>`;
     html += `<div class="exercise-body">`;
-    html += `<div class="prompt"><span class="field-label">PROMPT</span> ${esc(item.prompt)}</div>`;
+    if (item.prompt)
+      html += `<div class="prompt"><span class="field-label">PROMPT</span> ${esc(item.prompt)}</div>`;
+    if (item.template)
+      html += `<div class="prompt"><span class="field-label">TEMPLATE</span> <code>${esc(item.template)}</code></div>`;
     if (item.promptImage) {
       const src = this.resolveAssetSrc(item.promptImage);
       html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" /><div class="asset-cap"><code>${esc(item.promptImage)}</code></div></div>`;
     }
-    if (item.audio)
-      html += `<div class="audio-ref"><span class="field-label">AUDIO</span> <code>${esc(item.audio)}</code></div>`;
+    if (item.audio) html += this.renderAudio(item.audio, "AUDIO");
     if (item.options && item.options.length) html += this.renderOptions(item.options, "Options");
     html += `<div class="response"><span class="field-label">ANSWER</span> ${esc(item.answer.join(", "))}</div>`;
     if (item.feedback)
@@ -270,8 +288,12 @@ export class ModulePreviewPanel {
     if (act.instruction)
       html += `<div class="instruction"><span class="field-label">INSTRUCTION</span> ${esc(act.instruction)}</div>`;
     const flags = [`INPUT: ${act.input}`, `CHECK: ${act.check}`];
-    if (act.audioOnly) flags.push("AUDIO_ONLY");
+    if (act.showPrompt) flags.push("SHOW_PROMPT");
     html += `<div class="flags">${flags.map((f) => `<span class="flag">${esc(f)}</span>`).join(" ")}</div>`;
+    if (act.image) {
+      const src = this.resolveAssetSrc(act.image);
+      html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" /><div class="asset-cap"><code>${esc(act.image)}</code></div></div>`;
+    }
     html += `<div class="exercise-items">`;
     for (let i = 0; i < act.items.length; i++) {
       html += this.renderProduceItem(act.items[i], i + 1);
@@ -294,10 +316,10 @@ export class ModulePreviewPanel {
       const src = this.resolveAssetSrc(item.promptImage);
       html += `<div class="asset-block"><img class="asset-img" src="${esc(src)}" alt="" /><div class="asset-cap"><code>${esc(item.promptImage)}</code></div></div>`;
     }
-    if (item.audio)
-      html += `<div class="audio-ref"><span class="field-label">AUDIO</span> <code>${esc(item.audio)}</code></div>`;
+    if (item.audio) html += this.renderAudio(item.audio, "AUDIO");
     if (item.response != null)
       html += `<div class="response"><span class="field-label">RESPONSE</span> ${esc(item.response)}</div>`;
+    if (item.responseAudio) html += this.renderAudio(item.responseAudio, "RESPONSE_AUDIO");
     if (item.accept && item.accept.length)
       html += `<div class="prompt-t"><span class="field-label">ACCEPT</span> ${esc(item.accept.join(" | "))}</div>`;
     if (item.rubric)
@@ -530,7 +552,8 @@ body { font-family: var(--vscode-font-family, system-ui); font-size: 13px; color
 .flag { font-size: 10px; font-weight: 600; color: var(--accent); background: rgba(79,193,255,0.1); border: 1px solid rgba(79,193,255,0.25); border-radius: 3px; padding: 1px 6px; margin-right: 4px; }
 .options { margin: 4px 0; font-size: 12px; }
 .option { display: inline-block; margin: 0 6px 4px 0; padding: 1px 6px; background: var(--badge-bg); border-radius: 3px; }
-.audio-ref { color: var(--muted); font-size: 11px; margin: 2px 0; }
+.audio-ref { color: var(--muted); font-size: 11px; margin: 4px 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.clip { height: 30px; vertical-align: middle; max-width: 320px; }
 
 .grammar-content { line-height: 1.7; }
 .grammar-content h4, .grammar-content h5 { margin: 12px 0 6px; }

@@ -20,16 +20,15 @@ INTRO: Listen to Marie and Pierre meeting for the first time.
 INSTRUCTION: Pay attention to the formal greetings used.
 REPEAT
 
-SPEAKER: Marie
 VOCAB: Bonjour
-LINE: Bonjour, je m'appelle Marie.
+Marie: Bonjour, je m'appelle Marie.
 
-SPEAKER: Pierre
-LINE: Bonjour Marie. Je m'appelle Pierre. Comment allez-vous ?
+Pierre: Bonjour Marie. Je m'appelle Pierre. Comment allez-vous ?
 NOTES: "Comment allez-vous" is the formal way to ask "how are you".
 
 $SELECT Formal or Informal?
 INSTRUCTION: Tap whether each greeting is formal or informal.
+SHOW_PROMPT
 OPTION: f | Formal
 OPTION: i | Informal
 
@@ -71,11 +70,9 @@ $LESSON Farewells
 $DIALOGUE Saying Goodbye
 INTRO: Marie and Pierre say goodbye after their conversation.
 
-SPEAKER: Pierre
-LINE: Au revoir, Marie. Bonne journée !
+Pierre: Au revoir, Marie. Bonne journée !
 
-SPEAKER: Marie
-LINE: Au revoir, Pierre. À bientôt !
+Marie: Au revoir, Pierre. À bientôt !
 
 $CHAT Free Practice
 SCENARIO: You are at a café in Paris. A French person sits down and says "Bonjour!" Practice introducing yourself.
