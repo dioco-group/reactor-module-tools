@@ -34,11 +34,23 @@ VOICE_RESPONSE: schedar | Model answers, warm and clear
 
 One `$LESSON` for the whole ST lesson. Preserve the book's section order.
 
+## Two principles (same as the LLA conversions)
+
+- **A book section is presentation + task — split it into single-purpose
+  activities.** A section that presents a passage and then asks questions is
+  TWO activities: a `$DIALOGUE` (the passage) followed by a `$PRODUCE`/`$SELECT`
+  (the questions). Never bloat one activity with both.
+- **Choose `$SELECT` vs `$PRODUCE` by what the learner DOES, not by the printed
+  heading.** "Answer the questions" where the learner picks among printed
+  statements → `$SELECT`; only when they must produce the words (say/type)
+  → `$PRODUCE`.
+
 ## Section mapping
 
 - **Vocabulary presentations** ("Repeat and read these new words and sentences",
   numbered words with pictures) → `$DIALOGUE REPEAT`, one `LINE` per sentence,
-  `VOCAB:` for the underlined word(s) before their line, the picture inline on
+  `VOCAB:` for the underlined word(s) before their line — **one word/phrase per
+  `VOCAB` line** (repeatable; each is a dictionary unit) — the picture inline on
   its line (`{page_005_001.jpg}`). Underlines mark the taught word — use them for
   `VOCAB`, do not reproduce underline markup in text.
 - **Sentence lists / "Repeat the sentences"** → `$DIALOGUE REPEAT`, one LINE per
@@ -64,9 +76,18 @@ One `$LESSON` for the whole ST lesson. Preserve the book's section order.
   `$PRODUCE` (speak/reveal): `TEMPLATE` = the source sentence with its `(cue)`,
   `RESPONSE` = the transformed sentence. The book's EXAMPLE becomes an `EXAMPLE`
   item with the same TEMPLATE scaffolding as regular items.
+- **Written one-answer cloze** ("Write the word on the line", a single correct
+  form) → `$PRODUCE` with `INPUT: type` + `CHECK: exact`: `TEMPLATE` = the
+  gapped sentence, `RESPONSE` = the **full completed sentence** (what's shown
+  and TTS-read at reveal), `ACCEPT` = the bare word(s) the learner actually
+  types (`ACCEPT: visited`, multiple alternates `|`-separated).
 - **Completion drills** ("Complete the sentences. Use the word again.") →
-  `$PRODUCE` (speak/reveal): `TEMPLATE` = context sentence + the gapped line,
-  `RESPONSE` = the completed sentence.
+  `$PRODUCE` (speak/reveal): `TEMPLATE` = context sentence + the gapped line
+  **joined on ONE line** (` — ` between them; a TEMPLATE is always a single
+  line), `RESPONSE` = the completed sentence.
+- **Multiple choice / matching / true-false** (if present) → `$SELECT`; declare
+  the options ONCE at the activity level when they repeat across items (shared
+  pool); say "Tap", never "Circle".
 - **Cued Q&A drills** ("Ted/work/late/last week") → `$PRODUCE` (speak/reveal):
   `TEMPLATE` = the cue, `RESPONSE` = question + short answer as the model.
 - **Picture Q&A** (pictures + cue words → write Q and A) → `$PRODUCE`:
@@ -91,9 +112,20 @@ One `$LESSON` for the whole ST lesson. Preserve the book's section order.
 - An instruction is never a spoken `PROMPT`; instructions go in `INTRO:` (spoken
   once, 1–3 sentences, standalone — no "look at the picture below" deixis) and
   `INSTRUCTION:` (short on-screen text).
-- `TEMPLATE` is display-only and never read aloud; cloze gaps use `____`.
+- **Map print verbs to app interactions**: "circle the letter" → "tap", "write
+  on the line" → "type". Never reference the book, pages, circling, or printed
+  letters in INTRO/INSTRUCTION text.
+- **Strip the book's item numbers** from content: never `LINE: 1. The boys…` —
+  TTS would read "one." aloud. Numbering is print apparatus, like page numbers.
+- `TEMPLATE` is display-only and never read aloud; cloze gaps use `____`; a
+  cloze stimulus must be a `TEMPLATE`, never a `PROMPT` (a clip-less PROMPT is
+  TTS-read, which would voice the gaps).
 - EXAMPLE items carry the same TEMPLATE scaffolding as their regular items.
 - Reference info the learner answers FROM (tables, maps) must be on screen:
   repeat it in a compact `TEMPLATE` on every item, or use an activity-wide
   `IMAGE:`.
+- **No raw HTML** — the ST markdown contains flex/side-by-side `<div>` layouts
+  and HTML tables (calendars): flatten to linear content; a complex visual (a
+  calendar, a map) belongs as an **image**, not a transcribed table.
+- Don't emit printed page numbers or "ST Page" artifacts as content.
 - Separate items with a blank line. Output ONLY the .module text.
