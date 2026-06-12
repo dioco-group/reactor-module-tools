@@ -1,0 +1,433 @@
+# ============================================================================
+# BK4 Student Text — Lesson 4: How Much Is That Shirt? (new 5-type format)
+# Conventions: $PRODUCE uses RESPONSE; $DIALOGUE listen-then-repeat marked REPEAT;
+# blank line between items; LINEs kept short (1-2 sentences). SKIP notes = dropped
+# per our rules.
+# ============================================================================
+
+$MODULE
+DIOCO_DOC_ID: lc_alc_st_bk4_l4
+TITLE: ALC Book 4 — Lesson 4: How Much Is That Shirt?
+DESCRIPTION: Seasons, colors, prices, shopping, demonstratives, and irregular past tense.
+TARGET_LANG_G: en
+HOME_LANG_G: en
+VOICE_DEFAULT: aoede | Clear, friendly American English narrator
+
+$LESSON Lesson 4.1: Seasons and Days
+
+# --- Seasons vocabulary ---
+$DIALOGUE The Four Seasons
+REPEAT
+INTRO: Repeat and read the new words and sentences.
+INSTRUCTION: Listen and repeat.
+
+VOCAB: winter
+LINE: It's cold in the winter. December, January, and February are the winter months. {page_092_001.jpg}
+
+VOCAB: spring
+VOCAB: warm
+LINE: It's warm in the spring. March, April, and May are the spring months. {page_092_002.jpg}
+
+VOCAB: summer
+LINE: It's hot in the summer. June, July, and August are the summer months. {page_092_003.jpg}
+
+VOCAB: autumn
+VOCAB: fall
+VOCAB: cool
+LINE: It's cool in the fall. September, October, and November are the fall months. {page_092_004.jpg}
+
+# --- Which season? (shared 4-option pool) ---
+$SELECT Which season?
+INTRO: Read each statement and choose the season.
+INSTRUCTION: Tap the season.
+SHOW_PROMPT
+OPTION: a | spring
+OPTION: b | summer
+OPTION: c | fall
+OPTION: d | winter
+
+PROMPT: It's the month of November. It's cool outside.
+ANSWER: c
+
+PROMPT: It's very hot. I want to drink cold tea.
+ANSWER: b
+
+PROMPT: Put on your coat. It's very cold.
+ANSWER: d
+
+PROMPT: It's April. It's warm outside.
+ANSWER: a
+
+PROMPT: Brrr! I want hot coffee. I'm very cold.
+ANSWER: d
+
+PROMPT: Let's swim. It's very hot.
+ANSWER: b
+
+# --- Days of the week (repeat) ---
+$DIALOGUE The Day After Tomorrow Is Friday
+REPEAT
+INTRO: Today is Wednesday. Repeat the sentences.
+INSTRUCTION: Listen and repeat.
+
+LINE: Today is Wednesday. {page_092_cal.jpg}
+
+LINE: Yesterday was Tuesday.
+
+VOCAB: the day before yesterday
+LINE: The day before yesterday was Monday.
+
+LINE: Tomorrow is Thursday.
+
+VOCAB: the day after tomorrow
+LINE: The day after tomorrow is Friday.
+
+# --- Make statements from a given "today" (open production) ---
+$PRODUCE Make statements like the examples
+INTRO: I'll tell you what day it is today. Say the other four sentences.
+INSTRUCTION: Say the four sentences, then check.
+CHECK: llm
+
+PROMPT: Today is Sunday.
+RESPONSE: Yesterday was Saturday. The day before yesterday was Friday. Tomorrow is Monday. The day after tomorrow is Tuesday.
+
+PROMPT: Today is Thursday.
+RESPONSE: Yesterday was Wednesday. The day before yesterday was Tuesday. Tomorrow is Friday. The day after tomorrow is Saturday.
+
+$LESSON Lesson 4.2: What Questions and Colors
+
+# --- "What + noun" questions (reference) ---
+$GRAMMAR "What suit did he wear?" — What + noun questions
+INTRO: We can ask questions with "what" plus a noun.
+We often ask questions with **what** + a noun:
+- {What show did you see yesterday?}
+- {What rank did he have four years ago?}
+- {What time did John start to work?}
+- {What city did the Adams visit last year?}
+
+# --- Ask & answer with "what" (open) ---
+$PRODUCE Ask and answer with "what"
+INTRO: For each cue word, ask a question with "what" and answer it.
+INSTRUCTION: Ask and answer, then check.
+CHECK: llm
+
+EXAMPLE
+PROMPT: shoes
+RESPONSE: What shoes did you wear yesterday? — I wore my new shoes.
+
+PROMPT: show
+RESPONSE: What show did you see? — I saw a comedy.
+
+PROMPT: languages
+RESPONSE: What languages do you speak? — I speak Russian and English.
+
+# --- Colors vocabulary ---
+$DIALOGUE Colors of the Rainbow
+REPEAT
+INTRO: Repeat the new words and sentences.
+INSTRUCTION: Listen and repeat.
+
+VOCAB: red
+LINE: This is the color red. {page_095_001.jpg}
+
+VOCAB: orange
+LINE: This is the color orange.
+
+VOCAB: yellow
+LINE: This is the color yellow.
+
+VOCAB: green
+LINE: This is the color green.
+
+VOCAB: blue
+LINE: This is the color blue.
+
+VOCAB: purple
+LINE: This is the color purple.
+
+VOCAB: rainbow
+LINE: I see red, orange, yellow, and green in the rainbow. I see blue and purple, too.
+
+# --- Color dialog (listen, then repeat) ---
+$DIALOGUE What Color Is Your Car?
+REPEAT
+INTRO: Repeat the dialog, then read it.
+INSTRUCTION: Listen and repeat.
+
+Jack: Did you buy a new car?
+
+VOCAB: black
+VOCAB: white
+David: Yes, we looked at the cars on the weekend. We saw a black car and a white car.
+
+VOCAB: pink
+Jack: Did you see the pink cars?
+
+VOCAB: brown
+David: Yes, but we bought a brown car.
+
+# SKIP: Listening Skills (/ð/ /d/ same-or-different; select sound) — stimuli are on
+# the instructor tape, which we don't have.
+
+# --- Pronunciation list (read/repeat) ---
+$DIALOGUE Pronunciation: "then" vs "den"
+REPEAT
+INTRO: Read these word pairs aloud.
+INSTRUCTION: Listen and repeat.
+
+LINE: they / day
+LINE: there / dare
+LINE: then / den
+LINE: though / dough
+LINE: than / Dan
+
+# SKIP: "Write d" / "Write th" phonics letter-fill — low-value spelling drill.
+
+$LESSON Lesson 4.3: Prices and Shopping
+
+# --- How much...? (grammar reference) ---
+$GRAMMAR How much...?
+INTRO: We ask about price with "how much".
+- {How much do the shoes cost?} = {How much are the shoes?}
+- {How much does the shirt cost?} = {How much is the shirt?}
+- Past: {How much did the shoes cost?} = {How much were they?}
+- Past: {How much did the shirt cost?} = {How much was it?}
+
+# --- How much does it cost? (repeat Q&A) ---
+$DIALOGUE How Much Does It Cost?
+REPEAT
+INTRO: Repeat and then read the questions and answers.
+INSTRUCTION: Listen and repeat.
+
+LINE: How much is the blue shirt? — It's $15.00.
+LINE: How much does the suit cost? — It costs $250.00.
+LINE: How much did your new car cost? — It cost $15,000.00.
+LINE: How much did your black pants cost? — They cost $18.00.
+
+# --- Ask & answer about store prices (open, image-grounded) ---
+$PRODUCE How much...? (store prices)
+INTRO: Look at each item and its price tag. Ask "how much" and answer.
+INSTRUCTION: Ask and answer, then check.
+CHECK: llm
+
+PROMPT: men's shirts {page_101_001.jpg}
+RESPONSE: How much are the men's shirts? — They're $16.95.
+
+PROMPT: men's hats {page_101_002.jpg}
+RESPONSE: How much is the hat? — It's $15.00.
+
+PROMPT: shoes {page_101_005.jpg}
+RESPONSE: How much do the shoes cost? — They cost $31.20.
+
+# --- Store vocabulary ---
+$DIALOGUE At the Store — Vocabulary
+REPEAT
+INTRO: Repeat and read the words and sentences.
+INSTRUCTION: Listen and repeat.
+
+VOCAB: store
+LINE: He bought a tie at the store. This is a clothing store.
+
+VOCAB: clerk
+LINE: Sue works in that store. She's a clerk.
+
+VOCAB: sell / sold
+LINE: They sell good clothes at that store. I sold my old car.
+
+VOCAB: headphones
+LINE: Harry always puts on his headphones.
+
+# --- Reading passage (consume; not "repeat", so no REPEAT flag) ---
+$DIALOGUE He Went to the Store and Bought a Tie
+INTRO: Listen to the story about Harry.
+INSTRUCTION: Listen and read.
+
+Narrator: Harry dances every Friday. {page_103_001.jpg}
+
+Narrator: Last Friday, he wanted to wear his new suit, so on Thursday he went to the store and bought a new tie.
+
+Narrator: A clerk helped him. "May I help you?" "Yes, I want a red and yellow tie."
+
+Narrator: Harry chose one tie. "How much is it?" "It's $9.89."
+
+Narrator: The clerk sold him the tie, and Harry wore it to the dance.
+
+# --- Comprehension T/F ---
+$SELECT Harry's Story — True or False?
+INTRO: Read each statement about the story.
+INSTRUCTION: Tap True or False.
+SHOW_PROMPT
+OPTION: t | True
+OPTION: f | False
+
+PROMPT: Harry likes to dance.
+ANSWER: t
+
+PROMPT: Harry helped the clerk.
+ANSWER: f
+FEEDBACK: The clerk helped Harry.
+
+PROMPT: He asked the clerk, "How much is it?"
+ANSWER: t
+
+PROMPT: Harry sold the tie.
+ANSWER: f
+FEEDBACK: The clerk sold Harry the tie.
+
+# SKIP: "Circle the same word as the key word" (Exercises A/B) — timed reading-speed
+# drill; dropped per our rules.
+
+$LESSON Lesson 4.4: Irregular Past Tense and Demonstratives
+
+# --- Irregular verbs (reference) ---
+$GRAMMAR Irregular Verbs
+INTRO: Study these irregular past-tense forms.
+| Present | Past | | Present | Past |
+|---|---|---|---|---|
+| begin | began | | know | knew |
+| drink | drank | | write | wrote |
+| come | came | | drive | drove |
+| eat | ate | | speak | spoke |
+| take | took | | choose | chose |
+| see | saw | | wear | wore |
+| go | went | | buy | bought |
+| fly | flew | | leave | left |
+
+# --- Give the past tense (production) ---
+$PRODUCE Give the past tense
+INTRO: I say the present-tense verb; you give the past tense.
+INSTRUCTION: Say or type the past tense.
+INPUT: type
+CHECK: exact
+
+PROMPT: go
+RESPONSE: went
+
+PROMPT: fly
+RESPONSE: flew
+
+PROMPT: buy
+RESPONSE: bought
+
+PROMPT: see
+RESPONSE: saw
+
+PROMPT: drive
+RESPONSE: drove
+
+PROMPT: choose
+RESPONSE: chose
+
+# --- Past-tense cloze (TEMPLATE is shown, not read; cue in (   ) is display-only) ---
+$PRODUCE The Smiths Were in Houston — past tense
+INTRO: Complete each sentence with the past tense of the verb in (   ).
+INSTRUCTION: Type the past-tense verb.
+INPUT: type
+CHECK: exact
+
+EXAMPLE
+TEMPLATE: The Smiths ____ a ticket. (buy)
+RESPONSE: bought
+
+TEMPLATE: Capt Smith and his wife ____ to Houston last month. (fly)
+RESPONSE: flew
+
+TEMPLATE: They ____ downtown. (drive)
+RESPONSE: drove
+
+TEMPLATE: They ____ at a restaurant downtown. (eat)
+RESPONSE: ate
+
+TEMPLATE: They ____ to their old friends. (speak)
+RESPONSE: spoke
+
+TEMPLATE: They ____ to a baseball game one night. (go)
+RESPONSE: went
+
+TEMPLATE: They ____ Houston last night. (leave)
+RESPONSE: left
+
+# --- over here / over there ---
+$DIALOGUE Over Here, Over There
+REPEAT
+INTRO: Repeat the words and sentences.
+INSTRUCTION: Listen and repeat.
+
+VOCAB: over here
+LINE: Where's the pen? — It's over here. It's on this table. {page_109_001.jpg}
+
+VOCAB: over there
+LINE: Where's the book? — It's over there. It's on that table. {page_109_002.jpg}
+
+# --- this/that/these/those (reference) ---
+$GRAMMAR This, That, These, Those
+INTRO: Use this/these for things near you; that/those for things farther away.
+| | Near | Not near |
+|---|---|---|
+| Singular | this | that |
+| Plural | these | those |
+
+# --- choose this/that/these/those ---
+$SELECT This / That / These / Those
+INTRO: Choose the correct word for each sentence.
+INSTRUCTION: Tap the correct word.
+SHOW_PROMPT
+
+PROMPT: Who lives in ____ house?
+OPTION: a | that
+OPTION: b | those
+ANSWER: a
+
+PROMPT: I like ____ car.
+OPTION: a | this
+OPTION: b | these
+ANSWER: a
+
+PROMPT: ____ pens are black.
+OPTION: a | this
+OPTION: b | these
+ANSWER: b
+
+PROMPT: ____ shoes are big.
+OPTION: a | that
+OPTION: b | those
+ANSWER: b
+
+# --- Function dialog ---
+$DIALOGUE At the Clothing Store
+REPEAT
+INTRO: Repeat and then read the dialog.
+INSTRUCTION: Listen and repeat.
+
+Clerk: Hello. May I help you?
+
+Frank: Yes, thank you. Do you have this shirt in blue?
+
+Clerk: Yes, we do. Right over here. Here you are.
+
+Frank: Thank you. How much does it cost?
+
+Clerk: It's $16.89.
+
+# NOTE: "Choose and Memorize" (pick a word, memorize, recite) — converted simply as
+# the read-aloud dialog above; the memorize-and-recite gimmick is dropped.
+
+# --- Listen-and-complete cloze paragraph ---
+$PRODUCE He Wanted to Buy a Coat
+INTRO: Listen and type the missing word in each gap.
+INSTRUCTION: Type the missing word.
+INPUT: type
+CHECK: exact
+
+TEMPLATE: Bob went to the store. He wanted to buy a coat. He didn't ____ to buy a shirt or pants.
+RESPONSE: want
+
+TEMPLATE: At the store, he saw a ____ shirt. He liked it.
+RESPONSE: red
+
+TEMPLATE: The clerk said, "This is the ____ red shirt in the store."
+RESPONSE: last
+
+# SKIP: Reading Skill "alphabetical order" — dropped per our rules.
+# SKIP: Writing Skill "Put in the punctuation" — punctuation/capitalization editing
+# (deferred writing family).

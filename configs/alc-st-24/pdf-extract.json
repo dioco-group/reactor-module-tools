@@ -1,0 +1,15 @@
+{
+  "_comment": "ALC Student Text Book 24 (1991ALCST24): PDF → Markdown. Paths relative to this file.",
+  "inputPdf": "../../data/alc-st-24/source.pdf",
+  "outputDir": "../../data/alc-st-24/pdf-extract",
+  "model": "gemini-3.5-flash",
+  "temperature": null,
+  "thinkingLevel": "LOW",
+  "maxTokens": 65536,
+  "imageModel": "gemini-3.1-flash-image",
+  "splitOutputDir": "../../data/alc-st-24/md",
+  "splitEnabled": true,
+  "splitInstructions": "- This is an American Language Course (ALC) Student Text book.\n- Split at top-level boundaries: each new LESSON / UNIT (e.g. \"LESSON 24A\") is its own split. Treat a prominent lesson/unit title page or heading as the split point.\n- Do NOT split for minor sections like Vocabulary, Exercises, or individual dialogs unless the book treats them as top-level.",
+  "prompt": "",
+  "_comment_split": "split marker is a fixed line: <<<< SPLIT HERE >>>>"
+}

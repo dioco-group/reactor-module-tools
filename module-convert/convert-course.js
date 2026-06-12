@@ -34,13 +34,17 @@ function parseArgs() {
   const configIndex = args.indexOf('--config');
   
   if (configIndex === -1 || !args[configIndex + 1]) {
-    console.error('Usage: node module-convert/convert-course.js --config <path-to-config.json>');
+    console.error('Usage: node module-convert/convert-course.js --config <path-to-config.json> [file-substring]');
     console.error('Example: node module-convert/convert-course.js --config configs/fsi-french/module-convert.json');
     process.exit(1);
   }
   
+  // Optional positional filter: only convert input files whose name contains it.
+  const fileFilter = args.filter((a, i) => i !== configIndex && i !== configIndex + 1 && !a.startsWith('--'))[0] || null;
+  
   return {
-    configPath: args[configIndex + 1]
+    configPath: args[configIndex + 1],
+    fileFilter,
   };
 }
 
@@ -104,9 +108,20 @@ function validateModuleOutput(text) {
   if (!t.match(/^\s*TARGET_LANG_G:\s*\S+/m)) warnings.push('Missing TARGET_LANG_G in header');
   if (!t.match(/^\s*HOME_LANG_G:\s*\S+/m)) warnings.push('Missing HOME_LANG_G in header');
 
-  // No-colon rule for section markers
-  const colonMarkers = t.match(/^\s*\$(LESSON|DIALOGUE|EXERCISE|GRAMMAR|CHAT)\s*:/gm);
+  // No-colon rule for section markers (v2 marker set)
+  const colonMarkers = t.match(/^\s*\$(LESSON|DIALOGUE|GRAMMAR|SELECT|PRODUCE|CHAT)\s*:/gm);
   if (colonMarkers && colonMarkers.length > 0) warnings.push('Found section markers with colon (must be `$LESSON Title`, not `$LESSON: Title`)');
+
+  // v2 removed $EXERCISE and inline translations (*_T fields)
+  if (t.match(/^\s*\$EXERCISE\b/m)) warnings.push('Found $EXERCISE — v2 uses $PRODUCE (drills/cloze) or $SELECT (multiple-choice) instead');
+  const tFields = t.match(/^\s*(LINE_T|PROMPT_T|RESPONSE_T|VOCAB_T|FEEDBACK_T):/gm);
+  if (tFields && tFields.length > 0) warnings.push(`Found ${tFields.length} translation field(s) (*_T) — v2 modules are monolingual; translations are generated downstream`);
+
+  // $SELECT items need ANSWER; $PRODUCE items need RESPONSE
+  for (const block of t.split(/^\$/m)) {
+    if (block.startsWith('SELECT') && !/^\s*ANSWER:/m.test(block)) warnings.push('A $SELECT activity is missing ANSWER lines');
+    if (block.startsWith('PRODUCE') && !/^\s*RESPONSE:/m.test(block)) warnings.push('A $PRODUCE activity is missing RESPONSE lines');
+  }
 
   // Speaker labels in VOICE_SPEAKER mappings should not contain spaces
   const voiceSpeakerLines = t.match(/^\s*VOICE_SPEAKER:\s*.+$/gm) || [];
@@ -155,7 +170,11 @@ async function convertCourse() {
   
   // Get all .md files in input directory
   const allFiles = getFiles(config.inputDir, /\.md$/);
-  const inputFiles = allFiles.filter(f => !f.includes('Zone.Identifier'));
+  let inputFiles = allFiles.filter(f => !f.includes('Zone.Identifier'));
+  if (args.fileFilter) {
+    inputFiles = inputFiles.filter(f => f.toLowerCase().includes(args.fileFilter.toLowerCase()));
+    console.log(`Filter "${args.fileFilter}": ${inputFiles.length} file(s) match`);
+  }
   
   if (inputFiles.length === 0) {
     console.log('No .md files found in input directory');
@@ -215,7 +234,7 @@ async function convertCourse() {
       writeTextFile(outputPath, cleanModule);
 
       progress.logSuccess(`Saved: ${outputFilename}`);
-      const sectionCount = (cleanModule.match(/^\$(LESSON|DIALOGUE|EXERCISE|GRAMMAR|CHAT)/gm) || []).length;
+      const sectionCount = (cleanModule.match(/^\$(LESSON|DIALOGUE|GRAMMAR|SELECT|PRODUCE|CHAT)/gm) || []).length;
       console.log(`  - Sections: ${sectionCount}`);
       progress.incrementSuccess();
 

@@ -31,7 +31,7 @@ import 'dotenv/config';
 import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 
 // ============================================================================
 // CONFIG (positional arg)
@@ -70,7 +70,21 @@ function loadConfig(configPath) {
   const outputDirAbs = path.resolve(configDir, cfg.outputDir);
   const pdfBaseName = path.basename(sourcePdf, '.pdf');
 
+  // Optional per-book markup notes ("on page X, do Y") injected into the prompts.
+  // Use `markupNotes` in the config, or a conventional `markup-notes.md` beside it.
+  let MARKUP_NOTES = '';
+  const noteCandidates = [];
+  if (cfg.markupNotes) noteCandidates.push(path.resolve(configDir, cfg.markupNotes));
+  noteCandidates.push(path.join(configDir, 'markup-notes.md'));
+  for (const p of noteCandidates) {
+    if (fs.existsSync(p)) {
+      MARKUP_NOTES = fs.readFileSync(p, 'utf8').trim();
+      break;
+    }
+  }
+
   return {
+    MARKUP_NOTES,
     // extract-markdown.js writes to: <outputDir>/<pdfBaseName>/...
     INPUT_DIR: path.join(outputDirAbs, pdfBaseName),
     SOURCE_PDF: sourcePdf,
@@ -98,20 +112,46 @@ const CONFIG = loadConfig(parseArgs().configPath);
 // PROMPTS
 // ============================================================================
 
-const BBOX_PROMPT = (images) => `
-This is one page from a language learning textbook containing ${images.length} illustration(s).
+const BLEED_THROUGH_NOTE =
+  `- IGNORE page "bleed-through"/show-through: faint, ghosted, or mirrored marks from ` +
+  `the reverse side of the sheet or an adjacent page. These are not part of the ` +
+  `illustration — treat only the solid, intended foreground line art as the artwork.`;
 
-For EACH illustration listed below, return the tight bounding box of the DRAWING/ARTWORK only:
+function bookNotesBlock() {
+  return CONFIG.MARKUP_NOTES ? `\nBook-specific markup notes (apply where relevant to this page):\n${CONFIG.MARKUP_NOTES}\n` : '';
+}
+
+const BBOX_PROMPT = (images, pageNum) => `
+This is PDF page ${pageNum} from a language learning textbook containing ${images.length} illustration(s).
+
+For EACH illustration listed below, return the tight bounding box of the artwork:
 - INCLUDE the whole illustration and any arrows that are part of it.
-- EXCLUDE the rectangular panel border/frame box (if any).
+- INCLUDE any labels/annotations that belong to the illustration — words that name
+  or point to parts of the drawing (callouts, part names, a title attached to the
+  figure), EVEN IF they sit just outside the panel frame. Extend the box to contain them.
+- EXCLUDE the rectangular panel border/frame line itself (but you may extend beyond it
+  to capture the figure's own labels as above).
+- EXCLUDE unrelated body/paragraph text and any other illustration.
 - EXCLUDE any small printed panel number (e.g. "8.").
-
+${BLEED_THROUGH_NOTE}
+${bookNotesBlock()}
 Illustrations (id, printed panel number if any, description):
 ${images.map(im => `- id ${im.imageIndex}${im.panelNumber != null ? ` (panel #${im.panelNumber})` : ''}: ${im.cleanDescription}`).join('\n')}
 
 Return ONLY JSON: an array of {"id": <id>, "box": [ymin, xmin, ymax, xmax]} with coordinates
 normalized to integers 0-1000 (top-left origin). One object per illustration id above.
 `;
+
+// EXPERIMENT (RECOMPOSE=1): let the model rebalance the layout for the square
+// canvas instead of strictly preserving the original page composition.
+const COMPOSITION_RULE_FAITHFUL = `- Reproduce it EXACTLY: same composition, poses, objects, and the SAME ARROW DIRECTIONS.
+  Do NOT mirror, rotate, or change any direction of motion or arrows.`;
+const COMPOSITION_RULE_RECOMPOSE = `- Keep ALL the original content: the same subjects, poses, objects, actions, and the
+  SAME ARROW DIRECTIONS (do NOT mirror, rotate, or change any direction of motion).
+- You MAY rebalance the composition to make good use of the square 1:1 canvas:
+  enlarge the main subject, recenter, tighten empty margins, and arrange elements
+  so the square is filled naturally — without adding, removing, or reinterpreting
+  any content.`;
 
 const RERENDER_PROMPT = (description) => `
 You are given a SINGLE illustration cropped from a black-and-white language-learning textbook.
@@ -121,12 +161,14 @@ at the very edges.
 Target illustration: "${description}"
 
 Recreate the MAIN, CENTRAL illustration as a clean, faithful, higher-quality reproduction:
-- Reproduce it EXACTLY: same composition, poses, objects, and the SAME ARROW DIRECTIONS.
-  Do NOT mirror, rotate, or change any direction of motion or arrows.
+${process.env.RECOMPOSE === '1' ? COMPOSITION_RULE_RECOMPOSE : COMPOSITION_RULE_FAITHFUL}
 - Keep the original black-and-white line-art style (line weight, shading, proportions).
-- EXCLUDE: any panel frame/border, the printed panel number, and any partial neighbouring
-  illustrations near the edges.
-- Output ONLY the central illustration on a plain white background, square 1:1 aspect ratio.
+- INCLUDE any labels/annotations that belong to this illustration (part names, callouts,
+  or a title attached to the figure), reproducing the label text faithfully in place.
+- EXCLUDE: any panel frame/border, the printed panel number, unrelated body/paragraph
+  text, and any partial neighbouring illustrations near the edges.
+${BLEED_THROUGH_NOTE}
+- Output the illustration with its own labels on a plain white background, square 1:1 aspect ratio.
 Generate the image now.
 `;
 
@@ -215,7 +257,7 @@ class ImagePipeline {
   }
 
   /** Detect bounding boxes for all illustrations on a page. Returns { id: [ymin,xmin,ymax,xmax] }. */
-  async detectBoxes(pagePngPath, images) {
+  async detectBoxes(pagePngPath, images, pageNum) {
     const data = fs.readFileSync(pagePngPath).toString('base64');
     // Retry on malformed JSON too: the model occasionally returns truncated/invalid
     // JSON, and skipping the whole page would drop every illustration on it.
@@ -225,7 +267,7 @@ class ImagePipeline {
         () => this.genai.models.generateContent({
           model: CONFIG.BBOX_MODEL,
           contents: [{ parts: [
-            { text: BBOX_PROMPT(images) },
+            { text: BBOX_PROMPT(images, pageNum) },
             { inlineData: { mimeType: 'image/png', data } },
           ] }],
         config: {
@@ -330,8 +372,16 @@ async function main() {
   const dirName = path.basename(CONFIG.INPUT_DIR);
   const markdownPath = path.join(CONFIG.INPUT_DIR, `${dirName}_complete.md`);
   const pagesDir = path.join(CONFIG.INPUT_DIR, 'temp', 'pages');
-  const imagesDir = path.join(CONFIG.INPUT_DIR, 'images');
+  // OUT_DIR: write to an alternate folder (for A/B experiments).
+  const imagesDir = process.env.OUT_DIR ? path.resolve(process.env.OUT_DIR) : path.join(CONFIG.INPUT_DIR, 'images');
   const refDir = path.join(CONFIG.INPUT_DIR, 'temp', 'crops');
+  // PAGES=7,8,12: restrict processing to specific PDF page indices.
+  const pageFilter = process.env.PAGES ? new Set(process.env.PAGES.split(',').map((s) => parseInt(s.trim(), 10))) : null;
+  // MAX_SIZE=512: downscale generated images with ffmpeg after saving.
+  const maxSize = process.env.MAX_SIZE ? parseInt(process.env.MAX_SIZE, 10) : null;
+  if (process.env.RECOMPOSE === '1') console.log('Mode:        RECOMPOSE (square-canvas rebalance allowed)');
+  if (pageFilter) console.log(`Pages:       ${[...pageFilter].join(', ')}`);
+  if (maxSize) console.log(`Max size:    ${maxSize}px`);
 
   if (!fs.existsSync(markdownPath)) { console.error(`\nERROR: Markdown not found: ${markdownPath}`); process.exit(1); }
   if (!fs.existsSync(pagesDir)) { console.error(`\nERROR: Pages dir not found: ${pagesDir}`); process.exit(1); }
@@ -352,6 +402,7 @@ async function main() {
   const pageNums = [...byPage.keys()].sort((a, b) => a - b);
 
   for (const pageNum of pageNums) {
+    if (pageFilter && !pageFilter.has(pageNum)) continue;
     const pageImages = byPage.get(pageNum);
     const pending = pageImages.filter(im => !fs.existsSync(path.join(imagesDir, im.filename)));
     skipped += pageImages.length - pending.length;
@@ -370,7 +421,7 @@ async function main() {
 
     let boxes = {};
     try {
-      boxes = await pipeline.detectBoxes(pagePng, pending);
+      boxes = await pipeline.detectBoxes(pagePng, pending, pageNum);
     } catch (e) {
       console.log(`  bbox detection failed: ${e.message} - skipping page`);
       failed += pending.length;
@@ -393,7 +444,20 @@ async function main() {
       try {
         const imageData = await pipeline.rerender(refPng, img.cleanDescription);
         if (imageData) {
-          await fs.promises.writeFile(path.join(imagesDir, img.filename), imageData);
+          const outPath = path.join(imagesDir, img.filename);
+          await fs.promises.writeFile(outPath, imageData);
+          if (maxSize) {
+            // Downscale in place (line art survives JPEG q4 at small sizes fine).
+            const tmp = outPath + '.tmp.jpg';
+            try {
+              execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', outPath,
+                '-vf', `scale='min(${maxSize},iw)':-2`, '-q:v', '4', tmp], { stdio: 'pipe' });
+              fs.renameSync(tmp, outPath);
+            } catch (e) {
+              console.log(`  ${img.filename}: resize failed (${e.message}) - kept original size`);
+              if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+            }
+          }
           console.log(`  ${img.filename}: OK`);
           generated++;
         } else {

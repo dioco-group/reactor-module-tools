@@ -29,8 +29,21 @@ Method: re-extracted page 11 under several settings, scored the 6 directional pa
 
 - The "open book / close book" flip is a **vision/spatial error**, not a context-length one:
   3.1 Pro flipped the books even with page 11 **alone** in context (n=1).
-- Smaller chunks gave **no accuracy gain** and cost far more (228 calls vs 12). Keep 20.
+- Smaller chunks gave **no accuracy gain** and cost far more (228 calls vs 12).
+  (Originally: "Keep 20." See the update below — we later lowered it to 6.)
 - Lower temperature did not help (and 3.5 Flash doesn't accept temperature).
+
+> **Update (page-numbering reliability): `PAGES_PER_CHUNK` lowered 20 → 6.**
+> This study only measured *transcription/content* accuracy, which it found is
+> insensitive to chunk size (even 1 page/chunk scored 6/6). It did **not** measure
+> *image page-number* accuracy. Because these books are pure scans (no text layer),
+> the model has to derive each page's PDF index by counting from the batch's start
+> page — and the printed page numbers on the scans differ from the PDF index (cover +
+> front matter). Larger batches = more pages to count across = more off-by-one drift
+> in `page_XXX_YYY` filenames. Since content accuracy is chunk-size-insensitive, the
+> only cost of a smaller batch is more API calls, so 6 is a cheap way to de-risk the
+> numbering while keeping some cross-page context. The prompt also now lists the
+> exact "file page → PDF page" mapping for the batch.
 - **3.5 Flash read every arrow correctly** and was ~25–30% faster end-to-end
   (21.7 min vs 30.2 min full book). Matches the tool's original "Flash for transcription" note.
 

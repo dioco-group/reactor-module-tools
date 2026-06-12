@@ -2,9 +2,16 @@
 
 ## Overview
 
-This guide explains how to convert FSI (Foreign Service Institute) French course materials from markdown format to the structured module format.
+This guide explains how to convert FSI (Foreign Service Institute) French course materials from markdown format to the structured module format (v2).
 
 Each module corresponds to one Unit from the original FSI course (e.g., Module_01 = Unit 1).
+
+## Format v2 essentials
+
+- Activity types are: `$DIALOGUE`, `$GRAMMAR`, `$SELECT` (tap options), `$PRODUCE` (produce an answer), `$CHAT`. There is **no `$PRODUCE`** — drills become `$PRODUCE`.
+- **Monolingual:** do NOT write any translation (`*_T`) fields (`LINE_T`, `VOCAB_T`, `PROMPT_T`, `RESPONSE_T`). The French (target) text goes in `LINE`/`PROMPT`/`RESPONSE`; English instructions/intros go in their fields. English translations are generated automatically downstream.
+- `$PRODUCE` behavior is set by `INPUT:` (`speak` default · `type` · `either`) and `CHECK:` (`reveal` default · `exact` · `llm`). Most FSI drills are audio-lingual: leave the defaults (speak + reveal). Use `INPUT: type` for written exercises.
+- `VOCAB:` takes one word/phrase per line (no `VOCAB_T`).
 
 ## INTRO and INSTRUCTION fields
 
@@ -13,8 +20,8 @@ The book is being transformed for use in self-study software. Use your judgement
 ## FSI Source Element Conversion Guidelines
 
 #### Main dialogue with speakers
-Convert to `$DIALOGUE` using SPEAKER, LINE, and LINE_T fields.
-Vocabulary items: Place VOCAB/VOCAB_T entries **immediately before each specific LINE** they belong to. Each LINE should have its own VOCAB block — do not group vocab for multiple lines together. 
+Convert to `$DIALOGUE` using SPEAKER and LINE fields (the French line goes in LINE; do not add a translation).
+Vocabulary items: Place VOCAB entries **immediately before each specific LINE** they belong to. Each LINE should have its own VOCAB block — do not group vocab for multiple lines together. 
 
 Only include vocabulary items that are listed in the source material. Do not add additional vocab items. Do not include vocab for words that only appear in the activity title.
 
@@ -28,15 +35,15 @@ Include the full text — do not shorten or summarize.
 *Note: This is different from the per-line `NOTES` field in `$DIALOGUE`, which is for brief tips attached to a specific line.*
 
 ### Useful Words
-Convert to `$EXERCISE`. Some lines do not have underlines.. these should be put as EXAMPLE. The prompt and the response are both the full sentences. For other lines, a part of the sentence is underlined. The underlined part is the prompt, and the full sentence is the response.
+Convert to `$PRODUCE`. Some lines do not have underlines.. these should be put as EXAMPLE. The prompt and the response are both the full sentences. For other lines, a part of the sentence is underlined. The underlined part is the prompt, and the full sentence is the response.
 
 ### Vocabulary Awareness tables
-Convert to $DIALOGUE. The French should be the 'LINE's, and LINE_T is the English translations.
+Convert to $DIALOGUE. The French should be the 'LINE's (no translation — it is generated downstream).
 
 
 ### Some General Notes about Drills
 
-Each numbered drill (A-1, A-2, A-3, etc.) must be a **separate `$EXERCISE`** — do not merge them into one exercise. Convert each drill to `$EXERCISE` with its own title (e.g., "Lexical A-1", "Lexical A-2").
+Each numbered drill (A-1, A-2, A-3, etc.) must be a **separate `$PRODUCE`** — do not merge them into one exercise. Convert each drill to `$PRODUCE` with its own title (e.g., "Lexical A-1", "Lexical A-2").
 
 Drills can be formatted in two formats. One is a numbered list of sentence pairs, with the PROMPT on the left, and the RESPONSE on the right.
 
@@ -59,11 +66,11 @@ Drills generally include one (occassionally two) model sentences, to show the st
 Tutor: ...
 Student: ...
 
-For these model sentences, mark the items as EXAMPLE in the $EXERCISE.
+For these model sentences, mark the items as EXAMPLE in the $PRODUCE.
 
 
 ### Questions on the dialogue
-Put these as an `$EXERCISE`. Question is the prompt, answer is the response.
+Put these as an `$PRODUCE`. Question is the prompt, answer is the response.
 
 ### Situations (Situation I, Situation II, etc.)
 These are mini-dialogues that appear later in the unit (not at the beginning like the main dialogue). Convert each SITUATION to `$DIALOGUE` using SPEAKER and LINE fields. Don
@@ -81,20 +88,20 @@ Convert as `$GRAMMAR` and include the markdown content directly.  Do not summari
 
 ### Question Drill
 These appear as a list of questions in the book, without answers.
-Use the $EXERCISE type. Put the question as the prompt, and add an example answer as the reponse. No EXAMPLE is needed. The intro and instuction may indicate to the user that there is no single right answer.
+Use the $PRODUCE type. Put the question as the prompt, and add an example answer as the reponse. No EXAMPLE is needed. The intro and instuction may indicate to the user that there is no single right answer.
 
 ### Response Drill
-Here the student is prompted to play both sides of a conversation. The second speaker is denoted as '...'. Use an $EXERCISE type, with the prompt being the instruction for the student, and the response being the expected response. Rather than '...', use a real name. Make sure the INTRO and INSTRUCTION makes the exercise clear.
+Here the student is prompted to play both sides of a conversation. The second speaker is denoted as '...'. Use an $PRODUCE type, with the prompt being the instruction for the student, and the response being the expected response. Rather than '...', use a real name. Make sure the INTRO and INSTRUCTION makes the exercise clear.
 
 ### Written exercises
-These can be $EXERCISE. 
+These can be $PRODUCE. 
 Encourage the student (in INTRO/INSTRUCTION) to write down the answer with a pen and paper before checking their response.
 
 ### Review drills
-Convert as `$EXERCISE` (group these under a Review lesson section). Note: "grouping" means placing them in the same lesson — it does NOT mean merging or shortening. Each Review drill must remain a separate `$EXERCISE`.
+Convert as `$PRODUCE` (group these under a Review lesson section). Note: "grouping" means placing them in the same lesson — it does NOT mean merging or shortening. Each Review drill must remain a separate `$PRODUCE`.
 
 ### Comprehension Drills (Review Units 6 and 12)
-These appear in review units and are typically labeled R-36, R-37, etc. with "(Identification)" in the title. Convert to `$EXERCISE`. Note: in these drills, the PROMPT and REVERSE sections are often reversed:
+These appear in review units and are typically labeled R-36, R-37, etc. with "(Identification)" in the title. Convert to `$PRODUCE`. Note: in these drills, the PROMPT and REVERSE sections are often reversed:
 
 - **PROMPT**: The full sentence
 - **RESPONSE**: The underlined or bolded word/phrase (the part marked with `<u>...</u>` or `**...**`)
@@ -146,7 +153,7 @@ Remove the classroom expressions, they aren't needed.
 
 You MUST convert ALL content from the source. Do not skip, summarize, or truncate any of the following:
 
-1. **Lexical Drills** — Every Lexical drill in the source (A-1, A-2, ..., B-1, B-2, etc.) must be a separate `$EXERCISE`. The count varies by unit — convert ALL of them, however many there are.
+1. **Lexical Drills** — Every Lexical drill in the source (A-1, A-2, ..., B-1, B-2, etc.) must be a separate `$PRODUCE`. The count varies by unit — convert ALL of them, however many there are.
 
 2. **Grammar Examples** — All example sentences, tables, and Singular/Plural pairs in Grammar sections must be preserved. Use `{curly brackets}` around French phrases for audio. **Important:** Each Grammar Note in the source often starts with example sentences that demonstrate the concept (e.g., "Comment allez-vous?", "Je suis heureux de faire votre connaissance"). These introductory examples MUST be included at the start of the `$GRAMMAR` section.
 
@@ -154,9 +161,9 @@ You MUST convert ALL content from the source. Do not skip, summarize, or truncat
 
 4. **Dialogue Lines** — Every line of dialogue must be converted. Do not summarize or combine lines.
 
-5. **Learning Drills** — Every Learning drill in the source (Learning 1, Learning 2, etc.) must be a separate `$EXERCISE`. The count varies by unit — convert ALL of them, however many there are.
+5. **Learning Drills** — Every Learning drill in the source (Learning 1, Learning 2, etc.) must be a separate `$PRODUCE`. The count varies by unit — convert ALL of them, however many there are.
 
-6. **Practice Drills (numbered)** — Every Practice drill in the source (Practice A-1, A-2, etc.) must be a separate `$EXERCISE`. The count varies by unit — convert ALL of them, however many there are.
+6. **Practice Drills (numbered)** — Every Practice drill in the source (Practice A-1, A-2, etc.) must be a separate `$PRODUCE`. The count varies by unit — convert ALL of them, however many there are.
 
 If you run out of space, it is better to output an incomplete file than to silently skip content.
 
@@ -167,9 +174,9 @@ If you run out of space, it is better to output an incomplete file than to silen
 - Add "Practice Tips" or "Common Errors" sections
 - Include meta-commentary about learning strategies
 - Skip any drills or exercises — convert ALL Lexical A, B, Learning, Practice, and Review drills
-- Combine separate drills into one — each A-1, A-2, B-1, etc. must be a separate $EXERCISE
-- Combine separate Learning drills into one — each Learning 1, Learning 2, etc. must be a separate $EXERCISE
-- Combine separate Practice drills into one — each Practice A-1, A-2, etc. must be a separate $EXERCISE
+- Combine separate drills into one — each A-1, A-2, B-1, etc. must be a separate $PRODUCE
+- Combine separate Learning drills into one — each Learning 1, Learning 2, etc. must be a separate $PRODUCE
+- Combine separate Practice drills into one — each Practice A-1, A-2, etc. must be a separate $PRODUCE
 - Skip example sentences or tables from Grammar sections
 - Include page markers (`#page1`, `#page2`, etc.)
 - Include tape references (`Tape 1.1`, `Tape 2.3`, etc.)

@@ -1,0 +1,183 @@
+# ============================================================================
+# BK4 LLA — Lesson 3A (new 5-type format) — validation conversion
+# Conventions: $PRODUCE uses RESPONSE; $DIALOGUE listen-then-repeat marked REPEAT;
+# blank line between items; LINEs kept short (1-2 sentences) for snappy audio.
+# ============================================================================
+
+$MODULE
+DIOCO_DOC_ID: lc_alc_lla_bk4_l3a
+TITLE: ALC Book 4 — Lesson 3A: Clothes and Uniforms
+DESCRIPTION: Clothing vocabulary, wear/put on/take off, and past tense.
+TARGET_LANG_G: en
+HOME_LANG_G: en
+VOICE_DEFAULT: aoede | Clear, friendly American English narrator
+VOICE: Collins | achernar | Male officer, matter-of-fact
+VOICE: Andrews | achird | Male officer, relaxed
+
+$LESSON Lesson 3A
+
+# --- Figure 1a: vocabulary + paragraphs (listen, then repeat) ---
+$DIALOGUE Figure 1: Clothes
+REPEAT
+INTRO: Look at the picture and repeat the words and sentences.
+INSTRUCTION: Listen and repeat.
+
+VOCAB: wear / wore
+LINE: Capt Collins wears his uniform to work. He wore a necktie today. {page_045_001.jpg} {bk04-l3a-f1-01.mp3}
+
+LINE: He doesn't wear a tie every day. He wears his name tag on his shirt.
+
+LINE: He has six of these shirts. He's wearing a new belt, and he has a new hat, too.
+
+VOCAB: takes off
+VOCAB: puts on
+VOCAB: clothes
+LINE: After work, Capt Collins takes off his uniform and puts on civilian clothes.
+
+LINE: Today he took off his uniform before dinner. Then he put on a T-shirt and old pants.
+
+# --- Figure 1b: answer the questions (same figure -> second activity) ---
+$PRODUCE Figure 1: Answer the questions
+INTRO: Listen to each question and answer out loud, then check.
+INSTRUCTION: Answer, then check.
+
+PROMPT: Does Capt Collins wear his uniform to work?
+RESPONSE: Capt Collins wears his uniform to work.
+
+PROMPT: Does he wear a tie every day?
+RESPONSE: He doesn't wear a tie every day.
+
+PROMPT: Where does Capt Collins wear his name tag?
+RESPONSE: Capt Collins wears his name tag on his shirt.
+
+PROMPT: How many of these shirts does he have?
+RESPONSE: He has six of these shirts.
+
+PROMPT: When does Capt Collins take off his uniform?
+RESPONSE: Capt Collins takes off his uniform after work.
+
+PROMPT: What did he put on then?
+RESPONSE: Then he put on a T-shirt and old pants.
+
+# --- Figure 2: true / false (audio statements) ---
+$SELECT Figure 2: True or False?
+INTRO: Listen to each statement and decide if it is true or false.
+INSTRUCTION: Tap True or False.
+OPTION: t | True
+OPTION: f | False
+
+PROMPT: A cap is a hat. {bk04-l3a-f2-01.mp3}
+ANSWER: t
+# +AUDIO per item below
+
+PROMPT: Uniforms are clothes.
+ANSWER: t
+
+PROMPT: Trousers are pants.
+ANSWER: t
+
+PROMPT: Ties and belts are the same.
+ANSWER: f
+FEEDBACK: Ties and belts are not the same.
+
+PROMPT: Ties and neckties are different.
+ANSWER: f
+FEEDBACK: Ties and neckties are the same.
+
+# --- Figure 3: dialog (listen, then repeat; role-play part dropped) ---
+$DIALOGUE Figure 3: At the Restaurant
+REPEAT
+INTRO: Listen to the conversation, then repeat it.
+INSTRUCTION: Listen and repeat.
+
+Collins: Did you wear your uniform to the restaurant?
+
+Andrews: No, I wore civilian clothes last night.
+
+Collins: Did you wear a necktie?
+
+Andrews: Yes, I put on a tie. I took it off after dinner.
+
+Collins: What did Larry wear?
+
+Andrews: He wore a T-shirt, pants, and a hat.
+
+Collins: Was the hat his old baseball cap?
+
+Andrews: Yes, and he didn't take it off inside.
+
+# --- Figure 4: same / different minimal pairs ---
+$SELECT Figure 4: Same or Different?
+INTRO: Listen to the two words. Are they the same or different?
+INSTRUCTION: Tap Same or Different.
+OPTION: s | Same
+OPTION: d | Different
+
+PROMPT: wed ... red {bk04-l3a-f4-01.mp3}
+ANSWER: d
+# +AUDIO per item below
+
+PROMPT: wake ... wake
+ANSWER: s
+
+PROMPT: west ... rest
+ANSWER: d
+
+PROMPT: rose ... rose
+ANSWER: s
+
+PROMPT: wave ... wave
+ANSWER: s
+
+PROMPT: weighs ... raise
+ANSWER: d
+
+PROMPT: wipe ... ripe
+ANSWER: d
+
+PROMPT: read ... read
+ANSWER: s
+
+PROMPT: reed ... weed
+ANSWER: d
+
+PROMPT: went ... rent
+ANSWER: d
+
+# --- Figure 5: sound discrimination /w/ vs /r/ ---
+$SELECT Figure 5: /w/ as in "went" or /r/ as in "rent"?
+INTRO: Listen to each word. Tap a for the /w/ sound or b for the /r/ sound.
+INSTRUCTION: Tap the sound you hear.
+OPTION: a | /w/ — as in "went"
+OPTION: b | /r/ — as in "rent"
+
+PROMPT: week {bk04-l3a-f5-01.mp3}
+ANSWER: a
+# +AUDIO per item below
+
+PROMPT: want
+ANSWER: a
+
+PROMPT: radio
+ANSWER: b
+
+PROMPT: room
+ANSWER: b
+
+PROMPT: walk
+ANSWER: a
+
+PROMPT: report
+ANSWER: b
+
+PROMPT: always
+ANSWER: a
+
+PROMPT: razor
+ANSWER: b
+
+PROMPT: correct
+ANSWER: b
+
+PROMPT: window
+ANSWER: a

@@ -1,0 +1,297 @@
+# ============================================================================
+# FORMAT B — PREVIOUS v2 PROPOSAL
+# Distinct markers per interaction: $DIALOGUE $GRAMMAR $EXERCISE $QUIZ $MATCH
+# $DICTATION $RESPOND $CHAT. ($QUIZ=select, $MATCH=pair, $EXERCISE=reveal drill,
+# $RESPOND=LLM-graded, $DICTATION=write.)
+# ============================================================================
+
+$MODULE
+DIOCO_DOC_ID: lc_alc_lla_bk4_l1a
+TITLE: ALC Book 4 — Lesson 1A: Sports and Games
+DESCRIPTION: Talking about sports, games, and where people live (past and present).
+TARGET_LANG_G: en
+HOME_LANG_G: en
+VOICE_DEFAULT: aoede | Clear, friendly American English narrator
+
+$LESSON Lesson 1A
+
+# --- Figure 1: repeat vocabulary ---
+$DIALOGUE Figure 1: Sports and Games
+INTRO: Look at the pictures and repeat the words and sentences.
+INSTRUCTION: Listen and repeat.
+
+VOCAB: play / game / ball
+VOCAB_T: играть / игра / мяч
+IMAGE: page_007_001.jpg
+LINE: The children play a game with their ball.
+LINE_T: Дети играют в игру со своим мячом.
+
+VOCAB: football
+VOCAB_T: американский футбол
+IMAGE: page_007_002.jpg
+LINE: Sam plays football every day.
+LINE_T: Сэм играет в футбол каждый день.
+
+VOCAB: baseball
+VOCAB_T: бейсбол
+IMAGE: page_007_003.jpg
+LINE: George plays baseball on weekends.
+LINE_T: Джордж играет в бейсбол по выходным.
+
+VOCAB: tennis
+VOCAB_T: теннис
+IMAGE: page_007_004.jpg
+LINE: They play tennis after class.
+LINE_T: Они играют в теннис после занятий.
+
+VOCAB: soccer
+VOCAB_T: футбол (соккер)
+IMAGE: page_007_005.jpg
+LINE: Carlos plays soccer on Saturdays.
+LINE_T: Карлос играет в футбол по субботам.
+
+VOCAB: basketball
+VOCAB_T: баскетбол
+IMAGE: page_007_006.jpg
+LINE: Carl plays basketball at school.
+LINE_T: Карл играет в баскетбол в школе.
+
+# --- Figure 2: match each sentence to a picture ($MATCH) ---
+$MATCH Figure 2: Which sport?
+INTRO: Listen to each sentence and match it to the correct picture.
+INSTRUCTION: Match the sentence to the picture.
+
+OPTION_IMAGE: a | page_008_001.jpg
+OPTION_IMAGE: b | page_008_002.jpg
+OPTION_IMAGE: c | page_008_003.jpg
+OPTION_IMAGE: d | page_008_004.jpg
+OPTION_IMAGE: e | page_008_005.jpg
+OPTION_IMAGE: f | page_008_006.jpg
+
+AUDIO_ONLY
+PROMPT: Tony and Jim watch soccer games on TV.
+ANSWER: e
+
+AUDIO_ONLY
+PROMPT: Betty and Jane are playing tennis.
+ANSWER: d
+
+AUDIO_ONLY
+PROMPT: Mark plays baseball.
+ANSWER: c
+
+AUDIO_ONLY
+PROMPT: My children play with a ball after school.
+ANSWER: a
+
+AUDIO_ONLY
+PROMPT: The basketball game is at eight o'clock tonight.
+ANSWER: f
+
+# --- Figure 3: hear Q&A, circle the matching statement ($QUIZ) ---
+$QUIZ Figure 3: Likes and doesn't like
+INTRO: Listen to each short conversation, then choose the sentence that is true.
+INSTRUCTION: Circle the correct sentence.
+
+PROMPT: John, do you like football games? — No, I don't.
+OPTION: a | John likes football games.
+OPTION: b | John doesn't like football games.
+ANSWER: b
+FEEDBACK: John doesn't like football games.
+
+PROMPT: Jack and Joe, do you like sports? — Yes, we do.
+OPTION: a | Jack and Joe like sports.
+OPTION: b | Jack and Joe don't like sports.
+ANSWER: a
+FEEDBACK: Jack and Joe like sports.
+
+PROMPT: Mr. Adams, do you like basketball? — Yes, I do.
+OPTION: a | Mr. Adams likes basketball.
+OPTION: b | Mr. Adams doesn't like basketball.
+ANSWER: a
+FEEDBACK: Mr. Adams likes basketball.
+
+PROMPT: Do you like baseball? — No, we don't.
+OPTION: a | They like baseball.
+OPTION: b | They don't like baseball.
+ANSWER: b
+FEEDBACK: They don't like baseball.
+
+PROMPT: Donna, do you like tennis? — Yes, I do.
+OPTION: a | Donna likes tennis.
+OPTION: b | Donna doesn't like tennis.
+ANSWER: a
+FEEDBACK: Donna likes tennis.
+
+# --- Figure 4: answer the questions ($EXERCISE: prompt -> reveal response) ---
+$EXERCISE Figure 4: Answer the questions
+INTRO: Listen to the statement and question, answer out loud, then reveal the model answer.
+INSTRUCTION: Answer, then check.
+
+EXAMPLE
+PROMPT: The children play ball in the afternoon. What do the children like to do in the afternoon?
+PROMPT_T: Дети играют в мяч во второй половине дня. Что дети любят делать днём?
+RESPONSE: The children like to play ball in the afternoon.
+RESPONSE_T: Дети любят играть в мяч во второй половине дня.
+
+PROMPT: Sue and Kate go to football games on weekends. What do Sue and Kate like to do on weekends?
+RESPONSE: They like to go to football games on weekends.
+
+PROMPT: Jim swims at the base on Saturdays. What does Jim like to do on Saturdays?
+RESPONSE: Jim likes to swim at the base on Saturdays.
+
+PROMPT: Mr. and Mrs. Adams play tennis every morning. What do Mr. and Mrs. Adams like to do every morning?
+RESPONSE: Mr. and Mrs. Adams like to play tennis every morning.
+
+PROMPT: Jack watches basketball on Fridays. What does Jack like to watch on Fridays?
+RESPONSE: Jack likes to watch basketball on Fridays.
+
+# --- Figure 5: repeat sentences (map) ---
+$DIALOGUE Figure 5: Cities and Towns in Texas
+INTRO: Look at the map of Texas and repeat the words and sentences.
+INSTRUCTION: Listen and repeat.
+IMAGE: page_010_001.jpg
+
+VOCAB: city / cities
+VOCAB_T: город / города
+LINE: Texas has big cities and small towns.
+LINE_T: В Техасе есть большие города и маленькие городки.
+
+VOCAB: town
+VOCAB_T: городок
+LINE: The King family lives in a small town.
+LINE_T: Семья Кинг живёт в маленьком городке.
+
+VOCAB: lives
+VOCAB_T: живёт
+LINE: The Soto family lives in the city of Dallas.
+LINE_T: Семья Сото живёт в городе Даллас.
+
+LINE: Sometimes, the King family visits the Soto family in Dallas.
+LINE_T: Иногда семья Кинг навещает семью Сото в Далласе.
+
+LINE: Los Angeles, New York and Chicago are also big cities. These cities are not in Texas.
+LINE_T: Лос-Анджелес, Нью-Йорк и Чикаго тоже большие города. Эти города не в Техасе.
+
+# --- Figure 6: hear a question, circle the answer ($QUIZ) ---
+$QUIZ Figure 6: Choose the correct answer
+INTRO: Listen to each question and choose the correct answer.
+INSTRUCTION: Circle the correct answer.
+
+AUDIO_ONLY
+PROMPT: My sister has a house in San Antonio. She works in San Antonio. What does she do in San Antonio?
+OPTION: a | She works in San Antonio.
+OPTION: b | She plays sports in San Antonio.
+ANSWER: a
+FEEDBACK: She works in San Antonio.
+
+AUDIO_ONLY
+PROMPT: Joe lives in New York City. Where does he live?
+OPTION: a | He lives in a small town.
+OPTION: b | He lives in a big city.
+ANSWER: b
+FEEDBACK: He lives in a big city.
+
+AUDIO_ONLY
+PROMPT: Jacksonville is not on the map. It's very small. Is it a city or a town?
+OPTION: a | It's a town.
+OPTION: b | It's a city.
+ANSWER: a
+FEEDBACK: It's a town.
+
+AUDIO_ONLY
+PROMPT: Mary is at her friend's house. They are talking. What's Mary doing?
+OPTION: a | Mary is sleeping.
+OPTION: b | Mary is visiting her friend.
+ANSWER: b
+FEEDBACK: Mary is visiting her friend.
+
+# --- Figure 7: sound discrimination J vs Y ($QUIZ + AUDIO_ONLY) ---
+$QUIZ Figure 7: /j/ as in "jet" or /y/ as in "yet"?
+INTRO: Listen to each word. Circle a for the /j/ sound (as in "jet") or b for the /y/ sound (as in "yet").
+INSTRUCTION: Circle the sound you hear.
+
+EXAMPLE
+AUDIO_ONLY
+PROMPT: jam
+OPTION: a | /j/ — jet
+OPTION: b | /y/ — yet
+ANSWER: a
+
+AUDIO_ONLY
+PROMPT: joke
+ANSWER: a
+
+AUDIO_ONLY
+PROMPT: year
+ANSWER: b
+
+AUDIO_ONLY
+PROMPT: you
+ANSWER: b
+
+AUDIO_ONLY
+PROMPT: jaw
+ANSWER: a
+
+AUDIO_ONLY
+PROMPT: join
+ANSWER: a
+
+AUDIO_ONLY
+PROMPT: yes
+ANSWER: b
+
+AUDIO_ONLY
+PROMPT: yard
+ANSWER: b
+
+AUDIO_ONLY
+PROMPT: juice
+ANSWER: a
+
+AUDIO_ONLY
+PROMPT: jay
+ANSWER: a
+
+AUDIO_ONLY
+PROMPT: use
+ANSWER: b
+
+# --- Figure 8: listening passage + comprehension (ONE figure -> TWO activities) ---
+$DIALOGUE Figure 8: Linda's Week
+INTRO: Listen to the paragraph about Linda.
+INSTRUCTION: Listen.
+IMAGE: page_012_001.jpg
+SPEAKER: Narrator
+LINE: This is Linda. Linda works in an office. She works from Monday to Friday — she works all week long. On Saturdays, Linda gets up early and cleans her house all morning long. After she cleans, she starts to cook. She likes to cook a big dinner for her friends; she starts to cook the meal at 2 p.m. and cooks all afternoon long. Her friends come at 6:30. Sometimes they watch a show on TV, and sometimes they talk. Linda likes their visits very much.
+LINE_T: Это Линда. Линда работает в офисе. Она работает с понедельника по пятницу — всю неделю. По субботам Линда встаёт рано и всё утро убирает дом. После уборки она начинает готовить. Она любит готовить большой ужин для друзей; она начинает готовить в 2 часа дня и готовит весь день. Друзья приходят в 6:30. Иногда они смотрят телепередачу, иногда разговаривают. Линде очень нравятся их визиты.
+
+$QUIZ Figure 8: Linda's Week — comprehension
+INTRO: Listen again and choose the correct word for each sentence.
+INSTRUCTION: Circle the correct word.
+
+PROMPT: Linda works ____.
+OPTION: a | all night long
+OPTION: b | all week long
+ANSWER: b
+
+PROMPT: On Saturdays, she ____ her house.
+OPTION: a | cleans
+OPTION: b | cooks
+ANSWER: a
+
+PROMPT: She ____ a big dinner, and she ____ to cook the meal at 2:00.
+OPTION: a | cooks / starts
+OPTION: b | cleans / ends
+ANSWER: a
+
+PROMPT: Sometimes they watch a ____ on TV.
+OPTION: a | game
+OPTION: b | show
+ANSWER: b
+
+PROMPT: Linda likes her friends' ____ very much.
+OPTION: a | visits
+OPTION: b | houses
+ANSWER: a

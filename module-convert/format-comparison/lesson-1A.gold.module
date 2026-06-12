@@ -1,0 +1,318 @@
+# GOLD reference — ALC LLA Book 4, Lesson 1A (hand-authored).
+# Purpose: the target shape for the converter + a few-shot example. `#` lines are
+# comments (ignored by the parser) and carry the REASONING behind each decision.
+# Built from the book markdown (md/003 …1A.md) + tape transcripts (transcripts/Lesson 1A/Figure0N.txt).
+#
+# Cross-cutting decisions shown here:
+#  - INTRO = spoken+translated framing (what it's about + what to do); INSTRUCTION = short on-screen reminder.
+#  - Boilerplate discarded ("American Language Course…", "open your book", "circle the letter", "write the number on the line").
+#  - Audio rides its text INLINE as a trailing {clip.mp3}; a clip covers ONLY its
+#    line/prompt/response (vocab readings & "Number N" cues excluded from the range).
+#  - "Choose among given answers" → $SELECT even when the book says "Answer the questions".
+
+$MODULE
+FORMAT: 2
+TITLE: Lesson 1A
+DESCRIPTION: Sports, cities, and daily routines
+TARGET_LANG_G: en
+HOME_LANG_G: en
+VOICE_DEFAULT: aoede | Clear, friendly American English narrator
+
+$LESSON Lesson 1A
+
+# --- Figure 1 -------------------------------------------------------------
+# Vocab + example sentences to listen & repeat → $DIALOGUE REPEAT.
+# Each new word is a VOCAB before its LINE; the clip is the SENTENCE only
+# (the tape also reads the bare vocab word — that reading is excluded; vocab
+# gets its own TTS downstream). INTRO paraphrases the tape framing.
+$DIALOGUE Figure 1: Sports and Games
+INTRO: You're going to learn new words for things people play games with. You'll hear each new word, then a sentence using it — repeat both.
+INSTRUCTION: Repeat each word and sentence.
+REPEAT
+
+VOCAB: play
+VOCAB: game
+VOCAB: ball
+LINE: The children play a game with their ball. They play a ballgame. {page_007_001.jpg} {bk04-l1a-f1-01.mp3}
+
+VOCAB: football
+LINE: Sam plays football every day. {page_007_002.jpg} {bk04-l1a-f1-02.mp3}
+
+VOCAB: baseball
+LINE: George plays baseball on weekends. {page_007_003.jpg} {bk04-l1a-f1-03.mp3}
+
+VOCAB: tennis
+LINE: They play tennis after class. {page_007_004.jpg} {bk04-l1a-f1-04.mp3}
+
+VOCAB: soccer
+LINE: Carlos plays soccer on Saturdays. {page_007_005.jpg} {bk04-l1a-f1-05.mp3}
+
+VOCAB: basketball
+LINE: Carl played basketball at school. {page_007_006.jpg} {bk04-l1a-f1-06.mp3}
+
+VOCAB: sports
+LINE: Soccer and basketball are sports too. {bk04-l1a-f1-07.mp3}
+
+# --- Figure 2 -------------------------------------------------------------
+# "Listen to a sentence, tap the matching picture" → $SELECT (spoken stimulus — prompt hidden by default).
+# Six pictures are a SHARED option pool. Each option carries BOTH a short text
+# caption and its inline {image} on one line — captions help since the words
+# are brand-new. Clips are the sentence only ("Number 1/5" cues excluded).
+$SELECT Figure 2: Identify the Sport
+INTRO: You'll hear a sentence about one of the games or sports. Tap the picture it matches.
+INSTRUCTION: Listen and tap the correct picture.
+OPTION: a | ball {page_008_001.jpg}
+OPTION: b | football {page_008_002.jpg}
+OPTION: c | baseball {page_008_003.jpg}
+OPTION: d | tennis {page_008_004.jpg}
+OPTION: e | soccer {page_008_005.jpg}
+OPTION: f | basketball {page_008_006.jpg}
+
+PROMPT: Tony and Jim watch soccer games on TV. {bk04-l1a-f2-01.mp3}
+ANSWER: e
+
+PROMPT: Betty and Jane are playing tennis. {bk04-l1a-f2-02.mp3}
+ANSWER: d
+
+PROMPT: Mark plays baseball. {bk04-l1a-f2-03.mp3}
+ANSWER: c
+
+PROMPT: My children play with a ball after school. {bk04-l1a-f2-04.mp3}
+ANSWER: a
+
+PROMPT: The basketball game is at eight o'clock tonight. {bk04-l1a-f2-05.mp3}
+ANSWER: f
+
+# --- Figure 3 -------------------------------------------------------------
+# Tape: a recorded Q&A (1st/2nd person), then a 3rd-person model to repeat.
+# → $SELECT: PROMPT = the recorded exchange (its clip); options = the two
+#   statements; the CORRECT option carries the spoken 3rd-person model inline on
+#   its text so the app can play it for the learner to repeat after tapping.
+# Reasoning: this folds "make use of the model audio" into the SELECT rather than
+# adding a separate $DIALOGUE that would repeat the same lines.
+# The book prints only the answer options — the exchange itself was
+# tape-only, so the prompt text stays hidden until answered (follow the book).
+$SELECT Figure 3: Do they like sports?
+INTRO: You'll hear a question and a short answer. Choose the statement that is correct, then repeat it.
+INSTRUCTION: Tap the correct statement.
+
+PROMPT: "John, do you like football games?" "No, I don't." {bk04-l1a-f3-01-q.mp3}
+OPTION: a | John likes football games.
+OPTION: b | John doesn't like football games. {bk04-l1a-f3-01-a.mp3}
+ANSWER: b
+
+PROMPT: "Jack and Joe, do you like sports?" "Yes, we do." {bk04-l1a-f3-02-q.mp3}
+OPTION: a | Jack and Joe like sports. {bk04-l1a-f3-02-a.mp3}
+OPTION: b | Jack and Joe don't like sports.
+ANSWER: a
+
+PROMPT: "Mr. Adams, do you like basketball?" "Yes, I do." {bk04-l1a-f3-03-q.mp3}
+OPTION: a | Mr. Adams likes basketball. {bk04-l1a-f3-03-a.mp3}
+OPTION: b | Mr. Adams doesn't like basketball.
+ANSWER: a
+
+PROMPT: "Do you like baseball?" "No, we don't." {bk04-l1a-f3-04-q.mp3}
+OPTION: a | They like baseball.
+OPTION: b | They don't like baseball. {bk04-l1a-f3-04-a.mp3}
+ANSWER: b
+
+PROMPT: "Donna, do you like tennis?" "Yes, I do." {bk04-l1a-f3-05-q.mp3}
+OPTION: a | Donna likes tennis. {bk04-l1a-f3-05-a.mp3}
+OPTION: b | Donna doesn't like tennis.
+ANSWER: a
+
+# --- Figure 4 -------------------------------------------------------------
+# Learner READS a context sentence (book-only, NOT on the tape), HEARS a question,
+# and produces a full answer → $PRODUCE. TEMPLATE = the read-only context;
+# PROMPT = the spoken question (its clip); RESPONSE = the model answer (its clip).
+$PRODUCE Figure 4: Answer the questions
+INTRO: Read the sentence, listen to the question, then answer in a full sentence.
+INSTRUCTION: Answer with a full sentence.
+
+EXAMPLE
+TEMPLATE: The children play ball in the afternoon.
+PROMPT: What do the children like to do in the afternoon? {bk04-l1a-f4-01-q.mp3}
+RESPONSE: The children like to play ball in the afternoon. {bk04-l1a-f4-01-a.mp3}
+
+TEMPLATE: Sue and Kate go to football games on weekends.
+PROMPT: What do Sue and Kate like to do on weekends? {bk04-l1a-f4-02-q.mp3}
+RESPONSE: They like to go to football games on weekends. {bk04-l1a-f4-02-a.mp3}
+
+TEMPLATE: Jim swims at the base on Saturdays.
+PROMPT: What does Jim like to do on Saturdays? {bk04-l1a-f4-03-q.mp3}
+RESPONSE: Jim likes to swim at the base on Saturdays. {bk04-l1a-f4-03-a.mp3}
+
+TEMPLATE: Mr. and Mrs. Adams play tennis every morning.
+PROMPT: What do Mr. and Mrs. Adams like to do every morning? {bk04-l1a-f4-04-q.mp3}
+RESPONSE: Mr. and Mrs. Adams like to play tennis every morning. {bk04-l1a-f4-04-a.mp3}
+
+TEMPLATE: Jack watches basketball on Fridays.
+PROMPT: What does Jack like to watch on Fridays? {bk04-l1a-f4-05-q.mp3}
+RESPONSE: Jack likes to watch basketball on Fridays. {bk04-l1a-f4-05-a.mp3}
+
+# --- Figure 5 -------------------------------------------------------------
+# Vocab + sentences → $DIALOGUE REPEAT. The tape adds spoken content beyond the
+# book: the map intro and the three city names — keep those as lines. Drop the
+# bare instruction "Now let's repeat the sentences". VOCAB from the book underlines
+# (cities, towns, lives, city). The first book line has no tape clip (no {clip}).
+# Every line refers to ONE shared visual (the map), so it is an activity-wide
+# IMAGE: (stays on screen for all lines) — NOT inline on just the first line.
+$DIALOGUE Figure 5: Cities and Towns
+INTRO: You'll see a map of Texas. Learn the words for cities and towns, then repeat the sentences.
+INSTRUCTION: Repeat each sentence.
+REPEAT
+IMAGE: page_010_001.jpg
+
+Narrator: Do you see three big cities on the map? {bk04-l1a-f5-01.mp3}
+
+LINE: The city of Houston. {bk04-l1a-f5-02.mp3}
+LINE: The city of Dallas. {bk04-l1a-f5-03.mp3}
+LINE: The city of San Antonio. {bk04-l1a-f5-04.mp3}
+
+VOCAB: cities
+VOCAB: towns
+LINE: Texas has big cities and small towns.
+
+VOCAB: lives
+LINE: The King family lives in a small town. {bk04-l1a-f5-05.mp3}
+
+VOCAB: city
+LINE: The Soto family lives in the city of Dallas. {bk04-l1a-f5-06.mp3}
+
+LINE: Sometimes, the King family visits the Soto family in Dallas. {bk04-l1a-f5-07.mp3}
+
+LINE: Los Angeles, New York and Chicago are also big cities. These cities are not in Texas. {bk04-l1a-f5-08.mp3}
+
+# --- Figure 6 -------------------------------------------------------------
+# "Listen to a short situation + question, then CHOOSE the answer" → $SELECT
+# (the book printed a/b options ONLY — the situation+question was tape-only,
+# so the prompt stays hidden by default). PROMPT = situation+question (its clip). The correct option
+# carries the spoken model answer inline (play after tap).
+$SELECT Figure 6: Listen and Answer
+INTRO: You'll hear a short situation and a question. Tap the correct answer.
+INSTRUCTION: Tap the correct answer.
+
+PROMPT: My sister has a house in San Antonio. She works in San Antonio. What does she do in San Antonio? {bk04-l1a-f6-01-q.mp3}
+OPTION: a | She works in San Antonio. {bk04-l1a-f6-01-a.mp3}
+OPTION: b | She plays sports in San Antonio.
+ANSWER: a
+
+PROMPT: Joe lives in New York City. Where does he live? {bk04-l1a-f6-02-q.mp3}
+OPTION: a | He lives in a small town.
+OPTION: b | He lives in a big city. {bk04-l1a-f6-02-a.mp3}
+ANSWER: b
+
+PROMPT: Jacksonville is not on the map. It's very small. Is it a city or a town? {bk04-l1a-f6-03-q.mp3}
+OPTION: a | It's a town. {bk04-l1a-f6-03-a.mp3}
+OPTION: b | It's a city.
+ANSWER: a
+
+PROMPT: Mary is at her friend's house. They are talking. What's Mary doing? {bk04-l1a-f6-04-q.mp3}
+OPTION: a | Mary is sleeping.
+OPTION: b | Mary is visiting her friend. {bk04-l1a-f6-04-a.mp3}
+ANSWER: b
+
+# --- Figure 7 -------------------------------------------------------------
+# Sound discrimination (J vs Y). The PROCEDURE + example only exist on the tape
+# and reference paper actions ("circle the letter") — so the explanation goes in
+# INTRO (spoken + translated; no book/circle/letter references). Each test word is
+# a $SELECT item with its own clip (hidden by default, so the learner must listen).
+$SELECT Figure 7: J or Y Sound?
+INTRO: Listen to each word and decide how it begins. The J sound is like the start of "jet"; the Y sound is like the start of "yet". For example, "jam" begins with the J sound.
+INSTRUCTION: Tap the sound you hear at the start of the word.
+OPTION: a | J sound (as in jet)
+OPTION: b | Y sound (as in yet)
+
+PROMPT: joke {bk04-l1a-f7-01.mp3}
+ANSWER: a
+
+PROMPT: year {bk04-l1a-f7-02.mp3}
+ANSWER: b
+
+PROMPT: you {bk04-l1a-f7-03.mp3}
+ANSWER: b
+
+PROMPT: jaw {bk04-l1a-f7-04.mp3}
+ANSWER: a
+
+PROMPT: join {bk04-l1a-f7-05.mp3}
+ANSWER: a
+
+PROMPT: yes {bk04-l1a-f7-06.mp3}
+ANSWER: b
+
+PROMPT: yard {bk04-l1a-f7-07.mp3}
+ANSWER: b
+
+PROMPT: juice {bk04-l1a-f7-08.mp3}
+ANSWER: a
+
+PROMPT: jay {bk04-l1a-f7-09.mp3}
+ANSWER: a
+
+PROMPT: use {bk04-l1a-f7-10.mp3}
+ANSWER: b
+
+# --- Figure 8 (part 1) ----------------------------------------------------
+# A narration to listen to → $DIALOGUE (Narrator, NO repeat). Split the paragraph
+# into ONE LINE PER SENTENCE so each gets its own clip and on-screen unit. The
+# four story panels are separate images (page_012_001..004 — requires the page-12
+# panel split in markup-notes). Repeat each panel's {image} on EVERY line of the
+# span it illustrates — there is no carry-over between lines (a line without an
+# image shows none).
+$DIALOGUE Figure 8: Linda's Week
+INTRO: Listen to a short story about Linda's week. Afterwards you'll answer questions about it.
+
+Narrator: This is Linda. {page_012_001.jpg} {bk04-l1a-f8-01.mp3}
+LINE: Linda works in an office. {page_012_001.jpg} {bk04-l1a-f8-02.mp3}
+LINE: She works from Monday to Friday. {page_012_001.jpg} {bk04-l1a-f8-03.mp3}
+LINE: Linda works all week long. {page_012_001.jpg} {bk04-l1a-f8-04.mp3}
+
+LINE: On Saturdays, Linda gets up early. {page_012_002.jpg} {bk04-l1a-f8-05.mp3}
+LINE: She starts to clean her house at eight o'clock. {page_012_002.jpg} {bk04-l1a-f8-06.mp3}
+LINE: Linda cleans her house all morning long. {page_012_002.jpg} {bk04-l1a-f8-07.mp3}
+
+LINE: After she cleans, she starts to cook. {page_012_003.jpg} {bk04-l1a-f8-08.mp3}
+LINE: Linda likes to cook a big dinner for her friends. {page_012_003.jpg} {bk04-l1a-f8-09.mp3}
+LINE: She starts to cook the meal at 2 p.m. {page_012_003.jpg} {bk04-l1a-f8-10.mp3}
+LINE: Linda cooks all afternoon long. {page_012_003.jpg} {bk04-l1a-f8-11.mp3}
+
+LINE: Her friends come at 6:30. {page_012_004.jpg} {bk04-l1a-f8-12.mp3}
+LINE: Sometimes they watch a show on TV. {page_012_004.jpg} {bk04-l1a-f8-13.mp3}
+LINE: Sometimes they talk. {page_012_004.jpg} {bk04-l1a-f8-14.mp3}
+LINE: Linda likes their visits very much. {page_012_004.jpg} {bk04-l1a-f8-15.mp3}
+
+# --- Figure 8 (part 2) ----------------------------------------------------
+# Comprehension over the story → $SELECT (book printed the two choices). The
+# gapped sentence is a TEMPLATE (shown, never spoken — a clip-less PROMPT would
+# get TTS and read the gaps aloud); options = the two candidates; the correct
+# option carries the spoken completed sentence inline so the app can play it
+# after the tap.
+$SELECT Figure 8: Comprehension Check
+INTRO: Choose the correct word to complete each sentence about the story.
+INSTRUCTION: Tap the correct word.
+
+TEMPLATE: Linda works ____.
+OPTION: a | all night long
+OPTION: b | all week long {bk04-l1a-f8-16.mp3}
+ANSWER: b
+
+TEMPLATE: On Saturdays, she ____ her house.
+OPTION: a | cleans {bk04-l1a-f8-17.mp3}
+OPTION: b | cooks
+ANSWER: a
+
+TEMPLATE: She ____ a big dinner, and she ____ to cook it at 2:00.
+OPTION: a | cooks / starts {bk04-l1a-f8-18.mp3}
+OPTION: b | cleans / ends
+ANSWER: a
+
+TEMPLATE: Sometimes they watch a ____ on TV.
+OPTION: a | game
+OPTION: b | show {bk04-l1a-f8-19.mp3}
+ANSWER: b
+
+TEMPLATE: Linda likes her friends' ____ very much.
+OPTION: a | houses
+OPTION: b | visits {bk04-l1a-f8-20.mp3}
+ANSWER: b

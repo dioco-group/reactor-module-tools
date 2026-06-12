@@ -65,7 +65,16 @@ const DEFAULTS = {
   MAX_OUTPUT_TOKENS: 32768,
 
   // Processing settings
-  PAGES_PER_CHUNK: 20,
+  // Smaller batch (6) than the original 20. The chunk-size study (configs/
+  // alc-english/NOTES.md) found transcription accuracy is insensitive to chunk
+  // size (even 1 page/chunk scored the same), so the only cost of a smaller
+  // batch is more API calls. The win: these PDFs are pure scans, so the model
+  // must DERIVE each page's PDF index by counting from the batch's start page
+  // (the printed page numbers on the scans differ from the PDF index). Fewer
+  // pages per batch = fewer pages to count across = much less room for an
+  // off-by-one drift in image filenames. 6 keeps some cross-page context while
+  // keeping the counting trivially short.
+  PAGES_PER_CHUNK: 6,
   DPI: 300,
 
   // Rate limiting / retries
@@ -114,7 +123,20 @@ function loadConfig(args) {
 
   const extraPrompt = typeof cfg.prompt === 'string' ? cfg.prompt : '';
 
+  // Optional per-book image-markup notes ("on page X, do Y").
+  let markupNotes = '';
+  const noteCandidates = [];
+  if (cfg.markupNotes) noteCandidates.push(path.resolve(configDir, cfg.markupNotes));
+  noteCandidates.push(path.join(configDir, 'markup-notes.md'));
+  for (const p of noteCandidates) {
+    if (fs.existsSync(p)) {
+      markupNotes = fs.readFileSync(p, 'utf8').trim();
+      break;
+    }
+  }
+
   return {
+    MARKUP_NOTES: markupNotes,
     // PDF-dependent config
     INPUT_PDF: path.resolve(configDir, cfg.inputPdf),
     OUTPUT_DIR: path.resolve(configDir, cfg.outputDir),
@@ -182,16 +204,46 @@ ${rules}
  * - Detailed instructions for language learning textbook content
  */
 const EXTRACTION_PROMPT = (pdfPageStart, pdfPageEnd) => `
-You are processing PDF pages ${pdfPageStart}-${pdfPageEnd} of a language learning textbook.
+You are processing pages of a language learning textbook.
+
+THIS BATCH = PDF PAGES ${pdfPageStart} TO ${pdfPageEnd} (${pdfPageEnd - pdfPageStart + 1} page(s), in reading order).
+
+This file's pages map to PDF page numbers EXACTLY as follows:
+${Array.from({ length: pdfPageEnd - pdfPageStart + 1 }, (_, i) =>
+  `  - The ${ordinal(i + 1)} page in this file  =  PDF page ${pdfPageStart + i}`
+).join('\n')}
+
+CRITICAL — PDF PAGE NUMBER vs PRINTED PAGE NUMBER:
+- The "PDF page number" is the page's position in the whole document — use the
+  exact mapping listed above (this batch covers ${pdfPageStart}..${pdfPageEnd}).
+- Many pages also show a PRINTED page number (e.g. "68" printed at the bottom). This
+  is the book's own numbering and is usually DIFFERENT from the PDF page number because
+  of the cover and front matter.
+- ALWAYS use the PDF page number (from the mapping above) for image filenames.
+  NEVER use the printed page number.
 
 TASK: Convert all content to clean Markdown format.
 
 IMAGE REFERENCES:
 - For each illustration/drawing, insert a markdown image reference
-- Use PDF page numbers (${pdfPageStart}-${pdfPageEnd}) for the filename, NOT printed page numbers
 - Format: ![Detailed description](images/page_XXX_YYY.jpg)
-- XXX = PDF page number (zero-padded to 3 digits)
+- XXX = the PDF page number (zero-padded to 3 digits) of the page the image is on,
+  taken from the mapping above — NOT the printed page number.
 - YYY = image index on that page (001, 002, etc.)
+
+IMAGE BOUNDARIES — what counts as ONE image (use the drawn frame as the unit):
+- The unit is the visible rectangular FRAME/BORDER drawn around the artwork.
+- If several sub-drawings are enclosed TOGETHER inside a SINGLE outer frame (e.g. a
+  grid of instrument dials in one box, or a labeled diagram with multiple parts in one
+  box), that is ONE image — do NOT split it into multiple images.
+- If a figure is made of MULTIPLE separate framed panels (each panel has its own
+  border, side by side or stacked), emit ONE image per panel.
+- When panels are individually numbered (#N), each numbered panel is its own image.
+- Decide boundaries from the drawn borders only; labels/captions printed outside a
+  frame do not split or merge images.
+- IGNORE page bleed-through / show-through (faint ghosted or mirrored marks from the
+  reverse side of the sheet or facing page) — it is not an illustration.
+${CONFIG.MARKUP_NOTES ? `\nBOOK-SPECIFIC MARKUP NOTES (apply where relevant to the pages in this batch):\n${CONFIG.MARKUP_NOTES}\n` : ''}
 - PRINTED PANEL NUMBER: If the illustration has a visible printed number or label next to it
   (e.g. a numbered panel "8." in an exercise grid), begin the description with that number
   using the form "#N " (a hash, the number, then a space). This lets downstream tooling
@@ -233,7 +285,8 @@ IMPORTANT:
 - Return ONLY the markdown text content
 - Do not generate any images in your response, only image references.
 - No explanations or commentary before or after the markdown.
-- Use PDF page numbers (${pdfPageStart}-${pdfPageEnd}) for image filenames.
+- For image filenames use the PDF page number from the page mapping above
+  (this batch = pages ${pdfPageStart}..${pdfPageEnd}), NEVER the printed page number.
 - Pay particular attention to marking underlined text.
 ${CONFIG.EXTRA_PROMPT ? `\n---\n\nADDITIONAL COURSE/BOOK-SPECIFIC INSTRUCTIONS:\n${CONFIG.EXTRA_PROMPT.trim()}\n` : ''}
 `;
@@ -254,6 +307,12 @@ function ensureDir(dirPath) {
 
 function zeroPad(num, length = 3) {
   return String(num).padStart(length, '0');
+}
+
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 function sanitizeFilenamePart(s) {

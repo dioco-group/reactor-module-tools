@@ -1,0 +1,11 @@
+{
+  "courseName": "ALC DLI English — Student Text Book 4",
+  "_comment": "Paths resolved relative to this config file.",
+  "inputDir": "../../data/alc-st-4/md",
+  "outputDir": "../../data/alc-st-4/module",
+  "model": "gemini-3.1-pro-preview",
+  "maxTokens": 32000,
+  "temperature": 1.0,
+  "thinkingBudget": 4096,
+  "delayBetweenRequests": 3000
+}
