@@ -1,0 +1,5987 @@
+{
+  "generatedAt": "2026-06-03T22:34:14.441Z",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "lessons": [
+    {
+      "id": "1A",
+      "title": "Lesson 1A",
+      "figures": [
+        {
+          "n": 1,
+          "instruction": "Repeat the words and sentences.",
+          "instructionRu": "Слушайте команды и повторяйте их.",
+          "activityType": "repeat_sentence",
+          "audioSrc": "/home/j/projects/reactor-module-tools/data/alc-english/audio/AUDIO/Lesson 1A/Lesson 1A/Figure 01.mp3",
+          "audioPublic": "audio/1A/Figure01.mp3",
+          "durationSec": 205.3224375,
+          "images": [
+            {
+              "index": 1,
+              "panel": 1,
+              "path": "images/page_011_001.jpg",
+              "caption": "A man holding his hand up to his right ear, indicating the action of listening"
+            },
+            {
+              "index": 2,
+              "panel": 2,
+              "path": "images/page_011_002.jpg",
+              "caption": "A man speaking with his mouth open, indicating the action of repeating or speaking"
+            },
+            {
+              "index": 3,
+              "panel": 3,
+              "path": "images/page_011_003.jpg",
+              "caption": "Profile view of a man looking towards the right, with a dashed arrow pointing from his eye to indicate looking"
+            },
+            {
+              "index": 4,
+              "panel": 4,
+              "path": "images/page_011_004.jpg",
+              "caption": "A hand holding a pencil writing the word \"no\" on a piece of paper"
+            },
+            {
+              "index": 5,
+              "panel": 5,
+              "path": "images/page_011_005.jpg",
+              "caption": "A hand holding a pencil drawing a circle around the letter \"c\" in \"a b c\""
+            },
+            {
+              "index": 6,
+              "panel": 6,
+              "path": "images/page_011_006.jpg",
+              "caption": "A man walking towards the left, with footprints shown behind him, indicating the action of going or walking"
+            },
+            {
+              "index": 7,
+              "panel": 7,
+              "path": "images/page_011_007.jpg",
+              "caption": "A closed door with a curved arrow indicating the door opening"
+            },
+            {
+              "index": 8,
+              "panel": 8,
+              "path": "images/page_011_008.jpg",
+              "caption": "An open book with two arrows pointing inwards, indicating closing the book"
+            },
+            {
+              "index": 9,
+              "panel": 9,
+              "path": "images/page_011_009.jpg",
+              "caption": "A man seen from behind opening a window, with an arrow pointing upwards"
+            },
+            {
+              "index": 10,
+              "panel": 10,
+              "path": "images/page_011_010.jpg",
+              "caption": "An open door with a curved arrow indicating the door closing"
+            },
+            {
+              "index": 11,
+              "panel": 11,
+              "path": "images/page_011_011.jpg",
+              "caption": "A man seen from behind standing in front of a window, with a downward-pointing arrow next to it, indicating closing the window"
+            },
+            {
+              "index": 12,
+              "panel": 12,
+              "path": "images/page_011_012.jpg",
+              "caption": "An open book with arrows pointing outwards, indicating opening the book"
+            }
+          ],
+          "segments": [
+            {
+              "start": 10.16,
+              "end": 16.98,
+              "en": "American Language Course, Book 1, Tape 1A.",
+              "ru": "Американский языковой курс, Книга 1, Лента 1А.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 10.16,
+                  "end": 10.74,
+                  "word": "American"
+                },
+                {
+                  "start": 10.74,
+                  "end": 11.34,
+                  "word": "Language"
+                },
+                {
+                  "start": 11.34,
+                  "end": 11.88,
+                  "word": "Course,"
+                },
+                {
+                  "start": 12.92,
+                  "end": 14.04,
+                  "word": "Book"
+                },
+                {
+                  "start": 14.04,
+                  "end": 14.46,
+                  "word": "1,"
+                },
+                {
+                  "start": 15.58,
+                  "end": 15.92,
+                  "word": "Tape"
+                },
+                {
+                  "start": 15.92,
+                  "end": 16.98,
+                  "word": "1A."
+                }
+              ],
+              "role": "other"
+            },
+            {
+              "start": 23.16,
+              "end": 31.44,
+              "en": "Hello. Please look at the activities for Lesson 1A.",
+              "ru": "Здравствуйте. Пожалуйста, посмотрите на задания к уроку 1А.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 23.16,
+                  "end": 23.92,
+                  "word": "Hello!"
+                },
+                {
+                  "start": 25.08,
+                  "end": 26.28,
+                  "word": "Please"
+                },
+                {
+                  "start": 26.28,
+                  "end": 27.48,
+                  "word": "look"
+                },
+                {
+                  "start": 27.48,
+                  "end": 27.78,
+                  "word": "at"
+                },
+                {
+                  "start": 27.78,
+                  "end": 28.88,
+                  "word": "the"
+                },
+                {
+                  "start": 28.88,
+                  "end": 29.52,
+                  "word": "activities"
+                },
+                {
+                  "start": 29.52,
+                  "end": 31,
+                  "word": "for"
+                },
+                {
+                  "start": 31,
+                  "end": 31.44,
+                  "word": "Tape"
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 40.62,
+              "end": 43.1,
+              "en": "Listen and repeat.",
+              "ru": "Слушайте и повторяйте.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 40.62,
+                  "end": 41.38,
+                  "word": "Listen"
+                },
+                {
+                  "start": 41.38,
+                  "end": 42.52,
+                  "word": "and"
+                },
+                {
+                  "start": 42.52,
+                  "end": 43.1,
+                  "word": "repeat."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 75.56,
+              "end": 79.7,
+              "en": "Look at the Language Laboratory Activities.",
+              "ru": "Посмотрите на задания в языковой лаборатории.",
+              "itemNumber": 3,
+              "image": {
+                "path": "images/page_011_003.jpg",
+                "caption": "Profile view of a man looking towards the right, with a dashed arrow pointing from his eye to indicate looking",
+                "panel": 3,
+                "publicPath": "images/page_011_003.jpg"
+              },
+              "words": [
+                {
+                  "start": 75.56,
+                  "end": 76.4,
+                  "word": "Look"
+                },
+                {
+                  "start": 76.4,
+                  "end": 76.82,
+                  "word": "at"
+                },
+                {
+                  "start": 76.82,
+                  "end": 77.04,
+                  "word": "the"
+                },
+                {
+                  "start": 77.04,
+                  "end": 77.52,
+                  "word": "language"
+                },
+                {
+                  "start": 77.52,
+                  "end": 78.42,
+                  "word": "laboratory"
+                },
+                {
+                  "start": 78.42,
+                  "end": 79.7,
+                  "word": "activities."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 86.008,
+              "end": 89.46,
+              "en": "Number 4: Write the word.",
+              "ru": "Номер 4: Напишите слово.",
+              "itemNumber": 4,
+              "image": {
+                "path": "images/page_011_004.jpg",
+                "caption": "A hand holding a pencil writing the word \"no\" on a piece of paper",
+                "panel": 4,
+                "publicPath": "images/page_011_004.jpg"
+              },
+              "words": [
+                {
+                  "start": 85.82,
+                  "end": 86.46,
+                  "word": "Number"
+                },
+                {
+                  "start": 86.46,
+                  "end": 87.04,
+                  "word": "four,"
+                },
+                {
+                  "start": 87.52,
+                  "end": 88.32,
+                  "word": "write"
+                },
+                {
+                  "start": 88.32,
+                  "end": 88.92,
+                  "word": "the"
+                },
+                {
+                  "start": 88.92,
+                  "end": 89.46,
+                  "word": "word."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 93.608,
+              "end": 95.46,
+              "en": "Write the word.",
+              "ru": "Напишите слово.",
+              "itemNumber": 4,
+              "image": {
+                "path": "images/page_011_004.jpg",
+                "caption": "A hand holding a pencil writing the word \"no\" on a piece of paper",
+                "panel": 4,
+                "publicPath": "images/page_011_004.jpg"
+              },
+              "words": [
+                {
+                  "start": 93.608,
+                  "end": 94.28,
+                  "word": "Write"
+                },
+                {
+                  "start": 94.28,
+                  "end": 94.92,
+                  "word": "the"
+                },
+                {
+                  "start": 94.92,
+                  "end": 95.46,
+                  "word": "word."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 99.568,
+              "end": 102.72,
+              "en": "Number 5: Circle the letter.",
+              "ru": "Номер 5: Обведите букву.",
+              "itemNumber": 5,
+              "image": {
+                "path": "images/page_011_005.jpg",
+                "caption": "A hand holding a pencil drawing a circle around the letter \"c\" in \"a b c\"",
+                "panel": 5,
+                "publicPath": "images/page_011_005.jpg"
+              },
+              "words": [
+                {
+                  "start": 99.42,
+                  "end": 100.06,
+                  "word": "Number"
+                },
+                {
+                  "start": 100.06,
+                  "end": 100.66,
+                  "word": "five,"
+                },
+                {
+                  "start": 101.46,
+                  "end": 101.88,
+                  "word": "circle"
+                },
+                {
+                  "start": 101.88,
+                  "end": 102.4,
+                  "word": "the"
+                },
+                {
+                  "start": 102.4,
+                  "end": 102.72,
+                  "word": "letter."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 106.83,
+              "end": 108.59,
+              "en": "Circle the letter.",
+              "ru": "Обведите букву.",
+              "itemNumber": 5,
+              "image": {
+                "path": "images/page_011_005.jpg",
+                "caption": "A hand holding a pencil drawing a circle around the letter \"c\" in \"a b c\"",
+                "panel": 5,
+                "publicPath": "images/page_011_005.jpg"
+              },
+              "words": [
+                {
+                  "start": 106.83,
+                  "end": 107.57,
+                  "word": "Circle"
+                },
+                {
+                  "start": 107.57,
+                  "end": 108.21,
+                  "word": "the"
+                },
+                {
+                  "start": 108.21,
+                  "end": 108.59,
+                  "word": "letter."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 113.07,
+              "end": 116.21,
+              "en": "Number 6: Go to the lab.",
+              "ru": "Номер 6: Идите в лабораторию.",
+              "itemNumber": 6,
+              "image": {
+                "path": "images/page_011_006.jpg",
+                "caption": "A man walking towards the left, with footprints shown behind him, indicating the action of going or walking",
+                "panel": 6,
+                "publicPath": "images/page_011_006.jpg"
+              },
+              "words": [
+                {
+                  "start": 113.07,
+                  "end": 113.29,
+                  "word": "Number"
+                },
+                {
+                  "start": 113.29,
+                  "end": 113.91,
+                  "word": "six,"
+                },
+                {
+                  "start": 114.53,
+                  "end": 114.91,
+                  "word": "go"
+                },
+                {
+                  "start": 114.91,
+                  "end": 115.53,
+                  "word": "to"
+                },
+                {
+                  "start": 115.53,
+                  "end": 115.75,
+                  "word": "the"
+                },
+                {
+                  "start": 115.75,
+                  "end": 116.21,
+                  "word": "lab."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 119.912,
+              "end": 121.93,
+              "en": "Go to the lab.",
+              "ru": "Идите в лабораторию.",
+              "itemNumber": 6,
+              "image": {
+                "path": "images/page_011_006.jpg",
+                "caption": "A man walking towards the left, with footprints shown behind him, indicating the action of going or walking",
+                "panel": 6,
+                "publicPath": "images/page_011_006.jpg"
+              },
+              "words": [
+                {
+                  "start": 119.91199999999999,
+                  "end": 120.55,
+                  "word": "Go"
+                },
+                {
+                  "start": 120.55,
+                  "end": 121.21,
+                  "word": "to"
+                },
+                {
+                  "start": 121.21,
+                  "end": 121.43,
+                  "word": "the"
+                },
+                {
+                  "start": 121.43,
+                  "end": 121.93,
+                  "word": "lab."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 126.412,
+              "end": 129.97,
+              "en": "Number 7: Open the door.",
+              "ru": "Номер 7: Откройте дверь.",
+              "itemNumber": 7,
+              "image": {
+                "path": "images/page_011_007.jpg",
+                "caption": "A closed door with a curved arrow indicating the door opening",
+                "panel": 7,
+                "publicPath": "images/page_011_007.jpg"
+              },
+              "words": [
+                {
+                  "start": 126.36999999999999,
+                  "end": 126.99,
+                  "word": "Number"
+                },
+                {
+                  "start": 126.99,
+                  "end": 127.51,
+                  "word": "seven,"
+                },
+                {
+                  "start": 128.39,
+                  "end": 128.83,
+                  "word": "open"
+                },
+                {
+                  "start": 128.83,
+                  "end": 129.53,
+                  "word": "the"
+                },
+                {
+                  "start": 129.53,
+                  "end": 129.97,
+                  "word": "door."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 133.872,
+              "end": 135.75,
+              "en": "Open the door.",
+              "ru": "Откройте дверь.",
+              "itemNumber": 7,
+              "image": {
+                "path": "images/page_011_007.jpg",
+                "caption": "A closed door with a curved arrow indicating the door opening",
+                "panel": 7,
+                "publicPath": "images/page_011_007.jpg"
+              },
+              "words": [
+                {
+                  "start": 133.87,
+                  "end": 134.49,
+                  "word": "Open"
+                },
+                {
+                  "start": 134.49,
+                  "end": 135.35,
+                  "word": "the"
+                },
+                {
+                  "start": 135.35,
+                  "end": 135.75,
+                  "word": "door."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 140.4,
+              "end": 144.22,
+              "en": "Number 8: Close the book.",
+              "ru": "Номер 8: Закройте книгу.",
+              "itemNumber": 8,
+              "image": {
+                "path": "images/page_011_008.jpg",
+                "caption": "An open book with two arrows pointing inwards, indicating closing the book",
+                "panel": 8,
+                "publicPath": "images/page_011_008.jpg"
+              },
+              "words": [
+                {
+                  "start": 140.4,
+                  "end": 141.02,
+                  "word": "Number"
+                },
+                {
+                  "start": 141.02,
+                  "end": 141.6,
+                  "word": "eight,"
+                },
+                {
+                  "start": 142.36,
+                  "end": 143.26,
+                  "word": "close"
+                },
+                {
+                  "start": 143.26,
+                  "end": 143.8,
+                  "word": "the"
+                },
+                {
+                  "start": 143.8,
+                  "end": 144.22,
+                  "word": "book."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 147.6,
+              "end": 149.9,
+              "en": "Close the book.",
+              "ru": "Закройте книгу.",
+              "itemNumber": 8,
+              "image": {
+                "path": "images/page_011_008.jpg",
+                "caption": "An open book with two arrows pointing inwards, indicating closing the book",
+                "panel": 8,
+                "publicPath": "images/page_011_008.jpg"
+              },
+              "words": [
+                {
+                  "start": 147.6,
+                  "end": 148.96,
+                  "word": "Close"
+                },
+                {
+                  "start": 148.96,
+                  "end": 149.48,
+                  "word": "the"
+                },
+                {
+                  "start": 149.48,
+                  "end": 149.9,
+                  "word": "book."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 154.62,
+              "end": 157.98,
+              "en": "Number 9: Open the window.",
+              "ru": "Номер 9: Откройте окно.",
+              "itemNumber": 9,
+              "image": {
+                "path": "images/page_011_009.jpg",
+                "caption": "A man seen from behind opening a window, with an arrow pointing upwards",
+                "panel": 9,
+                "publicPath": "images/page_011_009.jpg"
+              },
+              "words": [
+                {
+                  "start": 154.48,
+                  "end": 155.16,
+                  "word": "Number"
+                },
+                {
+                  "start": 155.16,
+                  "end": 155.7,
+                  "word": "nine,"
+                },
+                {
+                  "start": 156.46,
+                  "end": 156.86,
+                  "word": "open"
+                },
+                {
+                  "start": 156.86,
+                  "end": 157.46,
+                  "word": "the"
+                },
+                {
+                  "start": 157.46,
+                  "end": 157.98,
+                  "word": "window."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 161.98,
+              "end": 163.98,
+              "en": "Open the window.",
+              "ru": "Откройте окно.",
+              "itemNumber": 9,
+              "image": {
+                "path": "images/page_011_009.jpg",
+                "caption": "A man seen from behind opening a window, with an arrow pointing upwards",
+                "panel": 9,
+                "publicPath": "images/page_011_009.jpg"
+              },
+              "words": [
+                {
+                  "start": 161.95999999999998,
+                  "end": 162.64,
+                  "word": "Open"
+                },
+                {
+                  "start": 162.64,
+                  "end": 163.38,
+                  "word": "the"
+                },
+                {
+                  "start": 163.38,
+                  "end": 163.98,
+                  "word": "window."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 169.61,
+              "end": 171.33,
+              "en": "Number 10: Close the door.",
+              "ru": "Номер 10: Закройте дверь.",
+              "itemNumber": 10,
+              "image": {
+                "path": "images/page_011_010.jpg",
+                "caption": "An open door with a curved arrow indicating the door closing",
+                "panel": 10,
+                "publicPath": "images/page_011_010.jpg"
+              },
+              "words": [
+                {
+                  "start": 169.61,
+                  "end": 170.43,
+                  "word": "Close"
+                },
+                {
+                  "start": 170.43,
+                  "end": 170.87,
+                  "word": "the"
+                },
+                {
+                  "start": 170.87,
+                  "end": 171.33,
+                  "word": "door."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 175.05,
+              "end": 176.93,
+              "en": "Close the door.",
+              "ru": "Закройте дверь.",
+              "itemNumber": 10,
+              "image": {
+                "path": "images/page_011_010.jpg",
+                "caption": "An open door with a curved arrow indicating the door closing",
+                "panel": 10,
+                "publicPath": "images/page_011_010.jpg"
+              },
+              "words": [
+                {
+                  "start": 175.05,
+                  "end": 176.01,
+                  "word": "Close"
+                },
+                {
+                  "start": 176.01,
+                  "end": 176.51,
+                  "word": "the"
+                },
+                {
+                  "start": 176.51,
+                  "end": 176.93,
+                  "word": "door."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 180.67,
+              "end": 182.07,
+              "en": "Number 11:",
+              "ru": "Номер 11:",
+              "itemNumber": 11,
+              "image": {
+                "path": "images/page_011_011.jpg",
+                "caption": "A man seen from behind standing in front of a window, with a downward-pointing arrow next to it, indicating closing the window",
+                "panel": 11,
+                "publicPath": "images/page_011_011.jpg"
+              },
+              "words": [
+                {
+                  "start": 180.67,
+                  "end": 181.55,
+                  "word": "Number"
+                },
+                {
+                  "start": 181.55,
+                  "end": 182.07,
+                  "word": "eleven"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 182.776,
+              "end": 184.55,
+              "en": "Close the window.",
+              "ru": "Закройте окно.",
+              "itemNumber": 11,
+              "image": {
+                "path": "images/page_011_011.jpg",
+                "caption": "A man seen from behind standing in front of a window, with a downward-pointing arrow next to it, indicating closing the window",
+                "panel": 11,
+                "publicPath": "images/page_011_011.jpg"
+              },
+              "words": [
+                {
+                  "start": 182.65,
+                  "end": 183.35,
+                  "word": "Close"
+                },
+                {
+                  "start": 183.35,
+                  "end": 184.05,
+                  "word": "the"
+                },
+                {
+                  "start": 184.05,
+                  "end": 184.55,
+                  "word": "window."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 188.476,
+              "end": 190.75,
+              "en": "Close the window.",
+              "ru": "Закройте окно.",
+              "itemNumber": 11,
+              "image": {
+                "path": "images/page_011_011.jpg",
+                "caption": "A man seen from behind standing in front of a window, with a downward-pointing arrow next to it, indicating closing the window",
+                "panel": 11,
+                "publicPath": "images/page_011_011.jpg"
+              },
+              "words": [
+                {
+                  "start": 188.476,
+                  "end": 189.29,
+                  "word": "Close"
+                },
+                {
+                  "start": 189.29,
+                  "end": 189.81,
+                  "word": "the"
+                },
+                {
+                  "start": 189.81,
+                  "end": 190.75,
+                  "word": "window."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 193.996,
+              "end": 195.33,
+              "en": "Number 12:",
+              "ru": "Номер 12:",
+              "itemNumber": 12,
+              "image": {
+                "path": "images/page_011_012.jpg",
+                "caption": "An open book with arrows pointing outwards, indicating opening the book",
+                "panel": 12,
+                "publicPath": "images/page_011_012.jpg"
+              },
+              "words": [
+                {
+                  "start": 193.93,
+                  "end": 194.63,
+                  "word": "Number"
+                },
+                {
+                  "start": 194.63,
+                  "end": 195.33,
+                  "word": "twelve"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 195.876,
+              "end": 197.59,
+              "en": "Open the book.",
+              "ru": "Откройте книгу.",
+              "itemNumber": 12,
+              "image": {
+                "path": "images/page_011_012.jpg",
+                "caption": "An open book with arrows pointing outwards, indicating opening the book",
+                "panel": 12,
+                "publicPath": "images/page_011_012.jpg"
+              },
+              "words": [
+                {
+                  "start": 195.79000000000002,
+                  "end": 196.49,
+                  "word": "Open"
+                },
+                {
+                  "start": 196.49,
+                  "end": 197.17,
+                  "word": "the"
+                },
+                {
+                  "start": 197.17,
+                  "end": 197.59,
+                  "word": "book."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 201.45,
+              "end": 203.21,
+              "en": "Open the book.",
+              "ru": "Откройте книгу.",
+              "itemNumber": 12,
+              "image": {
+                "path": "images/page_011_012.jpg",
+                "caption": "An open book with arrows pointing outwards, indicating opening the book",
+                "panel": 12,
+                "publicPath": "images/page_011_012.jpg"
+              },
+              "words": [
+                {
+                  "start": 201.45,
+                  "end": 202.27,
+                  "word": "Open"
+                },
+                {
+                  "start": 202.27,
+                  "end": 202.75,
+                  "word": "the"
+                },
+                {
+                  "start": 202.75,
+                  "end": 203.21,
+                  "word": "book."
+                }
+              ],
+              "role": "model"
+            }
+          ],
+          "instructionEn": "Listen to the commands and repeat them."
+        },
+        {
+          "n": 2,
+          "instruction": "Repeat the words and sentences.",
+          "instructionRu": "Посмотрите на рисунок 2. Слушайте и повторяйте команды.",
+          "activityType": "repeat_sentence",
+          "audioSrc": "/home/j/projects/reactor-module-tools/data/alc-english/audio/AUDIO/Lesson 1A/Lesson 1A/Figure 02.mp3",
+          "audioPublic": "audio/1A/Figure02.mp3",
+          "durationSec": 375.6669375,
+          "images": [],
+          "segments": [
+            {
+              "start": 0.4,
+              "end": 3.22,
+              "en": "Go to Figure 2.",
+              "ru": "Перейдите к рисунку 2.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 0.4,
+                  "end": 0.96,
+                  "word": "Go"
+                },
+                {
+                  "start": 0.96,
+                  "end": 1.46,
+                  "word": "to"
+                },
+                {
+                  "start": 1.46,
+                  "end": 2.44,
+                  "word": "Figure"
+                },
+                {
+                  "start": 2.44,
+                  "end": 3.22,
+                  "word": "2."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 4.58,
+              "end": 8.06,
+              "en": "Look at Figure 2.",
+              "ru": "Посмотрите на рисунок 2.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 4.58,
+                  "end": 5.64,
+                  "word": "Look"
+                },
+                {
+                  "start": 5.64,
+                  "end": 6,
+                  "word": "at"
+                },
+                {
+                  "start": 6,
+                  "end": 7.36,
+                  "word": "Figure"
+                },
+                {
+                  "start": 7.36,
+                  "end": 8.06,
+                  "word": "2."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 9.72,
+              "end": 11.98,
+              "en": "Listen and repeat.",
+              "ru": "Слушайте и повторяйте.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 9.72,
+                  "end": 10.24,
+                  "word": "Listen"
+                },
+                {
+                  "start": 10.24,
+                  "end": 11.48,
+                  "word": "and"
+                },
+                {
+                  "start": 11.48,
+                  "end": 11.98,
+                  "word": "repeat."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 32.36,
+              "end": 36.16,
+              "en": "Number 3: Look at the picture.",
+              "ru": "Номер 3: Посмотрите на картинку.",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 32.36,
+                  "end": 33.04,
+                  "word": "Number"
+                },
+                {
+                  "start": 33.04,
+                  "end": 33.6,
+                  "word": "three,"
+                },
+                {
+                  "start": 34.3,
+                  "end": 35,
+                  "word": "look"
+                },
+                {
+                  "start": 35,
+                  "end": 35.36,
+                  "word": "at"
+                },
+                {
+                  "start": 35.36,
+                  "end": 35.64,
+                  "word": "the"
+                },
+                {
+                  "start": 35.64,
+                  "end": 36.16,
+                  "word": "picture."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 40.408,
+              "end": 42.3,
+              "en": "Look at the picture.",
+              "ru": "Посмотрите на картинку.",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 40.38999999999999,
+                  "end": 40.98,
+                  "word": "Look"
+                },
+                {
+                  "start": 40.98,
+                  "end": 41.32,
+                  "word": "at"
+                },
+                {
+                  "start": 41.32,
+                  "end": 41.76,
+                  "word": "the"
+                },
+                {
+                  "start": 41.76,
+                  "end": 42.3,
+                  "word": "picture."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 47.748,
+              "end": 51.2,
+              "en": "Number 4: Write the word.",
+              "ru": "Номер 4: Напишите слово.",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 47.748000000000005,
+                  "end": 48.34,
+                  "word": "Number"
+                },
+                {
+                  "start": 48.34,
+                  "end": 48.92,
+                  "word": "four,"
+                },
+                {
+                  "start": 49.74,
+                  "end": 50.1,
+                  "word": "write"
+                },
+                {
+                  "start": 50.1,
+                  "end": 50.7,
+                  "word": "the"
+                },
+                {
+                  "start": 50.7,
+                  "end": 51.2,
+                  "word": "word."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 54.58,
+              "end": 56.84,
+              "en": "Write the word.",
+              "ru": "Напишите слово.",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 54.58,
+                  "end": 55.76,
+                  "word": "Write"
+                },
+                {
+                  "start": 55.76,
+                  "end": 56.34,
+                  "word": "the"
+                },
+                {
+                  "start": 56.34,
+                  "end": 56.84,
+                  "word": "word."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 62,
+              "end": 63.88,
+              "en": "Number 5: Circle the letter.",
+              "ru": "Номер 5: Обведите букву.",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 62,
+                  "end": 62.8,
+                  "word": "Circle"
+                },
+                {
+                  "start": 62.8,
+                  "end": 63.44,
+                  "word": "the"
+                },
+                {
+                  "start": 63.44,
+                  "end": 63.88,
+                  "word": "letter."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 67.68,
+              "end": 69.38,
+              "en": "Circle the letter.",
+              "ru": "Обведите букву.",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 67.61999999999999,
+                  "end": 68.24,
+                  "word": "Circle"
+                },
+                {
+                  "start": 68.24,
+                  "end": 69.04,
+                  "word": "the"
+                },
+                {
+                  "start": 69.04,
+                  "end": 69.38,
+                  "word": "letter."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 73.3,
+              "end": 76.82,
+              "en": "Number 6: Go to the lab.",
+              "ru": "Номер 6: Идите в лабораторию.",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 73.16,
+                  "end": 73.78,
+                  "word": "Number"
+                },
+                {
+                  "start": 73.78,
+                  "end": 74.42,
+                  "word": "six,"
+                },
+                {
+                  "start": 75,
+                  "end": 75.56,
+                  "word": "go"
+                },
+                {
+                  "start": 75.56,
+                  "end": 76.1,
+                  "word": "to"
+                },
+                {
+                  "start": 76.1,
+                  "end": 76.32,
+                  "word": "the"
+                },
+                {
+                  "start": 76.32,
+                  "end": 76.82,
+                  "word": "lab."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 80.6,
+              "end": 82.4,
+              "en": "Go to the lab.",
+              "ru": "Идите в лабораторию.",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 80.44,
+                  "end": 81.06,
+                  "word": "Go"
+                },
+                {
+                  "start": 81.06,
+                  "end": 81.66,
+                  "word": "to"
+                },
+                {
+                  "start": 81.66,
+                  "end": 81.92,
+                  "word": "the"
+                },
+                {
+                  "start": 81.92,
+                  "end": 82.4,
+                  "word": "lab."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 86.32,
+              "end": 89.54,
+              "en": "Number 7: Open the door.",
+              "ru": "Номер 7: Откройте дверь.",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 86.22,
+                  "end": 86.84,
+                  "word": "Number"
+                },
+                {
+                  "start": 86.84,
+                  "end": 87.34,
+                  "word": "seven,"
+                },
+                {
+                  "start": 88.08,
+                  "end": 88.4,
+                  "word": "open"
+                },
+                {
+                  "start": 88.4,
+                  "end": 89.1,
+                  "word": "the"
+                },
+                {
+                  "start": 89.1,
+                  "end": 89.54,
+                  "word": "door."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 93.04,
+              "end": 94.96,
+              "en": "Open the door.",
+              "ru": "Откройте дверь.",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 93.04,
+                  "end": 93.86,
+                  "word": "Open"
+                },
+                {
+                  "start": 93.86,
+                  "end": 94.42,
+                  "word": "the"
+                },
+                {
+                  "start": 94.42,
+                  "end": 94.96,
+                  "word": "door."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 99.76,
+              "end": 102.96,
+              "en": "Number 8: Open the book.",
+              "ru": "Номер 8: Откройте книгу.",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 99.75,
+                  "end": 100.36,
+                  "word": "Number"
+                },
+                {
+                  "start": 100.36,
+                  "end": 100.92,
+                  "word": "eight,"
+                },
+                {
+                  "start": 101.52,
+                  "end": 101.94,
+                  "word": "open"
+                },
+                {
+                  "start": 101.94,
+                  "end": 102.52,
+                  "word": "the"
+                },
+                {
+                  "start": 102.52,
+                  "end": 102.96,
+                  "word": "book."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 105.88,
+              "end": 107.86,
+              "en": "Open the book.",
+              "ru": "Откройте книгу.",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 105.88,
+                  "end": 106.98,
+                  "word": "Open"
+                },
+                {
+                  "start": 106.98,
+                  "end": 107.46,
+                  "word": "the"
+                },
+                {
+                  "start": 107.46,
+                  "end": 107.86,
+                  "word": "book."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 111.38,
+              "end": 114.74,
+              "en": "Number 9: Open the window.",
+              "ru": "Номер 9: Откройте окно.",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 111.38000000000001,
+                  "end": 112.04,
+                  "word": "Number"
+                },
+                {
+                  "start": 112.04,
+                  "end": 112.58,
+                  "word": "nine,"
+                },
+                {
+                  "start": 113.28,
+                  "end": 113.66,
+                  "word": "open"
+                },
+                {
+                  "start": 113.66,
+                  "end": 114.28,
+                  "word": "the"
+                },
+                {
+                  "start": 114.28,
+                  "end": 114.74,
+                  "word": "window."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 118.24,
+              "end": 120.24,
+              "en": "Open the window.",
+              "ru": "Откройте окно.",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 118.24000000000001,
+                  "end": 118.86,
+                  "word": "Open"
+                },
+                {
+                  "start": 118.86,
+                  "end": 119.64,
+                  "word": "the"
+                },
+                {
+                  "start": 119.64,
+                  "end": 120.24,
+                  "word": "window."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 123.34,
+              "end": 126.98,
+              "en": "Number 10: Close the door.",
+              "ru": "Номер 10: Закройте дверь.",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 123.34,
+                  "end": 124.06,
+                  "word": "Number"
+                },
+                {
+                  "start": 124.06,
+                  "end": 124.62,
+                  "word": "ten,"
+                },
+                {
+                  "start": 125.18,
+                  "end": 125.96,
+                  "word": "close"
+                },
+                {
+                  "start": 125.96,
+                  "end": 126.48,
+                  "word": "the"
+                },
+                {
+                  "start": 126.48,
+                  "end": 126.98,
+                  "word": "door."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 130.22,
+              "end": 132.42,
+              "en": "Close the door.",
+              "ru": "Закройте дверь.",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 130.22,
+                  "end": 131.48,
+                  "word": "Close"
+                },
+                {
+                  "start": 131.48,
+                  "end": 131.96,
+                  "word": "the"
+                },
+                {
+                  "start": 131.96,
+                  "end": 132.42,
+                  "word": "door."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 136.564,
+              "end": 140.36,
+              "en": "Number 11: Close the window.",
+              "ru": "Номер 11: Закройте окно.",
+              "itemNumber": 11,
+              "image": null,
+              "words": [
+                {
+                  "start": 136.564,
+                  "end": 137.2,
+                  "word": "Number"
+                },
+                {
+                  "start": 137.2,
+                  "end": 137.86,
+                  "word": "eleven,"
+                },
+                {
+                  "start": 138.72,
+                  "end": 139.24,
+                  "word": "close"
+                },
+                {
+                  "start": 139.24,
+                  "end": 139.78,
+                  "word": "the"
+                },
+                {
+                  "start": 139.78,
+                  "end": 140.36,
+                  "word": "window."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 143.54,
+              "end": 145.94,
+              "en": "Close the window.",
+              "ru": "Закройте окно.",
+              "itemNumber": 11,
+              "image": null,
+              "words": [
+                {
+                  "start": 143.54000000000002,
+                  "end": 144.8,
+                  "word": "Close"
+                },
+                {
+                  "start": 144.8,
+                  "end": 145.34,
+                  "word": "the"
+                },
+                {
+                  "start": 145.34,
+                  "end": 145.94,
+                  "word": "window."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 152.44,
+              "end": 153.16,
+              "en": "Number 12: Close the book.",
+              "ru": "Номер 12: Закройте книгу.",
+              "itemNumber": 12,
+              "image": null,
+              "words": [
+                {
+                  "start": 152.44,
+                  "end": 152.64,
+                  "word": "the"
+                },
+                {
+                  "start": 152.64,
+                  "end": 153.16,
+                  "word": "book."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 157.328,
+              "end": 158.72,
+              "en": "Close the book.",
+              "ru": "Закройте книгу.",
+              "itemNumber": 12,
+              "image": null,
+              "words": [
+                {
+                  "start": 157.27,
+                  "end": 157.78,
+                  "word": "Close"
+                },
+                {
+                  "start": 157.78,
+                  "end": 158.28,
+                  "word": "the"
+                },
+                {
+                  "start": 158.28,
+                  "end": 158.72,
+                  "word": "book."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 163.328,
+              "end": 164.18,
+              "en": "Number 13: Repeat the word, please.",
+              "ru": "Номер 13: Повторите слово, пожалуйста.",
+              "itemNumber": 13,
+              "image": null,
+              "words": [
+                {
+                  "start": 162.85000000000002,
+                  "end": 163.36,
+                  "word": "Number"
+                },
+                {
+                  "start": 163.36,
+                  "end": 164.18,
+                  "word": "13."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 165.02,
+              "end": 167.14,
+              "en": "Repeat the word, please.",
+              "ru": "Повторите слово, пожалуйста.",
+              "itemNumber": 13,
+              "image": null,
+              "words": [
+                {
+                  "start": 165.02,
+                  "end": 165.5,
+                  "word": "Repeat"
+                },
+                {
+                  "start": 165.5,
+                  "end": 165.96,
+                  "word": "the"
+                },
+                {
+                  "start": 165.96,
+                  "end": 166.4,
+                  "word": "word,"
+                },
+                {
+                  "start": 167.12,
+                  "end": 167.14,
+                  "word": "please."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 173.208,
+              "end": 175.14,
+              "en": "Repeat the word, please.",
+              "ru": "Повторите слово, пожалуйста.",
+              "itemNumber": 13,
+              "image": null,
+              "words": [
+                {
+                  "start": 172.79000000000002,
+                  "end": 173.3,
+                  "word": "Repeat"
+                },
+                {
+                  "start": 173.3,
+                  "end": 173.72,
+                  "word": "the"
+                },
+                {
+                  "start": 173.72,
+                  "end": 174.18,
+                  "word": "word,"
+                },
+                {
+                  "start": 174.64,
+                  "end": 175.14,
+                  "word": "please."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 182.35,
+              "end": 185.11,
+              "en": "Number 14: Please go to the classroom.",
+              "ru": "Номер 14: Пожалуйста, идите в класс.",
+              "itemNumber": 14,
+              "image": null,
+              "words": [
+                {
+                  "start": 182.35,
+                  "end": 183.21,
+                  "word": "Please"
+                },
+                {
+                  "start": 183.21,
+                  "end": 183.85,
+                  "word": "go"
+                },
+                {
+                  "start": 183.85,
+                  "end": 184.19,
+                  "word": "to"
+                },
+                {
+                  "start": 184.19,
+                  "end": 184.37,
+                  "word": "the"
+                },
+                {
+                  "start": 184.37,
+                  "end": 185.11,
+                  "word": "classroom."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 217.1,
+              "end": 221.88,
+              "en": "Number 16: Write your name, please.",
+              "ru": "Номер 16: Напишите свое имя, пожалуйста.",
+              "itemNumber": 16,
+              "image": null,
+              "words": [
+                {
+                  "start": 217.1,
+                  "end": 217.72,
+                  "word": "Number"
+                },
+                {
+                  "start": 217.72,
+                  "end": 218.54,
+                  "word": "16."
+                },
+                {
+                  "start": 219.08,
+                  "end": 219.96,
+                  "word": "Write"
+                },
+                {
+                  "start": 219.96,
+                  "end": 220.26,
+                  "word": "your"
+                },
+                {
+                  "start": 220.26,
+                  "end": 220.82,
+                  "word": "name,"
+                },
+                {
+                  "start": 221.28,
+                  "end": 221.88,
+                  "word": "please."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 246.62,
+              "end": 248.08,
+              "en": "Number 17: Please open the window.",
+              "ru": "Номер 17: Пожалуйста, откройте окно.",
+              "itemNumber": 17,
+              "image": null,
+              "words": [
+                {
+                  "start": 246.62,
+                  "end": 247.06,
+                  "word": "Open"
+                },
+                {
+                  "start": 247.06,
+                  "end": 247.54,
+                  "word": "the"
+                },
+                {
+                  "start": 247.54,
+                  "end": 248.08,
+                  "word": "window."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 254.464,
+              "end": 258.22,
+              "en": "Number 18: Write the number, please.",
+              "ru": "Номер 18: Напишите число, пожалуйста.",
+              "itemNumber": 18,
+              "image": null,
+              "words": [
+                {
+                  "start": 254.36,
+                  "end": 254.9,
+                  "word": "Number"
+                },
+                {
+                  "start": 254.9,
+                  "end": 255.64,
+                  "word": "18."
+                },
+                {
+                  "start": 256,
+                  "end": 256.56,
+                  "word": "Write"
+                },
+                {
+                  "start": 256.56,
+                  "end": 257,
+                  "word": "the"
+                },
+                {
+                  "start": 257,
+                  "end": 257.4,
+                  "word": "number,"
+                },
+                {
+                  "start": 258.22,
+                  "end": 258.22,
+                  "word": "please."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 263.02,
+              "end": 265.96,
+              "en": "Write the number, please.",
+              "ru": "Напишите число, пожалуйста.",
+              "itemNumber": 18,
+              "image": null,
+              "words": [
+                {
+                  "start": 263.02000000000004,
+                  "end": 264.1,
+                  "word": "Write"
+                },
+                {
+                  "start": 264.1,
+                  "end": 264.44,
+                  "word": "the"
+                },
+                {
+                  "start": 264.44,
+                  "end": 264.86,
+                  "word": "number,"
+                },
+                {
+                  "start": 265.44,
+                  "end": 265.96,
+                  "word": "please."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 270.924,
+              "end": 275.22,
+              "en": "Number 19: Circle the word, please.",
+              "ru": "Номер 19: Обведите слово, пожалуйста.",
+              "itemNumber": 19,
+              "image": null,
+              "words": [
+                {
+                  "start": 270.88,
+                  "end": 271.42,
+                  "word": "Number"
+                },
+                {
+                  "start": 271.42,
+                  "end": 272.06,
+                  "word": "19."
+                },
+                {
+                  "start": 272.9,
+                  "end": 273.32,
+                  "word": "Circle"
+                },
+                {
+                  "start": 273.32,
+                  "end": 273.8,
+                  "word": "the"
+                },
+                {
+                  "start": 273.8,
+                  "end": 274.26,
+                  "word": "word,"
+                },
+                {
+                  "start": 274.6,
+                  "end": 275.22,
+                  "word": "please."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 280.39,
+              "end": 283.01,
+              "en": "Circle the word, please.",
+              "ru": "Обведите слово, пожалуйста.",
+              "itemNumber": 19,
+              "image": null,
+              "words": [
+                {
+                  "start": 280.39,
+                  "end": 281.15,
+                  "word": "Circle"
+                },
+                {
+                  "start": 281.15,
+                  "end": 281.55,
+                  "word": "the"
+                },
+                {
+                  "start": 281.55,
+                  "end": 282.09,
+                  "word": "word"
+                },
+                {
+                  "start": 282.09,
+                  "end": 283.01,
+                  "word": "PLEASE."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 287.71,
+              "end": 288.63,
+              "en": "Number 20: Please look at the clock.",
+              "ru": "Номер 20: Пожалуйста, посмотрите на часы.",
+              "itemNumber": 20,
+              "image": null,
+              "words": [
+                {
+                  "start": 287.71,
+                  "end": 288.03,
+                  "word": "Number"
+                },
+                {
+                  "start": 288.03,
+                  "end": 288.63,
+                  "word": "20."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 289.63,
+              "end": 291.57,
+              "en": "Please look at the clock.",
+              "ru": "Пожалуйста, посмотрите на часы.",
+              "itemNumber": 20,
+              "image": null,
+              "words": [
+                {
+                  "start": 289.63,
+                  "end": 290.23,
+                  "word": "Please"
+                },
+                {
+                  "start": 290.23,
+                  "end": 290.65,
+                  "word": "look"
+                },
+                {
+                  "start": 290.65,
+                  "end": 290.95,
+                  "word": "at"
+                },
+                {
+                  "start": 290.95,
+                  "end": 291.09,
+                  "word": "the"
+                },
+                {
+                  "start": 291.09,
+                  "end": 291.57,
+                  "word": "clock."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 297.11,
+              "end": 299.63,
+              "en": "Please look at the clock.",
+              "ru": "Пожалуйста, посмотрите на часы.",
+              "itemNumber": 20,
+              "image": null,
+              "words": [
+                {
+                  "start": 297.11,
+                  "end": 298.17,
+                  "word": "Please"
+                },
+                {
+                  "start": 298.17,
+                  "end": 298.71,
+                  "word": "look"
+                },
+                {
+                  "start": 298.71,
+                  "end": 298.93,
+                  "word": "at"
+                },
+                {
+                  "start": 298.93,
+                  "end": 299.11,
+                  "word": "the"
+                },
+                {
+                  "start": 299.11,
+                  "end": 299.63,
+                  "word": "clock."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 304.19,
+              "end": 305.93,
+              "en": "Number 21: Go to your chair, please.",
+              "ru": "Номер 21: Идите к своему стулу, пожалуйста.",
+              "itemNumber": 21,
+              "image": null,
+              "words": [
+                {
+                  "start": 304.19,
+                  "end": 305.25,
+                  "word": "Number"
+                },
+                {
+                  "start": 305.25,
+                  "end": 305.93,
+                  "word": "21."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 306.75,
+              "end": 309.37,
+              "en": "Go to your chair, please.",
+              "ru": "Идите к своему стулу, пожалуйста.",
+              "itemNumber": 21,
+              "image": null,
+              "words": [
+                {
+                  "start": 306.75,
+                  "end": 307.47,
+                  "word": "Go"
+                },
+                {
+                  "start": 307.47,
+                  "end": 307.71,
+                  "word": "to"
+                },
+                {
+                  "start": 307.71,
+                  "end": 307.95,
+                  "word": "your"
+                },
+                {
+                  "start": 307.95,
+                  "end": 308.45,
+                  "word": "chair,"
+                },
+                {
+                  "start": 308.93,
+                  "end": 309.37,
+                  "word": "please."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 314.54,
+              "end": 317.4,
+              "en": "Go to your chair, please.",
+              "ru": "Идите к своему стулу, пожалуйста.",
+              "itemNumber": 21,
+              "image": null,
+              "words": [
+                {
+                  "start": 314.54,
+                  "end": 315.12,
+                  "word": "Go"
+                },
+                {
+                  "start": 315.12,
+                  "end": 315.4,
+                  "word": "to"
+                },
+                {
+                  "start": 315.4,
+                  "end": 315.62,
+                  "word": "your"
+                },
+                {
+                  "start": 315.62,
+                  "end": 316.18,
+                  "word": "chair,"
+                },
+                {
+                  "start": 316.8,
+                  "end": 317.4,
+                  "word": "please."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 323.76,
+              "end": 325.48,
+              "en": "Number 22: Please listen.",
+              "ru": "Номер 22: Пожалуйста, слушайте.",
+              "itemNumber": 22,
+              "image": null,
+              "words": [
+                {
+                  "start": 323.76,
+                  "end": 324.6,
+                  "word": "Number"
+                },
+                {
+                  "start": 324.6,
+                  "end": 325.48,
+                  "word": "22"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 326.404,
+              "end": 327.86,
+              "en": "Please listen.",
+              "ru": "Пожалуйста, слушайте.",
+              "itemNumber": 22,
+              "image": null,
+              "words": [
+                {
+                  "start": 326.26,
+                  "end": 326.94,
+                  "word": "Please"
+                },
+                {
+                  "start": 326.94,
+                  "end": 327.86,
+                  "word": "listen!"
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 331.92,
+              "end": 333.62,
+              "en": "Please listen.",
+              "ru": "Пожалуйста, слушайте.",
+              "itemNumber": 22,
+              "image": null,
+              "words": [
+                {
+                  "start": 331.92,
+                  "end": 332.88,
+                  "word": "Please"
+                },
+                {
+                  "start": 332.88,
+                  "end": 333.62,
+                  "word": "listen!"
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 337.744,
+              "end": 339.18,
+              "en": "Number 23: Look at the book, please.",
+              "ru": "Номер 23: Посмотрите на книгу, пожалуйста.",
+              "itemNumber": 23,
+              "image": null,
+              "words": [
+                {
+                  "start": 337.71999999999997,
+                  "end": 338.4,
+                  "word": "Number"
+                },
+                {
+                  "start": 338.4,
+                  "end": 339.18,
+                  "word": "23"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 340.544,
+              "end": 342.82,
+              "en": "Look at the book, please.",
+              "ru": "Посмотрите на книгу, пожалуйста.",
+              "itemNumber": 23,
+              "image": null,
+              "words": [
+                {
+                  "start": 340.42,
+                  "end": 341.1,
+                  "word": "Look"
+                },
+                {
+                  "start": 341.1,
+                  "end": 341.38,
+                  "word": "at"
+                },
+                {
+                  "start": 341.38,
+                  "end": 341.56,
+                  "word": "the"
+                },
+                {
+                  "start": 341.56,
+                  "end": 341.94,
+                  "word": "book,"
+                },
+                {
+                  "start": 342.34,
+                  "end": 342.82,
+                  "word": "please."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 348.08,
+              "end": 351.12,
+              "en": "Look at the book, please.",
+              "ru": "Посмотрите на книгу, пожалуйста.",
+              "itemNumber": 23,
+              "image": null,
+              "words": [
+                {
+                  "start": 348.08,
+                  "end": 348.94,
+                  "word": "Look"
+                },
+                {
+                  "start": 348.94,
+                  "end": 349.4,
+                  "word": "at"
+                },
+                {
+                  "start": 349.4,
+                  "end": 349.64,
+                  "word": "the"
+                },
+                {
+                  "start": 349.64,
+                  "end": 350.08,
+                  "word": "book,"
+                },
+                {
+                  "start": 350.52,
+                  "end": 351.12,
+                  "word": "please."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 357.04,
+              "end": 358.8,
+              "en": "Number 24: Please write my name.",
+              "ru": "Номер 24: Пожалуйста, напишите мое имя.",
+              "itemNumber": 24,
+              "image": null,
+              "words": [
+                {
+                  "start": 357.03999999999996,
+                  "end": 357.72,
+                  "word": "Number"
+                },
+                {
+                  "start": 357.72,
+                  "end": 358.8,
+                  "word": "24"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 359.64,
+              "end": 362.12,
+              "en": "Please write my name.",
+              "ru": "Пожалуйста, напишите мое имя.",
+              "itemNumber": 24,
+              "image": null,
+              "words": [
+                {
+                  "start": 359.64,
+                  "end": 360.4,
+                  "word": "Please"
+                },
+                {
+                  "start": 360.4,
+                  "end": 361.04,
+                  "word": "write"
+                },
+                {
+                  "start": 361.04,
+                  "end": 361.54,
+                  "word": "my"
+                },
+                {
+                  "start": 361.54,
+                  "end": 362.12,
+                  "word": "name."
+                }
+              ],
+              "role": "model"
+            },
+            {
+              "start": 367.16,
+              "end": 370.28,
+              "en": "Please write my name.",
+              "ru": "Пожалуйста, напишите мое имя.",
+              "itemNumber": 24,
+              "image": null,
+              "words": [
+                {
+                  "start": 367.16,
+                  "end": 368.4,
+                  "word": "Please"
+                },
+                {
+                  "start": 368.4,
+                  "end": 369.14,
+                  "word": "write"
+                },
+                {
+                  "start": 369.14,
+                  "end": 369.66,
+                  "word": "my"
+                },
+                {
+                  "start": 369.66,
+                  "end": 370.28,
+                  "word": "name."
+                }
+              ],
+              "role": "model"
+            }
+          ],
+          "instructionEn": "Look at Figure 2. Listen and repeat the commands."
+        },
+        {
+          "n": 3,
+          "instruction": "Repeat the letters.",
+          "instructionRu": "Прослушайте буквы и повторите их, затем прослушайте и обведите услышанные буквы.",
+          "activityType": "listen_circle",
+          "audioSrc": "/home/j/projects/reactor-module-tools/data/alc-english/audio/AUDIO/Lesson 1A/Lesson 1A/Figure 03.mp3",
+          "audioPublic": "audio/1A/Figure03.mp3",
+          "durationSec": 248.8424375,
+          "images": [],
+          "segments": [
+            {
+              "start": 0.27,
+              "end": 4.79,
+              "en": "Okay. Go to Figure 3.",
+              "ru": "Хорошо. Перейдите к рисунку 3.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 0.27,
+                  "end": 0.99,
+                  "word": "Okay,"
+                },
+                {
+                  "start": 2.15,
+                  "end": 3.41,
+                  "word": "go"
+                },
+                {
+                  "start": 3.41,
+                  "end": 3.97,
+                  "word": "to"
+                },
+                {
+                  "start": 3.97,
+                  "end": 4.29,
+                  "word": "figure"
+                },
+                {
+                  "start": 4.29,
+                  "end": 4.79,
+                  "word": "three."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 6.27,
+              "end": 8.93,
+              "en": "Look at Figure 3.",
+              "ru": "Посмотрите на рисунок 3.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 6.27,
+                  "end": 6.93,
+                  "word": "Look"
+                },
+                {
+                  "start": 6.93,
+                  "end": 7.25,
+                  "word": "at"
+                },
+                {
+                  "start": 7.25,
+                  "end": 8.45,
+                  "word": "figure"
+                },
+                {
+                  "start": 8.45,
+                  "end": 8.93,
+                  "word": "three."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 10.71,
+              "end": 12.13,
+              "en": "Listen to the letters.",
+              "ru": "Прослушайте буквы.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 10.71,
+                  "end": 11.01,
+                  "word": "Listen"
+                },
+                {
+                  "start": 11.01,
+                  "end": 11.53,
+                  "word": "to"
+                },
+                {
+                  "start": 11.53,
+                  "end": 11.73,
+                  "word": "the"
+                },
+                {
+                  "start": 11.73,
+                  "end": 12.13,
+                  "word": "letters."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 13.45,
+              "end": 14.95,
+              "en": "Listen and repeat.",
+              "ru": "Слушайте и повторяйте.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 13.45,
+                  "end": 13.81,
+                  "word": "Listen"
+                },
+                {
+                  "start": 13.81,
+                  "end": 14.57,
+                  "word": "and"
+                },
+                {
+                  "start": 14.57,
+                  "end": 14.95,
+                  "word": "repeat."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 30.12,
+              "end": 31.06,
+              "en": "C",
+              "ru": "C",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 30.12,
+                  "end": 31.06,
+                  "word": "C"
+                }
+              ],
+              "role": "letters"
+            },
+            {
+              "start": 36.2,
+              "end": 37.6,
+              "en": "D",
+              "ru": "D",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 36.2,
+                  "end": 37.6,
+                  "word": "D"
+                }
+              ],
+              "role": "letters"
+            },
+            {
+              "start": 44.36,
+              "end": 45.76,
+              "en": "E",
+              "ru": "E",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 44.36,
+                  "end": 45.76,
+                  "word": "E"
+                }
+              ],
+              "role": "letters"
+            },
+            {
+              "start": 50.56,
+              "end": 51.96,
+              "en": "F",
+              "ru": "F",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 50.56,
+                  "end": 51.96,
+                  "word": "F"
+                }
+              ],
+              "role": "letters"
+            },
+            {
+              "start": 63.12,
+              "end": 63.92,
+              "en": "Listen.",
+              "ru": "Слушайте.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 63.12,
+                  "end": 63.92,
+                  "word": "Listen."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 65.04,
+              "end": 68,
+              "en": "Listen and circle the letter.",
+              "ru": "Слушайте и обведите букву.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 65.04,
+                  "end": 65.76,
+                  "word": "Listen"
+                },
+                {
+                  "start": 65.76,
+                  "end": 66.52,
+                  "word": "and"
+                },
+                {
+                  "start": 66.52,
+                  "end": 67.08,
+                  "word": "circle"
+                },
+                {
+                  "start": 67.08,
+                  "end": 67.7,
+                  "word": "the"
+                },
+                {
+                  "start": 67.7,
+                  "end": 68,
+                  "word": "letter."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 70.1,
+              "end": 71.5,
+              "en": "EXAMPLE:",
+              "ru": "ПРИМЕР:",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 70.1,
+                  "end": 71.5,
+                  "word": "Example"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 72.56,
+              "end": 73.1,
+              "en": "E.",
+              "ru": "E.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 72.39999999999999,
+                  "end": 73.1,
+                  "word": "E"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 76.34,
+              "end": 79.4,
+              "en": "Circle the letter \"E.\"",
+              "ru": "Обведите букву «E».",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 76.34,
+                  "end": 77.2,
+                  "word": "Circle"
+                },
+                {
+                  "start": 77.2,
+                  "end": 77.98,
+                  "word": "the"
+                },
+                {
+                  "start": 77.98,
+                  "end": 78.34,
+                  "word": "letter"
+                },
+                {
+                  "start": 78.34,
+                  "end": 79.4,
+                  "word": "E"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 83.06,
+              "end": 84.24,
+              "en": "Number 1:",
+              "ru": "Номер 1:",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 82.94,
+                  "end": 83.64,
+                  "word": "Number"
+                },
+                {
+                  "start": 83.64,
+                  "end": 84.24,
+                  "word": "one"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 85.38,
+              "end": 85.78,
+              "en": "B.",
+              "ru": "B.",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 85.08,
+                  "end": 85.78,
+                  "word": "B"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 90.58,
+              "end": 91.78,
+              "en": "Number 2:",
+              "ru": "Номер 2:",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 90.52,
+                  "end": 91.22,
+                  "word": "Number"
+                },
+                {
+                  "start": 91.22,
+                  "end": 91.78,
+                  "word": "two"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 93.1,
+              "end": 94.04,
+              "en": "E.",
+              "ru": "E.",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 93.1,
+                  "end": 94.04,
+                  "word": "E"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 98.344,
+              "end": 101.32,
+              "en": "Number 3: C.",
+              "ru": "Номер 3: C.",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 98.25999999999999,
+                  "end": 98.96,
+                  "word": "Number"
+                },
+                {
+                  "start": 98.96,
+                  "end": 99.62,
+                  "word": "three,"
+                },
+                {
+                  "start": 100.28,
+                  "end": 101.32,
+                  "word": "C."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 105.664,
+              "end": 108.38,
+              "en": "Number 4: F.",
+              "ru": "Номер 4: F.",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 105.61999999999999,
+                  "end": 106.32,
+                  "word": "Number"
+                },
+                {
+                  "start": 106.32,
+                  "end": 106.96,
+                  "word": "four,"
+                },
+                {
+                  "start": 107.94,
+                  "end": 108.38,
+                  "word": "F."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 112.324,
+              "end": 114.92,
+              "en": "Number 5: A.",
+              "ru": "Номер 5: A.",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 112.3,
+                  "end": 113,
+                  "word": "Number"
+                },
+                {
+                  "start": 113,
+                  "end": 113.78,
+                  "word": "five,"
+                },
+                {
+                  "start": 114.46,
+                  "end": 114.92,
+                  "word": "A."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 118.504,
+              "end": 121,
+              "en": "Number 6: D.",
+              "ru": "Номер 6: D.",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 118.42,
+                  "end": 119.12,
+                  "word": "Number"
+                },
+                {
+                  "start": 119.12,
+                  "end": 119.84,
+                  "word": "six,"
+                },
+                {
+                  "start": 120.66,
+                  "end": 121,
+                  "word": "D."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 125,
+              "end": 127.72,
+              "en": "Number 7: G.",
+              "ru": "Номер 7: G.",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 125,
+                  "end": 125.66,
+                  "word": "Number"
+                },
+                {
+                  "start": 125.66,
+                  "end": 126.36,
+                  "word": "seven,"
+                },
+                {
+                  "start": 126.92,
+                  "end": 127.72,
+                  "word": "G"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 131.608,
+              "end": 134.24,
+              "en": "Number 8: A.",
+              "ru": "Номер 8: A.",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 131.608,
+                  "end": 132.32,
+                  "word": "Number"
+                },
+                {
+                  "start": 132.32,
+                  "end": 132.96,
+                  "word": "eight,"
+                },
+                {
+                  "start": 133.64,
+                  "end": 134.24,
+                  "word": "A"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 137.408,
+              "end": 140.08,
+              "en": "Number 9: B.",
+              "ru": "Номер 9: B.",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 137.36,
+                  "end": 138.06,
+                  "word": "Number"
+                },
+                {
+                  "start": 138.06,
+                  "end": 138.76,
+                  "word": "nine,"
+                },
+                {
+                  "start": 139.54,
+                  "end": 140.08,
+                  "word": "B"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 143.288,
+              "end": 146.08,
+              "en": "Number 10: D.",
+              "ru": "Номер 10: D.",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 143.24,
+                  "end": 143.94,
+                  "word": "Number"
+                },
+                {
+                  "start": 143.94,
+                  "end": 144.62,
+                  "word": "ten,"
+                },
+                {
+                  "start": 145.52,
+                  "end": 146.08,
+                  "word": "D"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 148.928,
+              "end": 151.72,
+              "en": "Number 11: C.",
+              "ru": "Номер 11: C.",
+              "itemNumber": 11,
+              "image": null,
+              "words": [
+                {
+                  "start": 148.82000000000002,
+                  "end": 149.52,
+                  "word": "Number"
+                },
+                {
+                  "start": 149.52,
+                  "end": 150.28,
+                  "word": "eleven,"
+                },
+                {
+                  "start": 151.26,
+                  "end": 151.72,
+                  "word": "C"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 155.37,
+              "end": 158.07,
+              "en": "Number 12: E.",
+              "ru": "Номер 12: E.",
+              "itemNumber": 12,
+              "image": null,
+              "words": [
+                {
+                  "start": 155.37,
+                  "end": 156.13,
+                  "word": "Number"
+                },
+                {
+                  "start": 156.13,
+                  "end": 156.97,
+                  "word": "12,"
+                },
+                {
+                  "start": 157.49,
+                  "end": 158.07,
+                  "word": "E."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 161.376,
+              "end": 164.11,
+              "en": "Number 13: G.",
+              "ru": "Номер 13: G.",
+              "itemNumber": 13,
+              "image": null,
+              "words": [
+                {
+                  "start": 161.376,
+                  "end": 162.27,
+                  "word": "Number"
+                },
+                {
+                  "start": 162.27,
+                  "end": 163.13,
+                  "word": "13,"
+                },
+                {
+                  "start": 163.71,
+                  "end": 164.11,
+                  "word": "G."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 167.47,
+              "end": 170.49,
+              "en": "Number 14: F.",
+              "ru": "Номер 14: F.",
+              "itemNumber": 14,
+              "image": null,
+              "words": [
+                {
+                  "start": 167.47,
+                  "end": 168.45,
+                  "word": "Number"
+                },
+                {
+                  "start": 168.45,
+                  "end": 169.17,
+                  "word": "14,"
+                },
+                {
+                  "start": 170.07,
+                  "end": 170.49,
+                  "word": "F."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 173.19,
+              "end": 176.53,
+              "en": "Number 15: B.",
+              "ru": "Номер 15: B.",
+              "itemNumber": 15,
+              "image": null,
+              "words": [
+                {
+                  "start": 173.19,
+                  "end": 174.59,
+                  "word": "Number"
+                },
+                {
+                  "start": 174.59,
+                  "end": 175.31,
+                  "word": "15,"
+                },
+                {
+                  "start": 176.21,
+                  "end": 176.53,
+                  "word": "B."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 185.37,
+              "end": 189.29,
+              "en": "Check your answers for Figure 3.",
+              "ru": "Проверьте свои ответы к рисунку 3.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 185.37,
+                  "end": 185.65,
+                  "word": "your"
+                },
+                {
+                  "start": 185.65,
+                  "end": 186.35,
+                  "word": "answers"
+                },
+                {
+                  "start": 186.35,
+                  "end": 188.03,
+                  "word": "for"
+                },
+                {
+                  "start": 188.03,
+                  "end": 188.61,
+                  "word": "Figure"
+                },
+                {
+                  "start": 188.61,
+                  "end": 189.29,
+                  "word": "3."
+                }
+              ],
+              "role": "instruction"
+            }
+          ],
+          "instructionEn": "Listen to the letters and repeat them, then listen and circle the letters you hear."
+        },
+        {
+          "n": 4,
+          "instruction": "Write the letters.",
+          "instructionRu": "Посмотрите на рисунок 4. Слушайте и записывайте буквы.",
+          "activityType": "dictation",
+          "audioSrc": "/home/j/projects/reactor-module-tools/data/alc-english/audio/AUDIO/Lesson 1A/Lesson 1A/Figure 04.mp3",
+          "audioPublic": "audio/1A/Figure04.mp3",
+          "durationSec": 219.7943125,
+          "images": [],
+          "segments": [
+            {
+              "start": 0,
+              "end": 7.62,
+              "en": "Look at Figure 4. Listen and write the letters.",
+              "ru": "Посмотрите на рисунок 4. Слушайте и записывайте буквы.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 0,
+                  "end": 0.8,
+                  "word": "Look"
+                },
+                {
+                  "start": 0.8,
+                  "end": 1.44,
+                  "word": "at"
+                },
+                {
+                  "start": 1.44,
+                  "end": 1.86,
+                  "word": "figure"
+                },
+                {
+                  "start": 1.86,
+                  "end": 2.54,
+                  "word": "4."
+                },
+                {
+                  "start": 4.44,
+                  "end": 4.74,
+                  "word": "Listen"
+                },
+                {
+                  "start": 4.74,
+                  "end": 5.78,
+                  "word": "and"
+                },
+                {
+                  "start": 5.78,
+                  "end": 6.18,
+                  "word": "write"
+                },
+                {
+                  "start": 6.18,
+                  "end": 6.68,
+                  "word": "the"
+                },
+                {
+                  "start": 6.68,
+                  "end": 7.62,
+                  "word": "letters."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 9.62,
+              "end": 10.42,
+              "en": "Example:",
+              "ru": "Пример:",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 9.620000000000001,
+                  "end": 10.42,
+                  "word": "Example"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 12,
+              "end": 13.5,
+              "en": "Capital A",
+              "ru": "Заглавная A",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 11.88,
+                  "end": 12.58,
+                  "word": "Capital"
+                },
+                {
+                  "start": 12.58,
+                  "end": 13.5,
+                  "word": "A"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 15.68,
+              "end": 17.34,
+              "en": "small a.",
+              "ru": "строчная a.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 15.68,
+                  "end": 16.54,
+                  "word": "Small"
+                },
+                {
+                  "start": 16.54,
+                  "end": 17.34,
+                  "word": "a"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 19.2,
+              "end": 20.8,
+              "en": "Write the letters.",
+              "ru": "Запишите буквы.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 18.98,
+                  "end": 19.68,
+                  "word": "Write"
+                },
+                {
+                  "start": 19.68,
+                  "end": 20.34,
+                  "word": "the"
+                },
+                {
+                  "start": 20.34,
+                  "end": 20.8,
+                  "word": "letters"
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 23.84,
+              "end": 24.96,
+              "en": "Number 1:",
+              "ru": "Номер 1:",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 23.6,
+                  "end": 24.3,
+                  "word": "Number"
+                },
+                {
+                  "start": 24.3,
+                  "end": 24.96,
+                  "word": "1"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 26.16,
+              "end": 27.72,
+              "en": "Capital G",
+              "ru": "Заглавная G",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 26.1,
+                  "end": 26.8,
+                  "word": "Capital"
+                },
+                {
+                  "start": 26.8,
+                  "end": 27.72,
+                  "word": "G"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 31.31,
+              "end": 33.09,
+              "en": "small g.",
+              "ru": "строчная g.",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 31.31,
+                  "end": 32.23,
+                  "word": "Small"
+                },
+                {
+                  "start": 32.23,
+                  "end": 33.09,
+                  "word": "g."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 37.452,
+              "end": 40.97,
+              "en": "Number 2: Capital D",
+              "ru": "Номер 2: Заглавная D",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 37.33,
+                  "end": 38.03,
+                  "word": "Number"
+                },
+                {
+                  "start": 38.03,
+                  "end": 38.57,
+                  "word": "two,"
+                },
+                {
+                  "start": 39.57,
+                  "end": 40.05,
+                  "word": "capital"
+                },
+                {
+                  "start": 40.05,
+                  "end": 40.97,
+                  "word": "D."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 44.67,
+              "end": 46.89,
+              "en": "small d.",
+              "ru": "строчная d.",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 44.67,
+                  "end": 45.91,
+                  "word": "Small"
+                },
+                {
+                  "start": 45.91,
+                  "end": 46.89,
+                  "word": "d."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 51.312,
+              "end": 55.09,
+              "en": "Number 3: Capital F",
+              "ru": "Номер 3: Заглавная F",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 51.269999999999996,
+                  "end": 51.97,
+                  "word": "Number"
+                },
+                {
+                  "start": 51.97,
+                  "end": 52.61,
+                  "word": "three,"
+                },
+                {
+                  "start": 53.71,
+                  "end": 54.13,
+                  "word": "capital"
+                },
+                {
+                  "start": 54.13,
+                  "end": 55.09,
+                  "word": "F."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 58.23,
+              "end": 60.03,
+              "en": "small f.",
+              "ru": "строчная f.",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 58.230000000000004,
+                  "end": 59.63,
+                  "word": "Small"
+                },
+                {
+                  "start": 59.63,
+                  "end": 60.03,
+                  "word": "f."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 64.23,
+              "end": 67.43,
+              "en": "Number 4: Capital C",
+              "ru": "Номер 4: Заглавная C",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 64.23,
+                  "end": 64.89,
+                  "word": "Number"
+                },
+                {
+                  "start": 64.89,
+                  "end": 65.39,
+                  "word": "four,"
+                },
+                {
+                  "start": 66.17,
+                  "end": 66.59,
+                  "word": "capital"
+                },
+                {
+                  "start": 66.59,
+                  "end": 67.43,
+                  "word": "C."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 69.97,
+              "end": 72.09,
+              "en": "small c.",
+              "ru": "строчная c.",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 69.97,
+                  "end": 71.29,
+                  "word": "Small"
+                },
+                {
+                  "start": 71.29,
+                  "end": 72.09,
+                  "word": "c"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 75.7,
+              "end": 79.09,
+              "en": "Number 5: Capital E",
+              "ru": "Номер 5: Заглавная E",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 75.50999999999999,
+                  "end": 76.21,
+                  "word": "Number"
+                },
+                {
+                  "start": 76.21,
+                  "end": 76.93,
+                  "word": "five,"
+                },
+                {
+                  "start": 77.75,
+                  "end": 78.23,
+                  "word": "capital"
+                },
+                {
+                  "start": 78.23,
+                  "end": 79.09,
+                  "word": "E."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 81.17,
+              "end": 83.43,
+              "en": "small e.",
+              "ru": "строчная e.",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 81.17,
+                  "end": 82.57,
+                  "word": "Small"
+                },
+                {
+                  "start": 82.57,
+                  "end": 83.43,
+                  "word": "e"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 87.38,
+              "end": 90.85,
+              "en": "Number 6: Capital B",
+              "ru": "Номер 6: Заглавная B",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 87.27,
+                  "end": 87.97,
+                  "word": "Number"
+                },
+                {
+                  "start": 87.97,
+                  "end": 88.59,
+                  "word": "six,"
+                },
+                {
+                  "start": 89.43,
+                  "end": 90.01,
+                  "word": "capital"
+                },
+                {
+                  "start": 90.01,
+                  "end": 90.85,
+                  "word": "B."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 93.93,
+              "end": 95.63,
+              "en": "small b.",
+              "ru": "строчная b.",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 93.93,
+                  "end": 94.75,
+                  "word": "Small"
+                },
+                {
+                  "start": 94.75,
+                  "end": 95.63,
+                  "word": "b."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 99.296,
+              "end": 102.47,
+              "en": "Number 7: Capital G",
+              "ru": "Номер 7: Заглавная G",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 99.14999999999999,
+                  "end": 99.85,
+                  "word": "Number"
+                },
+                {
+                  "start": 99.85,
+                  "end": 100.41,
+                  "word": "seven,"
+                },
+                {
+                  "start": 101.21,
+                  "end": 101.65,
+                  "word": "capital"
+                },
+                {
+                  "start": 101.65,
+                  "end": 102.47,
+                  "word": "G."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 105.01,
+              "end": 107.21,
+              "en": "small g.",
+              "ru": "строчная g.",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 105.01,
+                  "end": 106.39,
+                  "word": "Small"
+                },
+                {
+                  "start": 106.39,
+                  "end": 107.21,
+                  "word": "g."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 113.116,
+              "end": 116.37,
+              "en": "Number 8: Capital A",
+              "ru": "Номер 8: Заглавная A",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 112.99,
+                  "end": 113.69,
+                  "word": "Number"
+                },
+                {
+                  "start": 113.69,
+                  "end": 114.17,
+                  "word": "eight,"
+                },
+                {
+                  "start": 115.01,
+                  "end": 115.55,
+                  "word": "capital"
+                },
+                {
+                  "start": 115.55,
+                  "end": 116.37,
+                  "word": "A."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 119.33,
+              "end": 121.17,
+              "en": "small a.",
+              "ru": "строчная a.",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 119.33,
+                  "end": 120.73,
+                  "word": "Small"
+                },
+                {
+                  "start": 120.73,
+                  "end": 121.17,
+                  "word": "a."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 124.68,
+              "end": 132.56,
+              "en": "Number 9: Capital F small f.",
+              "ru": "Номер 9: Заглавная F, строчная f.",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 124.68,
+                  "end": 125.3,
+                  "word": "Number"
+                },
+                {
+                  "start": 125.3,
+                  "end": 125.88,
+                  "word": "nine."
+                },
+                {
+                  "start": 126.62,
+                  "end": 127.02,
+                  "word": "Capital"
+                },
+                {
+                  "start": 127.02,
+                  "end": 128.06,
+                  "word": "F."
+                },
+                {
+                  "start": 130.72,
+                  "end": 131.54,
+                  "word": "Small"
+                },
+                {
+                  "start": 131.54,
+                  "end": 132.56,
+                  "word": "f."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 136.688,
+              "end": 139.94,
+              "en": "Number 10: Capital B",
+              "ru": "Номер 10: Заглавная B",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 136.5,
+                  "end": 137.2,
+                  "word": "Number"
+                },
+                {
+                  "start": 137.2,
+                  "end": 137.72,
+                  "word": "ten."
+                },
+                {
+                  "start": 138.72,
+                  "end": 139.12,
+                  "word": "Capital"
+                },
+                {
+                  "start": 139.12,
+                  "end": 139.94,
+                  "word": "B."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 142.76,
+              "end": 144.96,
+              "en": "small b.",
+              "ru": "строчная b.",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 142.76,
+                  "end": 144.16,
+                  "word": "Small"
+                },
+                {
+                  "start": 144.16,
+                  "end": 144.96,
+                  "word": "b."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 153.56,
+              "end": 156.8,
+              "en": "Your answers for Figure 4.",
+              "ru": "Ваши ответы к рисунку 4.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 153.56,
+                  "end": 153.92,
+                  "word": "Your"
+                },
+                {
+                  "start": 153.92,
+                  "end": 154.52,
+                  "word": "answers"
+                },
+                {
+                  "start": 154.52,
+                  "end": 155.92,
+                  "word": "for"
+                },
+                {
+                  "start": 155.92,
+                  "end": 156.3,
+                  "word": "Figure"
+                },
+                {
+                  "start": 156.3,
+                  "end": 156.8,
+                  "word": "4."
+                }
+              ],
+              "role": "instruction"
+            }
+          ],
+          "instructionEn": "Look at Figure 4. Listen and write the letters."
+        },
+        {
+          "n": 5,
+          "instruction": "Circle S or D.",
+          "instructionRu": "Посмотрите на Рисунок 5. Прослушайте два слова и обведите «S» (одинаковые) или «D» (разные), затем прослушайте и проверьте.",
+          "activityType": "same_different",
+          "audioSrc": "/home/j/projects/reactor-module-tools/data/alc-english/audio/AUDIO/Lesson 1A/Lesson 1A/Figure 05.mp3",
+          "audioPublic": "audio/1A/Figure05.mp3",
+          "durationSec": 229.459625,
+          "images": [],
+          "segments": [
+            {
+              "start": 0,
+              "end": 14.86,
+              "en": "Look at Figure 5. Listen to the two words. Circle 'S' for same and 'D' for different.",
+              "ru": "Посмотрите на Рисунок 5. Прослушайте два слова. Обведите «S», если они одинаковые, и «D», если разные.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 0,
+                  "end": 0.54,
+                  "word": "Look"
+                },
+                {
+                  "start": 0.54,
+                  "end": 0.88,
+                  "word": "at"
+                },
+                {
+                  "start": 0.88,
+                  "end": 1.96,
+                  "word": "figure"
+                },
+                {
+                  "start": 1.96,
+                  "end": 2.58,
+                  "word": "5."
+                },
+                {
+                  "start": 4.16,
+                  "end": 4.46,
+                  "word": "Listen"
+                },
+                {
+                  "start": 4.46,
+                  "end": 5.02,
+                  "word": "to"
+                },
+                {
+                  "start": 5.02,
+                  "end": 5.72,
+                  "word": "the"
+                },
+                {
+                  "start": 5.72,
+                  "end": 6,
+                  "word": "two"
+                },
+                {
+                  "start": 6,
+                  "end": 6.58,
+                  "word": "words."
+                },
+                {
+                  "start": 8.02,
+                  "end": 8.54,
+                  "word": "Circle"
+                },
+                {
+                  "start": 8.54,
+                  "end": 9.34,
+                  "word": "S"
+                },
+                {
+                  "start": 9.34,
+                  "end": 10.56,
+                  "word": "for"
+                },
+                {
+                  "start": 10.56,
+                  "end": 11.12,
+                  "word": "same,"
+                },
+                {
+                  "start": 11.98,
+                  "end": 12.46,
+                  "word": "and"
+                },
+                {
+                  "start": 12.46,
+                  "end": 13.5,
+                  "word": "D"
+                },
+                {
+                  "start": 13.5,
+                  "end": 14.48,
+                  "word": "for"
+                },
+                {
+                  "start": 14.48,
+                  "end": 14.86,
+                  "word": "different."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 32.17,
+              "end": 37.53,
+              "en": "Number 1: putt, but",
+              "ru": "Номер 1: putt, but",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 32.17,
+                  "end": 32.85,
+                  "word": "Number"
+                },
+                {
+                  "start": 32.85,
+                  "end": 33.49,
+                  "word": "one,"
+                },
+                {
+                  "start": 34.47,
+                  "end": 35.75,
+                  "word": "putt,"
+                },
+                {
+                  "start": 37.09,
+                  "end": 37.53,
+                  "word": "butt."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 40.176,
+              "end": 44.61,
+              "en": "Number 2: bit, bit",
+              "ru": "Номер 2: bit, bit",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 39.709999999999994,
+                  "end": 40.41,
+                  "word": "Number"
+                },
+                {
+                  "start": 40.41,
+                  "end": 40.97,
+                  "word": "two,"
+                },
+                {
+                  "start": 42.53,
+                  "end": 42.93,
+                  "word": "bit,"
+                },
+                {
+                  "start": 44.17,
+                  "end": 44.61,
+                  "word": "bit."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 47.176,
+              "end": 51.09,
+              "en": "Number 3: rib, rip",
+              "ru": "Номер 3: rib, rip",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 46.61,
+                  "end": 47.31,
+                  "word": "Number"
+                },
+                {
+                  "start": 47.31,
+                  "end": 47.85,
+                  "word": "three,"
+                },
+                {
+                  "start": 49.09,
+                  "end": 49.49,
+                  "word": "rib,"
+                },
+                {
+                  "start": 50.63,
+                  "end": 51.09,
+                  "word": "rip."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 53.01,
+              "end": 57.85,
+              "en": "Number 4: lab, lap",
+              "ru": "Номер 4: lab, lap",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 53.01,
+                  "end": 53.81,
+                  "word": "Number"
+                },
+                {
+                  "start": 53.81,
+                  "end": 54.43,
+                  "word": "four,"
+                },
+                {
+                  "start": 55.67,
+                  "end": 56.15,
+                  "word": "lab,"
+                },
+                {
+                  "start": 57.31,
+                  "end": 57.85,
+                  "word": "lap."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 62.12,
+              "end": 63.06,
+              "en": "cab",
+              "ru": "cab",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 62.12,
+                  "end": 63.06,
+                  "word": "cab"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 64.168,
+              "end": 65.14,
+              "en": "cab",
+              "ru": "cab",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 64.168,
+                  "end": 65.14,
+                  "word": "cab"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 67.368,
+              "end": 72.08,
+              "en": "Number 6: peat, beat",
+              "ru": "Номер 6: peat, beat",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 67.08,
+                  "end": 67.78,
+                  "word": "Number"
+                },
+                {
+                  "start": 67.78,
+                  "end": 68.5,
+                  "word": "six"
+                },
+                {
+                  "start": 68.5,
+                  "end": 70.18,
+                  "word": "peat"
+                },
+                {
+                  "start": 70.18,
+                  "end": 72.08,
+                  "word": "beat"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 74.548,
+              "end": 78.84,
+              "en": "Number 7: sob, sob",
+              "ru": "Номер 7: sob, sob",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 74.32,
+                  "end": 75.02,
+                  "word": "Number"
+                },
+                {
+                  "start": 75.02,
+                  "end": 75.6,
+                  "word": "seven"
+                },
+                {
+                  "start": 75.6,
+                  "end": 77.12,
+                  "word": "sob"
+                },
+                {
+                  "start": 77.12,
+                  "end": 78.84,
+                  "word": "sob"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 80.848,
+              "end": 85.34,
+              "en": "Number 8: bay, pay",
+              "ru": "Номер 8: bay, pay",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 80.66,
+                  "end": 81.36,
+                  "word": "Number"
+                },
+                {
+                  "start": 81.36,
+                  "end": 81.96,
+                  "word": "eight"
+                },
+                {
+                  "start": 81.96,
+                  "end": 83.56,
+                  "word": "bay"
+                },
+                {
+                  "start": 83.56,
+                  "end": 85.34,
+                  "word": "pay"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 91.28,
+              "end": 92.1,
+              "en": "tab",
+              "ru": "tab",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 91.28,
+                  "end": 92.1,
+                  "word": "Tab"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 94.24,
+              "end": 98.74,
+              "en": "Number 10: pin, pin",
+              "ru": "Номер 10: pin, pin",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 94,
+                  "end": 94.7,
+                  "word": "Number"
+                },
+                {
+                  "start": 94.7,
+                  "end": 95.34,
+                  "word": "ten"
+                },
+                {
+                  "start": 95.34,
+                  "end": 96.98,
+                  "word": "pin"
+                },
+                {
+                  "start": 96.98,
+                  "end": 98.74,
+                  "word": "pin"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 102.96,
+              "end": 110.08,
+              "en": "Look at Figure 5 again. Listen and check.",
+              "ru": "Посмотрите на Рисунок 5 снова. Прослушайте и проверьте.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 102.8,
+                  "end": 103.5,
+                  "word": "Look"
+                },
+                {
+                  "start": 103.5,
+                  "end": 103.82,
+                  "word": "at"
+                },
+                {
+                  "start": 103.82,
+                  "end": 104.84,
+                  "word": "figure"
+                },
+                {
+                  "start": 104.84,
+                  "end": 105.52,
+                  "word": "five"
+                },
+                {
+                  "start": 105.52,
+                  "end": 106.48,
+                  "word": "again"
+                },
+                {
+                  "start": 106.48,
+                  "end": 108.52,
+                  "word": "listen"
+                },
+                {
+                  "start": 108.52,
+                  "end": 109.6,
+                  "word": "and"
+                },
+                {
+                  "start": 109.6,
+                  "end": 110.08,
+                  "word": "check"
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 112.88,
+              "end": 119.58,
+              "en": "Number 1: D, putt...but",
+              "ru": "Номер 1: D, putt...but",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 112.7,
+                  "end": 113.4,
+                  "word": "Number"
+                },
+                {
+                  "start": 113.4,
+                  "end": 114.02,
+                  "word": "one"
+                },
+                {
+                  "start": 114.02,
+                  "end": 115.7,
+                  "word": "D"
+                },
+                {
+                  "start": 115.7,
+                  "end": 118.82,
+                  "word": "putt"
+                },
+                {
+                  "start": 118.82,
+                  "end": 119.58,
+                  "word": "but"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 120.49,
+              "end": 122.496,
+              "en": "the words are different.",
+              "ru": "слова разные.",
+              "itemNumber": 1,
+              "image": null,
+              "words": [
+                {
+                  "start": 120.49,
+                  "end": 121.03,
+                  "word": "The"
+                },
+                {
+                  "start": 121.03,
+                  "end": 121.63,
+                  "word": "words"
+                },
+                {
+                  "start": 121.63,
+                  "end": 122.13,
+                  "word": "are"
+                },
+                {
+                  "start": 122.13,
+                  "end": 122.83,
+                  "word": "different."
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 125.216,
+              "end": 126.25,
+              "en": "Number 2:",
+              "ru": "Номер 2:",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 124.92999999999999,
+                  "end": 125.63,
+                  "word": "Number"
+                },
+                {
+                  "start": 125.63,
+                  "end": 126.25,
+                  "word": "two,"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 127.67,
+              "end": 128.27,
+              "en": "S",
+              "ru": "S",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 127.67,
+                  "end": 128.27,
+                  "word": "S"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 129.416,
+              "end": 130.15,
+              "en": "bit",
+              "ru": "bit",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 129.416,
+                  "end": 130.15,
+                  "word": "bit"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 131.136,
+              "end": 131.75,
+              "en": "bit",
+              "ru": "bit",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 131.05,
+                  "end": 131.75,
+                  "word": "bit"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 132.536,
+              "end": 135.43,
+              "en": "the words are the same.",
+              "ru": "слова одинаковые.",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 132.43,
+                  "end": 133.13,
+                  "word": "The"
+                },
+                {
+                  "start": 133.13,
+                  "end": 133.91,
+                  "word": "words"
+                },
+                {
+                  "start": 133.91,
+                  "end": 134.63,
+                  "word": "are"
+                },
+                {
+                  "start": 134.63,
+                  "end": 134.93,
+                  "word": "the"
+                },
+                {
+                  "start": 134.93,
+                  "end": 135.43,
+                  "word": "same"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 137.616,
+              "end": 138.69,
+              "en": "Number 3",
+              "ru": "Номер 3",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 137.41000000000003,
+                  "end": 138.11,
+                  "word": "Number"
+                },
+                {
+                  "start": 138.11,
+                  "end": 138.69,
+                  "word": "three"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 139.696,
+              "end": 140.13,
+              "en": "D",
+              "ru": "D",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 139.43,
+                  "end": 140.13,
+                  "word": "D"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 141.576,
+              "end": 142.31,
+              "en": "rib",
+              "ru": "rib",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 141.576,
+                  "end": 142.31,
+                  "word": "rib"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 143.416,
+              "end": 144.09,
+              "en": "rip",
+              "ru": "rip",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 143.39000000000001,
+                  "end": 144.09,
+                  "word": "rip"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 145.016,
+              "end": 146.91,
+              "en": "the words are",
+              "ru": "слова",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 144.85000000000002,
+                  "end": 145.55,
+                  "word": "the"
+                },
+                {
+                  "start": 145.55,
+                  "end": 146.15,
+                  "word": "words"
+                },
+                {
+                  "start": 146.15,
+                  "end": 146.91,
+                  "word": "are"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 146.91,
+              "end": 147.87,
+              "en": "different.",
+              "ru": "разные.",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 146.91,
+                  "end": 147.87,
+                  "word": "different"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 149.64,
+              "end": 159.52,
+              "en": "Number 4: D, lab...lap, the words are different.",
+              "ru": "Номер 4: D, lab...lap, слова разные.",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 149.64,
+                  "end": 150.34,
+                  "word": "Number"
+                },
+                {
+                  "start": 150.34,
+                  "end": 150.98,
+                  "word": "four,"
+                },
+                {
+                  "start": 152.06,
+                  "end": 152.36,
+                  "word": "D."
+                },
+                {
+                  "start": 153.64,
+                  "end": 154.32,
+                  "word": "Lab,"
+                },
+                {
+                  "start": 155.62,
+                  "end": 156.08,
+                  "word": "lap,"
+                },
+                {
+                  "start": 156.7,
+                  "end": 157.44,
+                  "word": "the"
+                },
+                {
+                  "start": 157.44,
+                  "end": 158.02,
+                  "word": "words"
+                },
+                {
+                  "start": 158.02,
+                  "end": 158.58,
+                  "word": "are"
+                },
+                {
+                  "start": 158.58,
+                  "end": 159.52,
+                  "word": "different."
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 160.48,
+              "end": 169.78,
+              "en": "Number 5: S, cab...cab, the words are the same.",
+              "ru": "Номер 5: S, cab...cab, слова одинаковые.",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 160.48,
+                  "end": 161.2,
+                  "word": "Number"
+                },
+                {
+                  "start": 161.2,
+                  "end": 161.92,
+                  "word": "five,"
+                },
+                {
+                  "start": 162.8,
+                  "end": 163.22,
+                  "word": "S."
+                },
+                {
+                  "start": 164.44,
+                  "end": 164.92,
+                  "word": "Cab,"
+                },
+                {
+                  "start": 165.98,
+                  "end": 166.58,
+                  "word": "cab,"
+                },
+                {
+                  "start": 167.2,
+                  "end": 167.72,
+                  "word": "the"
+                },
+                {
+                  "start": 167.72,
+                  "end": 168.26,
+                  "word": "words"
+                },
+                {
+                  "start": 168.26,
+                  "end": 169,
+                  "word": "are"
+                },
+                {
+                  "start": 169,
+                  "end": 169.32,
+                  "word": "the"
+                },
+                {
+                  "start": 169.32,
+                  "end": 169.78,
+                  "word": "same."
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 178.25,
+              "end": 180.69,
+              "en": "the words are different.",
+              "ru": "слова разные.",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 178.25,
+                  "end": 178.77,
+                  "word": "The"
+                },
+                {
+                  "start": 178.77,
+                  "end": 179.35,
+                  "word": "words"
+                },
+                {
+                  "start": 179.35,
+                  "end": 179.83,
+                  "word": "are"
+                },
+                {
+                  "start": 179.83,
+                  "end": 180.69,
+                  "word": "different"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 182.296,
+              "end": 184.59,
+              "en": "Number 7: S",
+              "ru": "Номер 7: S",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 182.05,
+                  "end": 182.75,
+                  "word": "number"
+                },
+                {
+                  "start": 182.75,
+                  "end": 183.39,
+                  "word": "7"
+                },
+                {
+                  "start": 183.39,
+                  "end": 184.59,
+                  "word": "s"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 185.736,
+              "end": 186.53,
+              "en": "sob",
+              "ru": "sob",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 185.736,
+                  "end": 186.53,
+                  "word": "sob"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 187.536,
+              "end": 191.59,
+              "en": "sob, the words are the same.",
+              "ru": "sob, слова одинаковые.",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 187.536,
+                  "end": 188.37,
+                  "word": "Sob"
+                },
+                {
+                  "start": 188.37,
+                  "end": 189.37,
+                  "word": "the"
+                },
+                {
+                  "start": 189.37,
+                  "end": 190.13,
+                  "word": "words"
+                },
+                {
+                  "start": 190.13,
+                  "end": 190.87,
+                  "word": "are"
+                },
+                {
+                  "start": 190.87,
+                  "end": 191.03,
+                  "word": "the"
+                },
+                {
+                  "start": 191.03,
+                  "end": 191.59,
+                  "word": "same"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 193.336,
+              "end": 195.91,
+              "en": "Number 8: D",
+              "ru": "Номер 8: D",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 193.11,
+                  "end": 193.81,
+                  "word": "Number"
+                },
+                {
+                  "start": 193.81,
+                  "end": 194.45,
+                  "word": "8"
+                },
+                {
+                  "start": 194.45,
+                  "end": 195.91,
+                  "word": "D"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 196.936,
+              "end": 197.79,
+              "en": "bay",
+              "ru": "bay",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 196.936,
+                  "end": 197.79,
+                  "word": "Bay"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 198.776,
+              "end": 199.59,
+              "en": "pay",
+              "ru": "pay",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 198.776,
+                  "end": 199.59,
+                  "word": "pay"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 200.256,
+              "end": 202.85,
+              "en": "the words are different.",
+              "ru": "слова разные.",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 200.11,
+                  "end": 200.81,
+                  "word": "The"
+                },
+                {
+                  "start": 200.81,
+                  "end": 201.35,
+                  "word": "words"
+                },
+                {
+                  "start": 201.35,
+                  "end": 201.93,
+                  "word": "are"
+                },
+                {
+                  "start": 201.93,
+                  "end": 202.85,
+                  "word": "different"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 204.296,
+              "end": 206.296,
+              "en": "Number 9: S",
+              "ru": "Номер 9: S",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 204.05,
+                  "end": 204.75,
+                  "word": "number"
+                },
+                {
+                  "start": 204.75,
+                  "end": 205.47,
+                  "word": "9"
+                },
+                {
+                  "start": 205.47,
+                  "end": 206.296,
+                  "word": "s"
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 207.53,
+              "end": 213.71,
+              "en": "tab...tab, the words are the same.",
+              "ru": "tab...tab, слова одинаковые.",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 207.53,
+                  "end": 208.47,
+                  "word": "Tab,"
+                },
+                {
+                  "start": 209.15,
+                  "end": 210.33,
+                  "word": "tab."
+                },
+                {
+                  "start": 210.99,
+                  "end": 211.57,
+                  "word": "The"
+                },
+                {
+                  "start": 211.57,
+                  "end": 212.13,
+                  "word": "words"
+                },
+                {
+                  "start": 212.13,
+                  "end": 212.75,
+                  "word": "are"
+                },
+                {
+                  "start": 212.75,
+                  "end": 213.23,
+                  "word": "the"
+                },
+                {
+                  "start": 213.23,
+                  "end": 213.71,
+                  "word": "same."
+                }
+              ],
+              "role": "answer"
+            },
+            {
+              "start": 215.21,
+              "end": 225.15,
+              "en": "Number 10: S, pin...pin, the words are the same.",
+              "ru": "Номер 10: S, pin...pin, слова одинаковые.",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 215.21,
+                  "end": 216.03,
+                  "word": "Number"
+                },
+                {
+                  "start": 216.03,
+                  "end": 216.63,
+                  "word": "ten."
+                },
+                {
+                  "start": 217.71,
+                  "end": 218.17,
+                  "word": "S."
+                },
+                {
+                  "start": 219.47,
+                  "end": 219.93,
+                  "word": "Pin,"
+                },
+                {
+                  "start": 221.13,
+                  "end": 221.57,
+                  "word": "pin."
+                },
+                {
+                  "start": 222.09,
+                  "end": 222.67,
+                  "word": "The"
+                },
+                {
+                  "start": 222.67,
+                  "end": 223.45,
+                  "word": "words"
+                },
+                {
+                  "start": 223.45,
+                  "end": 224.23,
+                  "word": "are"
+                },
+                {
+                  "start": 224.23,
+                  "end": 224.57,
+                  "word": "the"
+                },
+                {
+                  "start": 224.57,
+                  "end": 225.15,
+                  "word": "same."
+                }
+              ],
+              "role": "answer"
+            }
+          ],
+          "instructionEn": "Look at Figure 5. Listen to the two words and circle 'S' for same or 'D' for different, then listen and check."
+        },
+        {
+          "n": 6,
+          "instruction": "Repeat the numbers.",
+          "instructionRu": "Перейдите к рисунку 6. Посмотрите на рисунок 6. Слушайте и повторяйте числа.",
+          "activityType": "repeat_list",
+          "audioSrc": "/home/j/projects/reactor-module-tools/data/alc-english/audio/AUDIO/Lesson 1A/Lesson 1A/Figure 06.mp3",
+          "audioPublic": "audio/1A/Figure06.mp3",
+          "durationSec": 93.257125,
+          "images": [],
+          "segments": [
+            {
+              "start": 0,
+              "end": 14.84,
+              "en": "Okay. Go to Figure 6. Look at Figure 6. Listen. Listen and repeat.",
+              "ru": "Хорошо. Перейдите к рисунку 6. Посмотрите на рисунок 6. Слушайте. Слушайте и повторяйте.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 0,
+                  "end": 0.62,
+                  "word": "Okay."
+                },
+                {
+                  "start": 2.24,
+                  "end": 3.04,
+                  "word": "Go"
+                },
+                {
+                  "start": 3.04,
+                  "end": 3.54,
+                  "word": "to"
+                },
+                {
+                  "start": 3.54,
+                  "end": 4.5,
+                  "word": "figure"
+                },
+                {
+                  "start": 4.5,
+                  "end": 5.26,
+                  "word": "six."
+                },
+                {
+                  "start": 6.6,
+                  "end": 7.5,
+                  "word": "Look"
+                },
+                {
+                  "start": 7.5,
+                  "end": 7.78,
+                  "word": "at"
+                },
+                {
+                  "start": 7.78,
+                  "end": 8.92,
+                  "word": "figure"
+                },
+                {
+                  "start": 8.92,
+                  "end": 9.76,
+                  "word": "six."
+                },
+                {
+                  "start": 10.94,
+                  "end": 11.28,
+                  "word": "Listen,"
+                },
+                {
+                  "start": 12.4,
+                  "end": 13.1,
+                  "word": "listen"
+                },
+                {
+                  "start": 13.1,
+                  "end": 14.18,
+                  "word": "and"
+                },
+                {
+                  "start": 14.18,
+                  "end": 14.84,
+                  "word": "repeat."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 31.5,
+              "end": 32.42,
+              "en": "4",
+              "ru": "Четыре",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 31.5,
+                  "end": 32.42,
+                  "word": "Four"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 34.56,
+              "end": 35.96,
+              "en": "5",
+              "ru": "Пять",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 34.56,
+                  "end": 35.96,
+                  "word": "Five"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 38.344,
+              "end": 39.22,
+              "en": "6",
+              "ru": "Шесть",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 38.344,
+                  "end": 39.22,
+                  "word": "Six"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 41.864,
+              "end": 42.52,
+              "en": "7",
+              "ru": "Семь",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 41.82,
+                  "end": 42.52,
+                  "word": "Seven"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 44.28,
+              "end": 45.68,
+              "en": "8",
+              "ru": "Восемь",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 44.28,
+                  "end": 45.68,
+                  "word": "Eight"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 47.74,
+              "end": 49.14,
+              "en": "9",
+              "ru": "Девять",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 47.74,
+                  "end": 49.14,
+                  "word": "Nine"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 51.424,
+              "end": 52.24,
+              "en": "10",
+              "ru": "Десять",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 51.42400000000001,
+                  "end": 52.24,
+                  "word": "Ten"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 54.904,
+              "end": 55.48,
+              "en": "11",
+              "ru": "Одиннадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 54.779999999999994,
+                  "end": 55.48,
+                  "word": "Eleven"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 57.46,
+              "end": 58.86,
+              "en": "12",
+              "ru": "Двенадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 57.46,
+                  "end": 58.86,
+                  "word": "Twelve"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 61.04,
+              "end": 62.26,
+              "en": "13",
+              "ru": "Тринадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 61.04,
+                  "end": 62.26,
+                  "word": "Thirteen"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 65.24,
+              "end": 66.64,
+              "en": "14",
+              "ru": "Четырнадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 65.24,
+                  "end": 66.64,
+                  "word": "Fourteen"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 69.32,
+              "end": 70.14,
+              "en": "15",
+              "ru": "Пятнадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 69.32,
+                  "end": 70.14,
+                  "word": "Fifteen"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 73.12,
+              "end": 74.52,
+              "en": "16",
+              "ru": "Шестнадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 73.11999999999999,
+                  "end": 74.52,
+                  "word": "Sixteen"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 77.72,
+              "end": 78.48,
+              "en": "17",
+              "ru": "Семнадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 77.72,
+                  "end": 78.48,
+                  "word": "Seventeen"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 81.72,
+              "end": 82.58,
+              "en": "18",
+              "ru": "Восемнадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 81.72,
+                  "end": 82.58,
+                  "word": "Eighteen"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 84.96,
+              "end": 86.36,
+              "en": "19",
+              "ru": "Девятнадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 84.96,
+                  "end": 86.36,
+                  "word": "Nineteen"
+                }
+              ],
+              "role": "numbers"
+            },
+            {
+              "start": 88.6,
+              "end": 89.02,
+              "en": "20",
+              "ru": "Двадцать",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 88.32,
+                  "end": 89.02,
+                  "word": "Twenty"
+                }
+              ],
+              "role": "numbers"
+            }
+          ],
+          "instructionEn": "Go to Figure 6. Look at Figure 6. Listen and repeat the numbers."
+        },
+        {
+          "n": 7,
+          "instruction": "Circle the numbers.",
+          "instructionRu": "Посмотрите на рисунок 7. Обведите услышанное число.",
+          "activityType": "listen_circle",
+          "audioSrc": "/home/j/projects/reactor-module-tools/data/alc-english/audio/AUDIO/Lesson 1A/Lesson 1A/Figure 07.mp3",
+          "audioPublic": "audio/1A/Figure07.mp3",
+          "durationSec": 212.1143125,
+          "images": [],
+          "segments": [
+            {
+              "start": 0,
+              "end": 2.92,
+              "en": "Look at Figure 7.",
+              "ru": "Посмотрите на рисунок 7.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 0,
+                  "end": 0.46,
+                  "word": "Look"
+                },
+                {
+                  "start": 0.46,
+                  "end": 0.76,
+                  "word": "at"
+                },
+                {
+                  "start": 0.76,
+                  "end": 2.1,
+                  "word": "figure"
+                },
+                {
+                  "start": 2.1,
+                  "end": 2.92,
+                  "word": "7."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 5.22,
+              "end": 6.8,
+              "en": "Circle the number.",
+              "ru": "Обведите число.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 5.22,
+                  "end": 5.68,
+                  "word": "Circle"
+                },
+                {
+                  "start": 5.68,
+                  "end": 6.46,
+                  "word": "the"
+                },
+                {
+                  "start": 6.46,
+                  "end": 6.8,
+                  "word": "number."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 8.74,
+              "end": 10.62,
+              "en": "Listen and circle.",
+              "ru": "Слушайте и обводите.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 8.74,
+                  "end": 9.08,
+                  "word": "Listen"
+                },
+                {
+                  "start": 9.08,
+                  "end": 10.12,
+                  "word": "and"
+                },
+                {
+                  "start": 10.12,
+                  "end": 10.62,
+                  "word": "circle."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 13.08,
+              "end": 15.88,
+              "en": "Example: sixteen.",
+              "ru": "Пример: шестнадцать.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 13.08,
+                  "end": 14.48,
+                  "word": "Example"
+                },
+                {
+                  "start": 14.48,
+                  "end": 15.88,
+                  "word": "16"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 18.54,
+              "end": 21.88,
+              "en": "Circle the number \"sixteen.\"",
+              "ru": "Обведите число «шестнадцать».",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 18.400000000000002,
+                  "end": 19.1,
+                  "word": "Circle"
+                },
+                {
+                  "start": 19.1,
+                  "end": 19.92,
+                  "word": "the"
+                },
+                {
+                  "start": 19.92,
+                  "end": 20.36,
+                  "word": "number"
+                },
+                {
+                  "start": 20.36,
+                  "end": 21.88,
+                  "word": "16"
+                }
+              ],
+              "role": "example"
+            },
+            {
+              "start": 31.95,
+              "end": 34.83,
+              "en": "Number 2: eleven.",
+              "ru": "Номер 2: одиннадцать.",
+              "itemNumber": 2,
+              "image": null,
+              "words": [
+                {
+                  "start": 31.95,
+                  "end": 32.61,
+                  "word": "Number"
+                },
+                {
+                  "start": 32.61,
+                  "end": 33.21,
+                  "word": "two,"
+                },
+                {
+                  "start": 34.07,
+                  "end": 34.83,
+                  "word": "eleven."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 38.532,
+              "end": 41.43,
+              "en": "Number 3: six.",
+              "ru": "Номер 3: шесть.",
+              "itemNumber": 3,
+              "image": null,
+              "words": [
+                {
+                  "start": 38.449999999999996,
+                  "end": 39.15,
+                  "word": "Number"
+                },
+                {
+                  "start": 39.15,
+                  "end": 39.73,
+                  "word": "three,"
+                },
+                {
+                  "start": 40.65,
+                  "end": 41.43,
+                  "word": "six."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 45.03,
+              "end": 47.95,
+              "en": "Number 4: twelve.",
+              "ru": "Номер 4: двенадцать.",
+              "itemNumber": 4,
+              "image": null,
+              "words": [
+                {
+                  "start": 45.03,
+                  "end": 45.91,
+                  "word": "Number"
+                },
+                {
+                  "start": 45.91,
+                  "end": 46.49,
+                  "word": "four,"
+                },
+                {
+                  "start": 47.29,
+                  "end": 47.95,
+                  "word": "twelve."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 51.512,
+              "end": 54.15,
+              "en": "Number 5: nine.",
+              "ru": "Номер 5: девять.",
+              "itemNumber": 5,
+              "image": null,
+              "words": [
+                {
+                  "start": 51.41,
+                  "end": 52.11,
+                  "word": "Number"
+                },
+                {
+                  "start": 52.11,
+                  "end": 52.87,
+                  "word": "five,"
+                },
+                {
+                  "start": 53.61,
+                  "end": 54.15,
+                  "word": "nine."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 57.232,
+              "end": 59.81,
+              "en": "Number 6: ten.",
+              "ru": "Номер 6: десять.",
+              "itemNumber": 6,
+              "image": null,
+              "words": [
+                {
+                  "start": 57.11,
+                  "end": 57.81,
+                  "word": "Number"
+                },
+                {
+                  "start": 57.81,
+                  "end": 58.47,
+                  "word": "six,"
+                },
+                {
+                  "start": 59.29,
+                  "end": 59.81,
+                  "word": "ten."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 62.76,
+              "end": 65.7,
+              "en": "Number 7: five.",
+              "ru": "Номер 7: пять.",
+              "itemNumber": 7,
+              "image": null,
+              "words": [
+                {
+                  "start": 62.76,
+                  "end": 63.44,
+                  "word": "Number"
+                },
+                {
+                  "start": 63.44,
+                  "end": 64.12,
+                  "word": "seven,"
+                },
+                {
+                  "start": 64.74,
+                  "end": 65.7,
+                  "word": "five."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 68.468,
+              "end": 71.24,
+              "en": "Number 8: thirteen.",
+              "ru": "Номер 8: тринадцать.",
+              "itemNumber": 8,
+              "image": null,
+              "words": [
+                {
+                  "start": 68.44,
+                  "end": 69.14,
+                  "word": "Number"
+                },
+                {
+                  "start": 69.14,
+                  "end": 69.74,
+                  "word": "eight,"
+                },
+                {
+                  "start": 70.6,
+                  "end": 71.24,
+                  "word": "thirteen."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 74.908,
+              "end": 77.64,
+              "en": "Number 9: eighteen.",
+              "ru": "Номер 9: восемнадцать.",
+              "itemNumber": 9,
+              "image": null,
+              "words": [
+                {
+                  "start": 74.84,
+                  "end": 75.54,
+                  "word": "Number"
+                },
+                {
+                  "start": 75.54,
+                  "end": 76.12,
+                  "word": "nine,"
+                },
+                {
+                  "start": 77.02,
+                  "end": 77.64,
+                  "word": "eighteen."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 80.428,
+              "end": 82.86,
+              "en": "Number 10: zero.",
+              "ru": "Номер 10: ноль.",
+              "itemNumber": 10,
+              "image": null,
+              "words": [
+                {
+                  "start": 80.24,
+                  "end": 80.94,
+                  "word": "Number"
+                },
+                {
+                  "start": 80.94,
+                  "end": 81.52,
+                  "word": "ten,"
+                },
+                {
+                  "start": 82.44,
+                  "end": 82.86,
+                  "word": "zero."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 86.208,
+              "end": 89.1,
+              "en": "Number 11: fifteen.",
+              "ru": "Номер 11: пятнадцать.",
+              "itemNumber": 11,
+              "image": null,
+              "words": [
+                {
+                  "start": 86.08,
+                  "end": 86.78,
+                  "word": "Number"
+                },
+                {
+                  "start": 86.78,
+                  "end": 87.38,
+                  "word": "eleven,"
+                },
+                {
+                  "start": 88.22,
+                  "end": 89.1,
+                  "word": "fifteen."
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 92.59,
+              "end": 102.35,
+              "en": "Number 12: four. Number 13: nineteen.",
+              "ru": "Номер 12: четыре. Номер 13: девятнадцать.",
+              "itemNumber": 12,
+              "image": null,
+              "words": [
+                {
+                  "start": 92.59,
+                  "end": 93.25,
+                  "word": "number"
+                },
+                {
+                  "start": 93.25,
+                  "end": 93.99,
+                  "word": "12"
+                },
+                {
+                  "start": 93.99,
+                  "end": 95.31,
+                  "word": "for"
+                },
+                {
+                  "start": 95.31,
+                  "end": 99.77,
+                  "word": "number"
+                },
+                {
+                  "start": 99.77,
+                  "end": 100.61,
+                  "word": "13"
+                },
+                {
+                  "start": 100.61,
+                  "end": 102.35,
+                  "word": "19"
+                }
+              ],
+              "role": "prompt"
+            },
+            {
+              "start": 127.14,
+              "end": 136.54,
+              "en": "Look at page 5 and check your answers for Figure 7.",
+              "ru": "Посмотрите на страницу 5 и проверьте свои ответы к рисунку 7.",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 127.13999999999999,
+                  "end": 128.48,
+                  "word": "Look"
+                },
+                {
+                  "start": 128.48,
+                  "end": 129.82,
+                  "word": "at"
+                },
+                {
+                  "start": 129.82,
+                  "end": 130.86,
+                  "word": "page"
+                },
+                {
+                  "start": 130.86,
+                  "end": 131.46,
+                  "word": "5"
+                },
+                {
+                  "start": 131.46,
+                  "end": 133.02,
+                  "word": "and"
+                },
+                {
+                  "start": 133.02,
+                  "end": 133.54,
+                  "word": "check"
+                },
+                {
+                  "start": 133.54,
+                  "end": 133.92,
+                  "word": "your"
+                },
+                {
+                  "start": 133.92,
+                  "end": 134.44,
+                  "word": "answers"
+                },
+                {
+                  "start": 134.44,
+                  "end": 135.42,
+                  "word": "for"
+                },
+                {
+                  "start": 135.42,
+                  "end": 135.82,
+                  "word": "figure"
+                },
+                {
+                  "start": 135.82,
+                  "end": 136.54,
+                  "word": "7."
+                }
+              ],
+              "role": "instruction"
+            },
+            {
+              "start": 201.8,
+              "end": 204.34,
+              "en": "1A Book 1",
+              "ru": "1A Книга 1",
+              "itemNumber": null,
+              "image": null,
+              "words": [
+                {
+                  "start": 201.8,
+                  "end": 202.76,
+                  "word": "1a"
+                },
+                {
+                  "start": 202.76,
+                  "end": 203.82,
+                  "word": "book"
+                },
+                {
+                  "start": 203.82,
+                  "end": 204.34,
+                  "word": "one"
+                }
+              ],
+              "role": "other"
+            }
+          ],
+          "instructionEn": "Look at Figure 7. Circle the number you hear."
+        }
+      ]
+    }
+  ]
+}
