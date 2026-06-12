@@ -6,7 +6,8 @@
   "publisher": "language-reactor",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dioco-group/lr-cursor-extension.git"
+    "url": "https://github.com/dioco-group/reactor-module-tools.git",
+    "directory": "lr-cursor-extension"
   },
   "engines": {
     "vscode": "^1.85.0"

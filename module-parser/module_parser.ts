@@ -226,7 +226,7 @@ function handleSectionMarker(line: string, state: ParserState): void {
     case "PRODUCE":
       startActivity(state, "PRODUCE", title || "Produce");
       break;
-        case "CHAT":
+    case "CHAT":
       startActivity(state, "CHAT", title || "Chat");
       break;
     default:

@@ -19,21 +19,21 @@ const projects = path.resolve(here, '../..'); // .../projects
 const TARGETS = {
   'module_types.ts': [
     'reactor-module-tools/module-preview/src',
-    'lr-cursor-extension/src/parser',
+    'reactor-module-tools/lr-cursor-extension/src/parser',
     'dioco-base/src/modules',
   ],
   'module_parser.ts': [
     'reactor-module-tools/module-preview/src',
-    'lr-cursor-extension/src/parser',
+    'reactor-module-tools/lr-cursor-extension/src/parser',
     'dioco-base/src/modules',
   ],
   'module_spec.ts': [
     'reactor-module-tools/module-preview/src',
-    'lr-cursor-extension/src/parser',
+    'reactor-module-tools/lr-cursor-extension/src/parser',
   ],
   'module_diagnostics.ts': [
     'reactor-module-tools/module-preview/src',
-    'lr-cursor-extension/src/parser',
+    'reactor-module-tools/lr-cursor-extension/src/parser',
   ],
 };
 

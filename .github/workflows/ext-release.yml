@@ -1,12 +1,16 @@
-name: Release
+name: Extension Release
 
 on:
   push:
     tags:
-      - "v*"
+      - "ext-v*"
 
 permissions:
   contents: write
+
+defaults:
+  run:
+    working-directory: lr-cursor-extension
 
 jobs:
   build:
@@ -25,5 +29,5 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: lr-course-editor.vsix
+          files: lr-cursor-extension/lr-course-editor.vsix
           generate_release_notes: true
