@@ -85,6 +85,10 @@ function loadConfig(configPath) {
     delayBetweenRequests: config.delayBetweenRequests || 3000,
     configDir: configDir,
     goldExamples,
+    // Shared conversion-rule docs (filenames in module-convert/shared/) appended
+    // to the prompt after the format spec — e.g. ["st_notes.md"] for every ST
+    // book, so the rules live in ONE place instead of a per-book prompt.md copy.
+    sharedNotes: Array.isArray(config.sharedNotes) ? config.sharedNotes : [],
   };
 }
 
@@ -125,8 +129,18 @@ function buildSystemPrompt(config) {
   // Load shared module format spec
   const sharedFormatPath = path.resolve(__dirname, 'shared/module_format.md');
   const moduleFormat = readTextFile(sharedFormatPath);
-  
-  // Load course-specific prompt
+
+  // Shared conversion-rule docs (module-convert/shared/<name>), e.g. st_notes.md.
+  // These hold the rules common to a whole track (all ST books) so they aren't
+  // duplicated in each book's prompt.md.
+  const sharedNotes = [];
+  for (const name of config.sharedNotes || []) {
+    const p = path.resolve(__dirname, 'shared', name);
+    if (fileExists(p)) sharedNotes.push(readTextFile(p));
+    else console.warn(`  ⚠ sharedNotes file not found: ${p}`);
+  }
+
+  // Load course-specific prompt (per-book deltas only; usually empty)
   const coursePromptPath = path.resolve(config.configDir, 'prompt.md');
   let coursePrompt = '';
   if (fileExists(coursePromptPath)) {
@@ -134,10 +148,14 @@ function buildSystemPrompt(config) {
   }
 
   const goldSection = buildGoldSection(config);
-  
+
+  const sharedNotesSection = sharedNotes.length
+    ? '\n\n---\n\n' + sharedNotes.join('\n\n---\n\n')
+    : '';
+
   const systemPrompt = `You are converting ${config.courseName} language learning materials into a structured module format for educational software.
 
-${moduleFormat}
+${moduleFormat}${sharedNotesSection}
 
 ${coursePrompt ? '---\n\n# Course-Specific Instructions\n\n' + coursePrompt : ''}${goldSection ? '\n\n' + goldSection : ''}`;
 

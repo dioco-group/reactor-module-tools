@@ -162,16 +162,23 @@ function buildWorkedExample() {
 }
 
 function buildSystemPrompt(courseName) {
-  const spec = readMaybe(path.resolve(__dirname, 'shared/module_format_v2_proposal.md')) || '';
+  const spec = readMaybe(path.resolve(__dirname, 'shared/module_format.md')) || '';
+  const common = readMaybe(path.resolve(__dirname, 'shared/alc_common.md')) || '';
   const notes = readMaybe(path.resolve(__dirname, 'shared/alc_conversion_notes.md')) || '';
   const example = buildWorkedExample();
-  return `You convert ${courseName} into the v2 module format below, for Russian-speaking learners. The module is authored in English and is monolingual (TARGET_LANG_G: en, HOME_LANG_G: en); Russian translations are added automatically downstream.
+  return `You convert ${courseName} into the v2 module format below. The module is authored in English and is monolingual (TARGET_LANG_G: en, HOME_LANG_G: en); learner-language translations are added automatically downstream.
 
 ${spec}
 
 ---
 
-# ALC Conversion Notes (follow these)
+# ALC Conversion — Common Core (follow these)
+
+${common}
+
+---
+
+# ALC LLA Notes — cassette audio track (follow these)
 
 ${notes}
 
@@ -188,9 +195,9 @@ ${example}
 
 # LANGUAGE (this run)
 
-Output is **English only**. Do NOT emit any translation fields — no VOCAB_T,
-LINE_T, PROMPT_T, RESPONSE_T, or ANSWER_T. Russian translations are added by a
-later downstream step; produce the English module only.
+Output is **English only** and monolingual — the format has no translation fields.
+Translations into the learner's language are added by a later downstream step;
+produce the English module only.
 
 # HEADER & VOICES (this run)
 
@@ -224,7 +231,7 @@ Allowed on dialogue lines, PROMPT, RESPONSE ($PRODUCE model answer), and OPTION.
   RESPONSE: The children like to play ball in the afternoon. {bk04-l1a-f4-01-a.mp3@8.10-11.40}
 There are NO OPTION_IMAGE / PROMPT_IMAGE / IMAGE: fields. An activity-wide shared
 reference image (e.g. one map for all items in $SELECT) and the module cover ride
-the END of the marker title line: `$SELECT Title {page_XXX.jpg}` / `$MODULE … {cover.jpg}`.
+the END of the marker title line: \`$SELECT Title {page_XXX.jpg}\` / \`$MODULE … {cover.jpg}\`.
 
 # CLIP RULES (this run)
 

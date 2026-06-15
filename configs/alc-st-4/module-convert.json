@@ -1,6 +1,7 @@
 {
   "courseName": "ALC DLI English — Student Text Book 4",
-  "_comment": "Paths resolved relative to this config file.",
+  "_comment": "Paths resolved relative to this config file. Used by convert-course.js (ST = TTS-only, no tape).",
+  "sharedNotes": ["alc_common.md", "st_notes.md"],
   "inputDir": "../../data/alc-st-4/md",
   "outputDir": "../../data/alc-st-4/module",
   "model": "gemini-3.1-pro-preview",

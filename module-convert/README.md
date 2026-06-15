@@ -6,12 +6,16 @@ then into the recreated **master lessons**. Companion docs:
 - `AGENT_GUIDE.md` — **start here if you just need to run the pipeline** on a
   book: self-contained, storage-server-agnostic, the commands + the gotchas.
 
-- `shared/alc_conversion_notes.md` — WHAT to convert into WHAT (per-figure
-  rules, with reasoning). Embedded in the LLA converter prompt.
-- `configs/alc-st-4/prompt.md` — Student Text conversion rules (no tape).
+- `shared/alc_common.md` — track-agnostic ALC conversion core (5 types & how to
+  choose, presentation+task split, convert-every-item, INTRO/INSTRUCTION, images,
+  SKIP/DEFER, naming, output). Embedded in **both** converter prompts.
+- `shared/alc_conversion_notes.md` — **LLA delta**: cassette-audio rules (clip
+  timing, two-pass tapes, worked tape examples). Embedded in the LLA prompt only.
+- `shared/st_notes.md` — **ST delta**: no-tape rules + ST section mapping. Shared
+  by ALL ST books via each `configs/alc-st-*/module-convert.json` `sharedNotes`.
 - `shared/master_lessons_guide.md` — modules → recreated master lessons.
-- `shared/module_format.md` / `module_format_v2_proposal.md` /
-  `module_format.ebnf` — the format itself.
+- `shared/module_format.md` / `module_format.ebnf` — the format itself (the one
+  canonical spec, embedded in both converter prompts).
 - `../pdf-extract/EXTRACTION_PIPELINE.md` — PDF → markdown details.
 
 ## The two source books per ALC lesson
