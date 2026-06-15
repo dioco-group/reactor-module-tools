@@ -19,7 +19,7 @@ node pdf-extract/extract-markdown.js configs/fsi-french/pdf-extract.json
 
 **What it does:**
 1. Converts all PDF pages to PNG (300 DPI) for later use
-2. Splits PDF into 20-page chunks
+2. Splits the PDF into chunks (default 6 pages — see note below)
 3. Sends each chunk to Gemini for OCR
 4. Outputs markdown with image placeholders (detailed descriptions)
 5. If `splitOutputDir` is set in the config, also splits the combined markdown on the fixed marker `<<<< SPLIT HERE >>>>` and writes per-unit `.md` files to that directory (for `module-convert`).
@@ -95,7 +95,12 @@ Or add to `.env` file in the repo root.
 Design decisions based on research on optimal Gemini usage:
 
 1. **PDF → PNG conversion** yields dramatically better OCR vs direct PDF
-2. **20 pages per chunk** balances quality and efficiency (50+ degrades)
+2. **Chunk size = 6 pages (default).** Transcription accuracy is insensitive to
+   chunk size (even 1 page/chunk scored the same — see configs/alc-english/NOTES.md),
+   so the only cost of a smaller batch is more API calls. The win: these scans
+   make the model DERIVE each page's PDF index by counting from the batch's start,
+   and fewer pages per batch = far less off-by-one drift in image filenames.
+   (Overridable; was 20 originally.)
 3. **Style context pages** - send target page + up to 2 neighboring pages with images for style consistency
 4. **PDF page numbers for filenames** - reliable mapping vs printed page numbers
 5. **Low temperature (0.2)** - improves consistency for transcription

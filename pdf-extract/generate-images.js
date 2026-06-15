@@ -201,11 +201,15 @@ function extractJsonArray(text) {
  * (without the marker) for prompts.
  */
 function parseImageReferences(markdown) {
-  const regex = /!\[([^\]]*)\]\(images\/(page_(\d+)_(\d+)\.(?:png|jpe?g))\)/g;
+  // Non-greedy alt capture so the OCR's double-bracket form — ![[#1 desc]](images/..)
+  // — is parsed too (a `[^\]]*` capture stops at the inner `]` and silently drops
+  // those refs, leaving whole pages of figures ungenerated).
+  const regex = /!\[(.*?)\]\(images\/(page_(\d+)_(\d+)\.(?:png|jpe?g))\)/g;
   const images = [];
   let match;
   while ((match = regex.exec(markdown)) !== null) {
-    const description = match[1];
+    // Strip any surrounding brackets left by the ![[...]] form before parsing the #N marker.
+    const description = match[1].replace(/^\[+/, '').replace(/\]+$/, '');
     const numMatch = description.match(/^#(\d{1,3})\b/);
     images.push({
       description,
@@ -429,9 +433,20 @@ async function main() {
     }
 
     for (const img of pending) {
-      const box = boxes[img.imageIndex];
+      let box = boxes[img.imageIndex];
+      // The batch bbox call (asked for all illustrations on the page at once)
+      // sometimes OMITS an id it couldn't pick out — leaving a markdown-referenced
+      // figure with no box and thus no generated image (broken asset downstream).
+      // A focused, single-illustration retry locates it far more reliably.
       if (!box || !Array.isArray(box) || box.length !== 4) {
-        console.log(`  ${img.filename}: no bbox - skipped`);
+        try {
+          const retry = await pipeline.detectBoxes(pagePng, [img], pageNum);
+          box = retry[img.imageIndex];
+          if (box) console.log(`  ${img.filename}: recovered via single-box retry`);
+        } catch (e) { /* fall through to skip below */ }
+      }
+      if (!box || !Array.isArray(box) || box.length !== 4) {
+        console.log(`  ${img.filename}: no bbox (after retry) - skipped`);
         failed++;
         continue;
       }
