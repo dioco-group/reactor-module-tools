@@ -13,10 +13,16 @@
  *      similar text elsewhere, e.g. the question instead of the answer), and
  *      only TRIM it: strip unmatched cue words ("Number one,", "Repeat,",
  *      "The answer to number two is") from the edges.
- *   4. When the line text covers most of the remaining range (a spoken prompt),
- *      additionally snap to the first/last matched words. When it's a small
- *      subset (a cloze option like "cleans" riding the full model sentence),
- *      keep the whole cue-stripped range — the tape's full sentence is the clip.
+ *   4. Snap to the matched words. A line that covers most of the range snaps to
+ *      its first/last match; a small subset (a cloze option like "cleans" riding
+ *      the full model sentence) keeps the cue-stripped range. When the match is a
+ *      single short item sitting in a window the LLM made too wide (a letter or
+ *      number whose rough range spans neighbors), it snaps to that word's own
+ *      transcript SEGMENT — isolating the right item.
+ *   5. Emit the clip as [firstWord.start, lastWord.START]. Soniox word STARTS are
+ *      reliable but its ENDS are NOT (point-like, or the next item's onset), so
+ *      the end is anchored on the last word's start; slice-clips' silence-aware
+ *      `speechEdges` extends it to the real trailing gap and recovers a late start.
  *
  * Low-confidence matches are left unchanged and reported for review.
  *
@@ -137,12 +143,17 @@ function loadFigureWords(transcriptsDir, lesson, fig) {
   if (!fs.existsSync(p)) return null;
   const j = JSON.parse(fs.readFileSync(p, 'utf8'));
   const words = [];
+  let segIdx = 0;
   for (const seg of j.segments || []) {
     for (const w of seg.words || []) {
       for (const tok of normTokens(w.word)) {
-        words.push({ start: w.start, end: w.end, tok });
+        // segIdx tags which transcript SEGMENT (utterance) a word belongs to.
+        // Used to snap a fully-matched short line (a number/letter) to its own
+        // segment instead of a too-wide rough range that spans neighbors.
+        words.push({ start: w.start, end: w.end, tok, segIdx });
       }
     }
+    segIdx++;
   }
   return words;
 }
@@ -154,6 +165,7 @@ const LEAD_CUES = [
   /^repeat\b/,
   /^(and )?the answers? to number \w+ (is|are)\b/,
   /^listen to the examples?\b/,
+  /^(this is an? )?example\b/,
   /^listen\b/,
 ];
 
@@ -202,13 +214,31 @@ function align(words, tokens, s, e) {
   const matched = pairs.length;
   const score = matched / tokens.length; // how much of the line was found
 
-  // 3. The line covers (nearly) the whole remaining window -> snap to the
-  //    matched words. The line is only a fragment of it (cloze option riding
-  //    the full model sentence) -> keep the whole cue-stripped window.
+  // 3. Choose the final word span [a,b]:
+  //    - line covers most of the window -> snap to the matched words;
+  //    - line fully matched but window is wider -> snap to the matched word's
+  //      transcript segment (isolates a single item from a too-wide range, and
+  //      keeps a whole sentence for a cloze option — see branch below);
+  //    - otherwise (a genuine fragment) -> keep the whole cue-stripped window.
   const firstW = lo + pairs[0][1];
   const lastW = lo + pairs[pairs.length - 1][1];
   const coverage = (lastW - firstW + 1) / (hi - lo + 1);
-  const [a, b] = coverage >= 0.7 ? [firstW, lastW] : [lo, hi];
+  let a, b;
+  if (coverage >= 0.7) {
+    a = firstW; b = lastW;
+  } else if (score >= 0.999 && words[firstW].segIdx != null) {
+    // Line fully matched but the rough window is wider than the match. Two cases:
+    //  - a cloze OPTION riding a full model sentence: the match sits inside ONE
+    //    segment -> snapping to that segment keeps the whole sentence (intended).
+    //  - a too-wide range spanning SEPARATE items (numbers/letters each their own
+    //    segment): snapping to the matched word's segment isolates the right item.
+    // Either way: snap to the segment span covering the matched words.
+    const sLo = words[firstW].segIdx, sHi = words[lastW].segIdx;
+    a = firstW; while (a > lo && words[a - 1].segIdx >= sLo) a--;
+    b = lastW; while (b < hi && words[b + 1].segIdx <= sHi) b++;
+  } else {
+    a = lo; b = hi;
+  }
   return { ...padClamp(words, a, b), score };
 }
 
@@ -220,11 +250,17 @@ function align(words, tokens, s, e) {
 const SLICER_PAD = 0.2;
 function padClamp(words, a, b) {
   let start = words[a].start;
-  let end = words[b].end;
+  // Anchor the END on the LAST matched word's START, not its end: Soniox word
+  // ENDS on this corpus are unreliable (an isolated number's "end" is often the
+  // NEXT item's onset, e.g. "10."=[52.0-54.7] while "ten" is really 51.6-52.3).
+  // The START is reliable; slice-clips' silence-aware pass extends from here to
+  // the real trailing gap. This prevents the clip from bleeding into the next item.
+  let end = words[b].start;
   const prev = words[a - 1];
-  const next = words[b + 1];
   if (prev && start - SLICER_PAD < prev.end) start = Math.min(prev.end + SLICER_PAD, /* never cut into our own word */ start + SLICER_PAD);
-  if (next && end + SLICER_PAD > next.start) end = Math.max(next.start - SLICER_PAD, end - SLICER_PAD);
+  // Single-word clips have a==b so end==start; give a small nominal span so the
+  // slicer's `end > start` check passes (the real end is found by silence there).
+  if (end <= start) end = start + 0.1;
   return { start, end };
 }
 
