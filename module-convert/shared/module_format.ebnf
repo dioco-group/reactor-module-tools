@@ -23,21 +23,20 @@ module              = module_header , { voice_config } , { lesson } ;
    MODULE HEADER
    ========================================================================== *)
 
-module_header       = "$MODULE" , newline ,
+(* The module title (and an optional cover image) ride the $MODULE marker line,
+   consistent with every other marker — there is NO TITLE:/IMAGE: header field. *)
+module_header       = "$MODULE" , whitespace , module_title , [ whitespace , inline_image ] , newline ,
                       format_field ,
                       [ dioco_doc_id ] ,
-                      title_field ,
                       [ description_field ] ,
-                      [ image_field ] ,
                       target_lang_field ,
                       home_lang_field ,
                       [ tts_prompt_field ] ;
 
+module_title        = text_value ;
 format_field        = "FORMAT:" , whitespace , "2" , newline ;   (* declarative format version *)
 dioco_doc_id        = "DIOCO_DOC_ID:" , whitespace , identifier , newline ;
-title_field         = "TITLE:" , whitespace , text_value , newline ;
 description_field   = "DESCRIPTION:" , whitespace , text_value , newline ;
-image_field         = "IMAGE:" , whitespace , filename , newline ;
 target_lang_field   = "TARGET_LANG_G:" , whitespace , lang_code , newline ;
 home_lang_field     = ( "HOME_LANG_G:" | "USER_LANG_G:" ) , whitespace , lang_code , newline ;
 tts_prompt_field    = "TTS_PROMPT:" , whitespace , text_value , newline ;
@@ -76,7 +75,8 @@ lesson_title        = text_value ;
 
 intro_field         = "INTRO:" , whitespace , text_value , newline ;
 instruction_field   = "INSTRUCTION:" , whitespace , text_value , newline ;
-image_field_shared  = "IMAGE:" , whitespace , filename , newline ;   (* activity-level ($DIALOGUE/$SELECT/$PRODUCE) / header cover ONLY *)
+(* The activity-wide image (shown for ALL lines/items) rides the marker title
+   line as a trailing inline_image: `$DIALOGUE Title {page.jpg}`. *)
 activity_title      = text_value ;
 
 (* Inline assets: attached at the END of a content line, in curly braces,
@@ -103,12 +103,11 @@ activity            = dialogue_activity
    DIALOGUE ACTIVITY  (listen / read / repeat; also reading passages + vocab)
    -------------------------------------------------------------------------- *)
 
-dialogue_activity   = "$DIALOGUE" , whitespace , activity_title , newline ,
+dialogue_activity   = "$DIALOGUE" , whitespace , activity_title , [ whitespace , inline_image ] , newline ,
                       [ intro_field ] ,
                       [ instruction_field ] ,
                       [ tts_prompt_field ] ,
                       [ repeat_flag ] ,
-                      [ image_field_shared ] ,        (* activity-wide image shown for ALL lines *)
                       { vocab_entry } ,
                       { dialogue_line } ;
 
@@ -142,12 +141,11 @@ markdown_line       = ( ? any text not starting with "$" or known field ? ) , ne
    SELECT ACTIVITY  (tap one or more options)
    -------------------------------------------------------------------------- *)
 
-select_activity     = "$SELECT" , whitespace , activity_title , newline ,
+select_activity     = "$SELECT" , whitespace , activity_title , [ whitespace , inline_image ] , newline ,
                       [ intro_field ] ,
                       [ instruction_field ] ,
                       [ multi_flag ] ,
                       [ show_prompt_flag ] ,
-                      [ image_field_shared ] ,        (* activity-level shared image *)
                       { option_line } ,               (* activity-level shared option pool *)
                       { select_item } ;
 
@@ -174,17 +172,16 @@ feedback_field      = "FEEDBACK:" , whitespace , text_value , newline ;
    PRODUCE ACTIVITY  (produce an answer; typed/spoken)
    -------------------------------------------------------------------------- *)
 
-produce_activity    = "$PRODUCE" , whitespace , activity_title , newline ,
+produce_activity    = "$PRODUCE" , whitespace , activity_title , [ whitespace , inline_image ] , newline ,
                       [ intro_field ] ,
                       [ instruction_field ] ,
                       [ tts_prompt_field ] ,
                       [ input_field ] ,
                       [ check_field ] ,
                       [ show_prompt_flag ] ,        (* book printed the stimulus *)
-                      [ image_field_shared ] ,      (* activity-wide grounding image shown for ALL items *)
                       { produce_item } ;
 
-input_field         = "INPUT:" , whitespace , ( "type" | "speak" | "either" ) , newline ;
+input_field         = "INPUT:" , whitespace , ( "type" | "speak" ) , newline ;
 check_field         = "CHECK:" , whitespace , ( "reveal" | "exact" | "llm" ) , newline ;
 
 produce_item        = [ example_marker ] ,
@@ -242,8 +239,10 @@ newline             = "\n" | "\r\n" ;
    1. Section markers ($MODULE, $LESSON, $DIALOGUE, $GRAMMAR, $SELECT,
       $PRODUCE, $CHAT) must start at column 0 with NO colon after the marker.
 
-   2. Field names (TITLE:, SPEAKER:, LINE:, PROMPT:, OPTION:, etc.) must start
-      at column 0 and include the colon as part of the field marker.
+   2. Field names (FORMAT:, DESCRIPTION:, LINE:, PROMPT:, OPTION:, etc.) must start
+      at column 0 and include the colon as part of the field marker. The module
+      TITLE and cover IMAGE are NOT fields — they ride the $MODULE marker line:
+      `$MODULE Lesson 1: The Classroom {cover.jpg}`.
 
    3. Flag lines have NO colon and no value: REPEAT (dialogue), MULTI /
       SHOW_PROMPT (select/produce), EXAMPLE (next select/produce item). Spoken PROMPT text is hidden until answered/revealed by DEFAULT; SHOW_PROMPT shows it (the book printed the stimulus).
@@ -259,15 +258,16 @@ newline             = "\n" | "\r\n" ;
    8. VOCAB entries before a LINE attach to that line. v2 uses ONE word/phrase
       per VOCAB (no VOCAB_T — definitions are generated downstream).
 
-   9. Assets are INLINE: trailing "{file}" tokens on a content line, routed by
-      extension — "{page.jpg}" attaches an image, "{clip.mp3}" a cassette clip
-      played in full. Image first, audio LAST; at most one of each per line.
-      There are no AUDIO:/RESPONSE_AUDIO:/OPTION_AUDIO:/OPTION_IMAGE:/
-      PROMPT_IMAGE: fields, and no per-line IMAGE: — "IMAGE:" survives only as
-      the header cover and the activity-level shared image in $DIALOGUE /
-      $SELECT / $PRODUCE (placed before the first line/item; shows for ALL
-      lines/items, overridden per line/item by an inline {page.jpg}).
-      Drafts carry "{clip.mp3@start-end}" timing which the slicer strips.
+   9. Assets are INLINE: trailing "{file}" tokens, routed by extension —
+      "{page.jpg}" attaches an image, "{clip.mp3}" a cassette clip played in full.
+      Image first, audio LAST; at most one of each per line. There are no
+      AUDIO:/RESPONSE_AUDIO:/OPTION_AUDIO:/OPTION_IMAGE:/PROMPT_IMAGE:/IMAGE:
+      fields at all. A per-line/item image rides the END of its content line; the
+      activity-wide image (shown for ALL lines/items) and the module cover ride
+      the END of the marker TITLE line ($MODULE / $DIALOGUE / $SELECT / $PRODUCE),
+      e.g. `$SELECT Match the picture {page_020_001.jpg}`. Marker title lines take
+      an image only (no audio). Drafts carry "{clip.mp3@start-end}" timing which
+      the slicer strips.
 
    9b. Dialogue speakers are SCREENPLAY-STYLE: "Jim: Hello." (id = alnum/_,
       must contain a lowercase letter — ALL-CAPS is reserved for fields).
@@ -276,7 +276,7 @@ newline             = "\n" | "\r\n" ;
    10. $SELECT options may be declared once at the activity level (shared pool)
        or inside an item (overrides the pool). ANSWER lists correct option ids.
 
-   11. $PRODUCE behavior: INPUT (type/speak/either, default speak) and CHECK
+   11. $PRODUCE behavior: INPUT (type/speak, default speak) and CHECK
        (reveal/exact/llm, default reveal).
 
    12. TEMPLATE (in $SELECT and $PRODUCE items) is on-screen text shown but

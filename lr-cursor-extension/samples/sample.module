@@ -3,9 +3,8 @@
 # Modules are monolingual: no translation (*_T) fields — translations are
 # generated downstream.
 
-$MODULE
+$MODULE Greetings and Introductions
 DIOCO_DOC_ID: lc_example_my-course_01-greetings
-TITLE: Greetings and Introductions
 DESCRIPTION: Learn basic greetings and how to introduce yourself
 TARGET_LANG_G: fr
 HOME_LANG_G: en

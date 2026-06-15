@@ -106,9 +106,8 @@ ANSWER: t
 Include voice configuration in the module header:
 
 ```
-$MODULE
+$MODULE MODULE 1105: Greetings and Introductions
 DIOCO_DOC_ID: lc_alc_english_1105
-TITLE: MODULE 1105: Greetings and Introductions
 DESCRIPTION: Basic greetings and introduction phrases in English.
 TARGET_LANG_G: en
 HOME_LANG_G: en

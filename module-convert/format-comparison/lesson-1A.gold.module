@@ -10,9 +10,8 @@
 #    line/prompt/response (vocab readings & "Number N" cues excluded from the range).
 #  - "Choose among given answers" → $SELECT even when the book says "Answer the questions".
 
-$MODULE
+$MODULE Lesson 1A
 FORMAT: 2
-TITLE: Lesson 1A
 DESCRIPTION: Sports, cities, and daily routines
 TARGET_LANG_G: en
 HOME_LANG_G: en
@@ -155,13 +154,12 @@ RESPONSE: Jack likes to watch basketball on Fridays. {bk04-l1a-f4-05-a.mp3}
 # book: the map intro and the three city names — keep those as lines. Drop the
 # bare instruction "Now let's repeat the sentences". VOCAB from the book underlines
 # (cities, towns, lives, city). The first book line has no tape clip (no {clip}).
-# Every line refers to ONE shared visual (the map), so it is an activity-wide
-# IMAGE: (stays on screen for all lines) — NOT inline on just the first line.
-$DIALOGUE Figure 5: Cities and Towns
+# Every line refers to ONE shared visual (the map), so it rides the activity title
+# line as {page.jpg} (stays on screen for all lines) — NOT inline on just the first line.
+$DIALOGUE Figure 5: Cities and Towns {page_010_001.jpg}
 INTRO: You'll see a map of Texas. Learn the words for cities and towns, then repeat the sentences.
 INSTRUCTION: Repeat each sentence.
 REPEAT
-IMAGE: page_010_001.jpg
 
 Narrator: Do you see three big cities on the map? {bk04-l1a-f5-01.mp3}
 

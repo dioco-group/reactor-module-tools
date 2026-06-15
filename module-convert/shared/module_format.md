@@ -29,13 +29,14 @@ Understanding the student experience helps create better modules:
 
 ## Module Header (Required)
 
-Every module starts with `$MODULE` followed by required fields:
+The module **title** rides the `$MODULE` line (like every other marker), with an
+optional cover image as a trailing `{file}` — there is **no** `TITLE:`/`IMAGE:`
+field. The rest of the header is fields:
 
 ```
-$MODULE
+$MODULE Unit 1: Greetings and Introductions {cover.jpg}
 FORMAT: 2
 DIOCO_DOC_ID: lc_fsi_french_u1
-TITLE: Unit 1: Greetings and Introductions
 DESCRIPTION: Basic French greetings, introductions, and polite expressions.
 TARGET_LANG_G: fr
 HOME_LANG_G: en
@@ -43,11 +44,10 @@ HOME_LANG_G: en
 
 | Field | Required | Description |
 |-------|----------|-------------|
+| `$MODULE <title>` | **Yes** | Module title on the marker line; an optional trailing `{cover.jpg}` is the module cover image |
 | `FORMAT` | **Yes** | Format version — always `2`. Declarative so readers never have to sniff for v2-only markers |
 | `DIOCO_DOC_ID` | No | Optional identifier (moduleKey is derived from filename at runtime) |
-| `TITLE` | **Yes** | Module title |
 | `DESCRIPTION` | No | Single-line description of what the module teaches |
-| `IMAGE` | No | Image filename for module cover |
 | `TARGET_LANG_G` | **Yes** | Language being taught (`fr`, `es`, `en`, `de`, …) |
 | `HOME_LANG_G` | **Yes** | Language the instructions/titles/notes are written in |
 
@@ -117,8 +117,8 @@ $LESSON Grammar — Noun Markers
 | `INTRO:` | any activity | Spoken intro before the activity starts (sets the scene). Keep to 2–3 sentences. |
 | `INSTRUCTION:` | any activity | Brief on-screen instruction shown during the activity. |
 | `{file}` (inline) | end of a dialogue line / `PROMPT` / `RESPONSE` / `OPTION` | **An asset attached to that text**, routed by extension: `{page.jpg}` = image, `{clip.mp3}` = cassette clip played in full. See *Inline assets* below. |
-| `IMAGE:` | **activity-level** in `$DIALOGUE` / `$SELECT` / `$PRODUCE` (before the first line/item); module header (cover) | Shared reference image (diagram / map / scene) shown for **all** lines/items of the activity. Per-line/per-item images are inline. |
-| `REPEAT` | `$DIALOGUE` (flag, no colon) | After listening, the learner repeats each line aloud. |
+| `{image}` on a marker title line | `$MODULE` (cover) / `$DIALOGUE` / `$SELECT` / `$PRODUCE` (activity-wide) | A trailing `{page.jpg}` on the marker title line is the block-scoped image — module cover, or a shared reference image (diagram / map / scene) shown for **all** lines/items. Per-line/per-item images are inline on the content. |
+| `REPEAT` | `$DIALOGUE` / `$SELECT` / `$PRODUCE` (flag, no colon) | Learner repeats aloud after hearing. `$DIALOGUE`: each line. `$SELECT`/`$PRODUCE`: after the answer is revealed, repeat the model answer (tape's "Repeat." beat) — replay + say-it-back, not assessed. |
 | `MULTI` | `$SELECT` (flag, no colon) | More than one option may be correct. |
 | `SHOW_PROMPT` | `$SELECT` / `$PRODUCE` (flag, no colon) | Show the spoken `PROMPT` text from the start (the book printed the stimulus). DEFAULT: prompt text is hidden until answered/revealed — a spoken `PROMPT` is normally tape-only. |
 | `EXAMPLE` | next `$SELECT`/`$PRODUCE` item (flag, no colon) | Worked example, shown unblurred. |
@@ -144,9 +144,10 @@ RESPONSE: The children like to play ball in the afternoon. {bk04-l1a-f4-01-a.mp3
 - At most **one image + one audio** per line.
 - `TEMPLATE` is display-only — it may carry an image, **never** a clip.
 - There are no `AUDIO:` / `RESPONSE_AUDIO:` / `OPTION_AUDIO:` / `OPTION_IMAGE:` /
-  `PROMPT_IMAGE:` fields — assets always ride their text. `IMAGE:` survives only
-  as the module cover (header) and as the **activity-level shared image** in
-  `$DIALOGUE` / `$SELECT` / `$PRODUCE` (placed before the first line/item).
+  `PROMPT_IMAGE:` / `IMAGE:` fields — assets always ride their text. A per-line/item
+  image rides the END of its content line; the **module cover** and the
+  **activity-wide shared image** ride the END of the marker title line
+  (`$MODULE …`, `$DIALOGUE …`, `$SELECT …`, `$PRODUCE …`).
 - **Drafts** (pre-slicing) include audio timing: `{clip.mp3@<start>-<end>}`. The slicer
   cuts that range from the figure mp3 and rewrites it to a bare `{clip.mp3}`.
 
@@ -187,9 +188,9 @@ Durand: Tiens, voilà Mademoiselle Courtois. {clip-01.mp3}
 | `VOCAB` | No | One vocabulary word/phrase (repeatable, placed before the line it belongs to) |
 | `Speaker:` / `LINE` | **Yes** | Target-language line — **keep to 1–2 sentences** so audio clips stay short. Inline `{image.jpg}` / `{clip.mp3}` at the end |
 | `NOTES` | No | Cultural context / grammar tip for this line |
-| `IMAGE` | No | Activity-wide reference image (map / scene) shown for **all** lines. Place before the first line. An inline per-line `{image.jpg}` overrides it for that line |
+| `{image}` on `$DIALOGUE` title | No | Activity-wide reference image (map / scene) shown for **all** lines: `$DIALOGUE Title {map.jpg}`. An inline per-line `{image.jpg}` overrides it for that line |
 
-A line shows its own inline `{image.jpg}`, or the activity-wide `IMAGE:` if it has
+A line shows its own inline `{image.jpg}`, or the activity-wide title-line image if it has
 none — there is **no implicit carry-over** between lines. A narration panel that
 illustrates several sentences is repeated explicitly on each of those lines.
 
@@ -275,7 +276,7 @@ Same/Different, sound-ID, categorize, and matching.
 | `INTRO` / `INSTRUCTION` | No | |
 | `MULTI` | No | Flag: more than one correct option may be chosen |
 | `SHOW_PROMPT` | No | Flag: show the spoken stimulus text from the start (book printed it). Default: hidden until answered |
-| `IMAGE` | No | Activity-level shared reference image (diagram/map), before the first item |
+| `{image}` on `$SELECT` title | No | Activity-wide shared reference image (diagram/map): `$SELECT Title {diagram.jpg}` |
 | `OPTION` | **Yes** (≥2) | `OPTION: <id> \| <text> {image.jpg} {clip.mp3}` — text and/or inline image, optional spoken clip. At activity level = shared pool; inside an item = overrides the pool |
 | `EXAMPLE` | No | Marks the next item as a worked example |
 | `PROMPT` | * | The spoken stimulus; inline `{image.jpg}` / `{clip.mp3}` at the end (text hidden by default — `SHOW_PROMPT` shows it) |
@@ -321,7 +322,7 @@ Behavior is set by two orthogonal attributes:
 
 | Attribute | Default | Values |
 |---|---|---|
-| `INPUT:` | `speak` | `type` · `speak` · `either` — the **initially proposed** input mode; the learner can always switch. The app shows a typed field for checkable items (`CHECK: exact`/`llm`) regardless; spoken answers are self-checked via reveal. |
+| `INPUT:` | `speak` | `type` · `speak` — the input mode, mirroring the ALC original (book "write" → `type`; tape "say" → `speak`); the learner can always switch on-card. The app shows a typed field for checkable items (`CHECK: exact`/`llm`) regardless; spoken answers are self-checked via reveal. |
 | `CHECK:` | `reveal` | `reveal` (self-check) · `exact` (normalized string match) · `llm` (graded by model) |
 
 ### How It Works in the App
@@ -381,7 +382,7 @@ RESPONSE: The children like to play ball in the afternoon.
 ```
 # Open response (graded by model), switchable input
 $PRODUCE Ask and answer with "what"
-INPUT: either
+INPUT: speak
 CHECK: llm
 PROMPT: shoes
 RESPONSE: What shoes did you wear yesterday? — I wore my new shoes.
@@ -428,11 +429,11 @@ A path containing `/` is used as-is relative to the repo root (`{shared/logo.png
 
 | Context | Field | Example |
 |---------|-------|---------|
-| Course / Module header | `IMAGE:` field | `IMAGE: cover.jpg` |
+| Module cover | `$MODULE` title line | `$MODULE Unit 1: Greetings {cover.jpg}` |
 | Dialogue line | inline | `Jim: Look at this. {cafe_scene.png}` |
 | Select / Produce stimulus | inline | `PROMPT: What is it? {apple.png} {clip.mp3}` |
 | Select option | inline | `OPTION: a \| apple {apple.png}` |
-| Dialogue / Select / Produce activity | `IMAGE:` field | activity-level shared image, shown for ALL lines/items (before the first line/item) |
+| Dialogue / Select / Produce activity | marker title line | `$DIALOGUE Title {map.jpg}` — activity-wide shared image, shown for ALL lines/items |
 | Grammar content | Markdown syntax | `![alt text](diagram.png)` |
 
 ## Audio Clips
@@ -449,7 +450,7 @@ When generating module-format output:
 - Start with `$MODULE` and required header fields
 - Use section markers with NO colon (`$LESSON Title`, not `$LESSON: Title`)
 - Put titles on the same line as section markers
-- Ensure every module has `FORMAT: 2`, `TITLE`, `TARGET_LANG_G`, `HOME_LANG_G` (`DIOCO_DOC_ID` optional)
+- Ensure every module has a titled `$MODULE <title>` line plus `FORMAT: 2`, `TARGET_LANG_G`, `HOME_LANG_G` (`DIOCO_DOC_ID` optional)
 - **Monolingual:** never emit `*_T` translation fields — translations are generated downstream
 - Use only the v2 types: `$DIALOGUE`, `$GRAMMAR`, `$SELECT`, `$PRODUCE`, `$CHAT` (no `$EXERCISE`)
 - Dialogue lines are screenplay-style (`Jim: text`); `PROMPT`/`OPTION`/`ANSWER`/`RESPONSE` on separate lines; separate items with a blank line

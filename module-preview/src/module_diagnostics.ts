@@ -50,7 +50,7 @@ const produceFields = new Set(ebnfSpec.produceFields);
 const chatFields = new Set(ebnfSpec.chatFields);
 const grammarFields = new Set(ebnfSpec.grammarFields);
 
-const PRODUCE_INPUTS = new Set(["type", "speak", "either"]);
+const PRODUCE_INPUTS = new Set(["type", "speak"]);
 const PRODUCE_CHECKS = new Set(["reveal", "exact", "llm"]);
 
 // ---------------------------------------------------------------------------
@@ -102,6 +102,15 @@ function generateId(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+// A marker title line may carry a single trailing block image:
+// `$DIALOGUE Title {page.jpg}` / `$MODULE Lesson 1 {cover.jpg}`. Peel it so the
+// title text (used for ids) matches what the parser stores. Titles never carry audio.
+function peelTitleImage(raw: string): { title: string; image: string | null } {
+  const m = raw.trimEnd().match(/^(.*?)\s*\{\s*([^{}]+?)\s*\}$/);
+  if (m && isImageFile(m[2])) return { title: m[1].trim(), image: m[2].split("@")[0].trim() };
+  return { title: raw.trim(), image: null };
+}
+
 export function lintModuleText(text: string): Diagnostic[] {
   const diags: Diagnostic[] = [];
   const lines = String(text ?? "").split("\n");
@@ -124,8 +133,8 @@ export function lintModuleText(text: string): Diagnostic[] {
   // so we can flag missing ANSWERs and missing blank lines between items.
   let selItem: { stimulusLine: number; hasPrompt: boolean; hasTemplate: boolean; answered: boolean } | null = null;
   let prodItem: { stimulusLine: number; hasPrompt: boolean; hasTemplate: boolean; hasResponse: boolean } | null = null;
-  // Activity-level IMAGE in $DIALOGUE must precede the first dialogue line.
-  let dialogueContentStarted = false;
+  // Tracks whether the $MODULE marker carried an inline title.
+  let moduleTitleLine: number | null = null;
   let pendingExample: { line: number } | null = null;
   // Blank-line tracking for the item-separation style rule.
   let hadBlankBefore = true;
@@ -181,7 +190,16 @@ export function lintModuleText(text: string): Diagnostic[] {
         continue;
       }
       const marker = m[1];
-      const title = (m[2] ?? "").trim();
+      // A trailing {image} on the title line is the block-scoped image; peel it
+      // off so the title text (used for ids) matches what the parser stores.
+      const rawTitle = (m[2] ?? "").trim();
+      const { title, image: markerImage } = peelTitleImage(rawTitle);
+      if (/\}\s*$/.test(rawTitle) && !markerImage) {
+        push("warning", lineNo, "Only a single trailing {image} may ride a marker title line; clips/audio belong on content lines.", "title-asset-invalid");
+      }
+      if (markerImage && (marker === "LESSON" || marker === "GRAMMAR" || marker === "CHAT")) {
+        push("warning", lineNo, `$${marker} does not support a title image; it will be ignored.`, "title-image-unsupported");
+      }
       if (!sectionNames.has(marker)) {
         push("warning", lineNo, `Unknown section marker: $${marker}`, "section-unknown");
       }
@@ -190,6 +208,7 @@ export function lintModuleText(text: string): Diagnostic[] {
         sawModuleMarker = true;
         inHeader = true;
         currentActivity = null;
+        if (title) moduleTitleLine = lineNo;
       } else if (marker === "LESSON") {
         closeItems();
         inHeader = false;
@@ -200,7 +219,6 @@ export function lintModuleText(text: string): Diagnostic[] {
         closeItems();
         inHeader = false;
         currentActivity = marker as ActivityKind;
-        dialogueContentStarted = false;
         if (!currentLessonLine) {
           push("warning", lineNo, `Found $${marker} before any $LESSON; parser will create a "Default Lesson".`, "implicit-lesson");
         }
@@ -221,8 +239,8 @@ export function lintModuleText(text: string): Diagnostic[] {
 
     // Flag lines (no colon, no value): REPEAT / MULTI / AUDIO_ONLY
     if (flagNames.has(trimmed)) {
-      if (trimmed === "REPEAT" && currentActivity !== "DIALOGUE") {
-        push("warning", lineNo, "REPEAT is only meaningful inside $DIALOGUE.", "repeat-outside-dialogue");
+      if (trimmed === "REPEAT" && currentActivity !== "DIALOGUE" && currentActivity !== "SELECT" && currentActivity !== "PRODUCE") {
+        push("warning", lineNo, "REPEAT is only meaningful inside $DIALOGUE, $SELECT, or $PRODUCE.", "repeat-outside-dialogue");
       }
       if (trimmed === "MULTI" && currentActivity !== "SELECT") {
         push("warning", lineNo, "MULTI is only meaningful inside $SELECT.", "flag-outside-select");
@@ -280,7 +298,11 @@ export function lintModuleText(text: string): Diagnostic[] {
       }
 
       if (inHeader && !currentLessonLine && !currentActivity) {
-        if (!headerFields.has(field)) {
+        if (field === "TITLE") {
+          push("error", lineNo, "TITLE field was removed — put the title on the $MODULE line: `$MODULE Lesson 1: The Classroom`.", "legacy-title-field");
+        } else if (field === "IMAGE") {
+          push("error", lineNo, "IMAGE field was removed — put the cover image on the $MODULE line: `$MODULE <title> {page.jpg}`.", "legacy-image-field-header");
+        } else if (!headerFields.has(field)) {
           push("warning", lineNo, `Unknown header field: ${field}`, "unknown-header-field");
         } else if (field !== "VOICE_SPEAKER" && field !== "VOICE") {
           if (seenHeader[field]) push("warning", lineNo, `Duplicate header field: ${field}`, "dup-header-field");
@@ -302,15 +324,12 @@ export function lintModuleText(text: string): Diagnostic[] {
           push("error", lineNo, `${field} was removed — attach the image inline at the end of the ${field === "OPTION_IMAGE" ? "OPTION" : "PROMPT"} text: \`{page.jpg}\`.`, "legacy-image-field");
           continue;
         }
-        if (field === "IMAGE" && currentActivity === "DIALOGUE" && dialogueContentStarted) {
-          push("warning", lineNo, "IMAGE after dialogue lines is ignored — place the activity-wide IMAGE before the first line, or attach a per-line image inline: `{page.jpg}`.", "image-after-lines");
-          continue;
-        }
-        if (field === "LINE" && currentActivity === "DIALOGUE") {
-          dialogueContentStarted = true;
-        }
-        if (field === "IMAGE" && ((currentActivity === "SELECT" && selItem) || (currentActivity === "PRODUCE" && prodItem))) {
-          push("warning", lineNo, `IMAGE inside a $${currentActivity} item is ignored — activity-level only. Attach per-item images inline on the PROMPT/TEMPLATE.`, "image-inside-item");
+        if (field === "IMAGE") {
+          if (currentActivity === "GRAMMAR") {
+            push("error", lineNo, "IMAGE field was removed — in $GRAMMAR use markdown image syntax `![alt](file.png)` in the content.", "legacy-image-field");
+          } else {
+            push("error", lineNo, `IMAGE field was removed — put the activity-wide image on the marker title line (\`$${currentActivity} <title> {page.jpg}\`); per-line/item images ride the content inline: \`{page.jpg}\`.`, "legacy-image-field");
+          }
           continue;
         }
 
@@ -323,11 +342,7 @@ export function lintModuleText(text: string): Diagnostic[] {
           : null;
 
         if (allowed && !allowed.has(field)) {
-          if (currentActivity === "GRAMMAR" && field === "IMAGE") {
-            push("warning", lineNo, "IMAGE inside $GRAMMAR is not in the formal grammar and is ignored. Use markdown image syntax `![alt](file.png)`.", "grammar-image-ignored");
-          } else {
-            push("warning", lineNo, `Field ${field} is not expected inside $${currentActivity}.`, "field-unexpected");
-          }
+          push("warning", lineNo, `Field ${field} is not expected inside $${currentActivity}.`, "field-unexpected");
         }
 
         if (currentActivity === "GRAMMAR" && field !== "INTRO") {
@@ -365,7 +380,7 @@ export function lintModuleText(text: string): Diagnostic[] {
           }
         } else if (currentActivity === "PRODUCE") {
           if (field === "INPUT" && value && !PRODUCE_INPUTS.has(value.toLowerCase()))
-            push("warning", lineNo, `INPUT must be one of: type, speak, either.`, "input-invalid");
+            push("warning", lineNo, `INPUT must be one of: type, speak.`, "input-invalid");
           if (field === "CHECK" && value && !PRODUCE_CHECKS.has(value.toLowerCase()))
             push("warning", lineNo, `CHECK must be one of: reveal, exact, llm.`, "check-invalid");
           if (field === "PROMPT" || field === "TEMPLATE") {
@@ -405,7 +420,6 @@ export function lintModuleText(text: string): Diagnostic[] {
     if (currentActivity === "DIALOGUE") {
       const sp = matchSpeakerLine(trimmedEnd);
       if (sp) {
-        dialogueContentStarted = true;
         const a = analyzeInlineAssets(sp.rest);
         if (a.total > a.trailing) push("warning", lineNo, "Inline {assets} must sit at the END of the line to be attached.", "asset-not-trailing");
         if (a.audio > 1) push("warning", lineNo, "Multiple inline clips on one line; only ONE audio clip is attached.", "multiple-inline-clips");
@@ -448,7 +462,8 @@ export function lintModuleText(text: string): Diagnostic[] {
       push("warning", 1, "Missing header field: FORMAT: 2 (declares the module format version)", "missing-format");
     if (!seenHeader.DIOCO_DOC_ID)
       push("warning", 1, "Missing header field: DIOCO_DOC_ID (optional, moduleKey is derived from filename)", "missing-dioco-doc-id");
-    if (!seenHeader.TITLE) push("error", 1, "Missing required header field: TITLE", "missing-title");
+    if (moduleTitleLine === null)
+      push("error", 1, "Missing module title — put it on the $MODULE line: `$MODULE <title>`.", "missing-title");
     if (!seenHeader.TARGET_LANG_G) push("error", 1, "Missing required header field: TARGET_LANG_G", "missing-target-lang");
     if (!seenHeader.HOME_LANG_G && !seenHeader.USER_LANG_G)
       push("error", 1, "Missing required header field: HOME_LANG_G (or legacy USER_LANG_G)", "missing-home-lang");

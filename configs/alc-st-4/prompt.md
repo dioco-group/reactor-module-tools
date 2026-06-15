@@ -13,9 +13,8 @@ Language Laboratory Activities book is converted separately and HAS audio.)
 ## Header
 
 ```
-$MODULE
+$MODULE Lesson <N>: <short descriptive topic>   (title rides the $MODULE line — e.g. "$MODULE Lesson 1: Sports and Games" — NEVER a bare "Lesson 1")
 FORMAT: 2
-TITLE: Lesson <N>: <short descriptive topic>   (e.g. "Lesson 1: Sports and Games" — NEVER a bare "Lesson 1")
 DESCRIPTION: <one line>
 TARGET_LANG_G: en
 HOME_LANG_G: en
@@ -61,10 +60,10 @@ One `$LESSON` for the whole ST lesson. Preserve the book's section order.
   **ONE sentence per LINE** (two only when both are very short) — NEVER a whole
   paragraph on one line; keep any picture inline on the line it illustrates
   (repeat the same image on every line of its span — there is no carry-over).
-  A complex visual every line refers to (a map, a calendar) goes activity-wide:
-  `IMAGE: page_XXX_YYY.jpg` before the first line.
+  A complex visual every line refers to (a map, a calendar) goes activity-wide on
+  the marker title line: `$DIALOGUE Title {page_XXX_YYY.jpg}`.
 - **"Answer these questions about the paragraphs"** → `$PRODUCE` with
-  `INPUT: either` + `CHECK: llm` and `SHOW_PROMPT` (the book prints the
+  `INPUT: type` + `CHECK: llm` and `SHOW_PROMPT` (the book prints the
   questions — they must be readable, not blurred): `PROMPT` = the question,
   `RESPONSE` = a full model answer composed from the passage (any phrasing with
   the right meaning passes the LLM grader).
@@ -122,8 +121,8 @@ One `$LESSON` for the whole ST lesson. Preserve the book's section order.
   TTS-read, which would voice the gaps).
 - EXAMPLE items carry the same TEMPLATE scaffolding as their regular items.
 - Reference info the learner answers FROM (tables, maps) must be on screen:
-  repeat it in a compact `TEMPLATE` on every item, or use an activity-wide
-  `IMAGE:`.
+  repeat it in a compact `TEMPLATE` on every item, or use an activity-wide image
+  on the marker title line (`$PRODUCE Title {page.jpg}`).
 - **No raw HTML** — the ST markdown contains flex/side-by-side `<div>` layouts
   and HTML tables (calendars): flatten to linear content; a complex visual (a
   calendar, a map) belongs as an **image**, not a transcribed table.

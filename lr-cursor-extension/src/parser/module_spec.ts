@@ -26,14 +26,14 @@ export type EbnfSpec = {
 
 export const ebnfSpec: EbnfSpec = {
   markers: ["CHAT", "DIALOGUE", "GRAMMAR", "LESSON", "MODULE", "PRODUCE", "SELECT"],
+  // NOTE: the module TITLE and cover IMAGE are NOT header fields — they ride the
+  // `$MODULE <title> {cover.jpg}` marker line (consistent with every other marker).
   headerFields: [
     "DESCRIPTION",
     "DIOCO_DOC_ID",
     "FORMAT",
     "HOME_LANG_G",
-    "IMAGE",
     "TARGET_LANG_G",
-    "TITLE",
     "TTS_PROMPT",
     "USER_LANG_G",
   ],
@@ -45,10 +45,10 @@ export const ebnfSpec: EbnfSpec = {
     "VOICE_RESPONSE",
     "VOICE_SPEAKER",
   ],
-  // Speakers are screenplay-style (`Jim: text`), images/audio ride content
-  // lines inline ({page.jpg} / {clip.mp3}) — so no SPEAKER / *_IMAGE fields.
+  // Speakers are screenplay-style (`Jim: text`); images/audio ride content lines
+  // inline ({page.jpg} / {clip.mp3}); the activity-wide image rides the marker
+  // title line (`$DIALOGUE Title {page.jpg}`) — so no SPEAKER / IMAGE / *_IMAGE fields.
   dialogueFields: [
-    "IMAGE", // activity-level shared reference image only (before the first line)
     "INSTRUCTION",
     "INTRO",
     "LINE",
@@ -59,7 +59,6 @@ export const ebnfSpec: EbnfSpec = {
   selectFields: [
     "ANSWER",
     "FEEDBACK",
-    "IMAGE", // activity-level shared reference image only
     "INSTRUCTION",
     "INTRO",
     "OPTION",
@@ -69,7 +68,6 @@ export const ebnfSpec: EbnfSpec = {
   produceFields: [
     "ACCEPT",
     "CHECK",
-    "IMAGE", // activity-level shared grounding image only
     "INPUT",
     "INSTRUCTION",
     "INTRO",

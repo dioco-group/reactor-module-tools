@@ -62,21 +62,37 @@ function readMaybe(p) {
 // Stage A: assemble per-lesson bundles (book figures + tape transcript+timings)
 // ----------------------------------------------------------------------------
 
+// Strict single-line running banner, e.g. "LANGUAGE LABORATORY ACTIVITIES BOOK 1 LESSON 1B".
 const LESSON_HEADER_RE = /LANGUAGE LABORATORY ACTIVITIES.*?LESSON\s+(\d+[A-D])/i;
+// Fallback: a markdown HEADING line carrying the lesson code even when OCR
+// dropped/relocated the banner, e.g. "### BOOK 1, LESSON 1A" or "### LESSON 2D".
+// Heading-anchored so dotted TOC entries ("**LESSON 1A** ...... 1") never match.
+const LESSON_HEADING_RE = /^#{1,6}\s+.*?\bLESSON\s+(\d+[A-D])\b/i;
+// Back-matter section banners (tapescripts / answer keys — present in 2012+ ALC
+// editions). Once crossed, STOP assigning lines to lessons so per-lesson script
+// subheadings ("## Lesson 2D") aren't mistaken for content and the whole back
+// matter isn't dumped into the last lesson. Matches ONLY a heading that IS the
+// banner (whole line) — so a normal lesson heading like "### Answer the
+// questions" does NOT trip it.
+const BACKMATTER_RE = /^#{1,6}\s*(AUDIO\s*SCRIPTS?|TAPESCRIPTS?|SCRIPTS|ANSWER\s*KEYS?|ANSWERS)\s*:?\s*$/i;
 
 // Split all book markdown into { lessonCode -> bookText }, in document order.
 function splitBookByLesson(inputDir) {
   const files = fs.readdirSync(inputDir).filter((f) => /\.md$/.test(f) && !f.includes('Zone.Identifier')).sort();
   const lessons = new Map();
   let current = null;
+  let inBackMatter = false;
   for (const f of files) {
     const text = fs.readFileSync(path.join(inputDir, f), 'utf8');
     const lines = text.split(/\r?\n/);
     for (const line of lines) {
-      const m = line.match(LESSON_HEADER_RE);
-      if (m) {
-        current = m[1].toUpperCase();
-        if (!lessons.has(current)) lessons.set(current, []);
+      if (!inBackMatter && BACKMATTER_RE.test(line)) { inBackMatter = true; current = null; }
+      if (!inBackMatter) {
+        const m = line.match(LESSON_HEADER_RE) || line.match(LESSON_HEADING_RE);
+        if (m) {
+          current = m[1].toUpperCase();
+          if (!lessons.has(current)) lessons.set(current, []);
+        }
       }
       if (current) lessons.get(current).push(line);
     }
@@ -123,10 +139,32 @@ function clipBase(bookId, lessonCode, figNum) {
 // Stage B: LLM convert
 // ----------------------------------------------------------------------------
 
+// The worked example is a FULL input->output pair: the gold is LLA Book 4
+// Lesson 1A, so we present that lesson's BOOK + TAPE exactly as the model
+// receives a real lesson (same splitBookByLesson / gatherTape formatting),
+// followed by the correct .module. Showing the transformation — not just the
+// target shape — is a far stronger few-shot signal. Falls back to output-only
+// if the Book 4 source data isn't on disk.
+function buildWorkedExample() {
+  const gold = readMaybe(path.resolve(__dirname, 'format-comparison/lesson-1A.gold.module')) || '';
+  if (!gold) return '';
+  try {
+    const book = splitBookByLesson(path.resolve(__dirname, '../data/alc-lla-4/md'));
+    const bookText = book.get('1A');
+    const tapeText = gatherTape(path.resolve(__dirname, '../data/alc-lla-4/transcripts'), '1A', '04');
+    if (bookText && tapeText) {
+      return `## EXAMPLE INPUT — BOOK (figures — the printed scaffold)\n\n${bookText}\n\n` +
+        `## EXAMPLE INPUT — TAPE (the cassette — the real drill content + timings)\n\n${tapeText}\n\n` +
+        `## EXAMPLE OUTPUT — the correct .module produced from the BOOK + TAPE above\n\n${gold}`;
+    }
+  } catch { /* fall through to output-only */ }
+  return gold;
+}
+
 function buildSystemPrompt(courseName) {
   const spec = readMaybe(path.resolve(__dirname, 'shared/module_format_v2_proposal.md')) || '';
   const notes = readMaybe(path.resolve(__dirname, 'shared/alc_conversion_notes.md')) || '';
-  const example = readMaybe(path.resolve(__dirname, 'format-comparison/lesson-1A.gold.module')) || '';
+  const example = buildWorkedExample();
   return `You convert ${courseName} into the v2 module format below, for Russian-speaking learners. The module is authored in English and is monolingual (TARGET_LANG_G: en, HOME_LANG_G: en); Russian translations are added automatically downstream.
 
 ${spec}
@@ -139,10 +177,11 @@ ${notes}
 
 ---
 
-# WORKED EXAMPLE — a complete, correct conversion of LLA Book 4 Lesson 1A.
-# Match this SHAPE and apply the reasoning in its \`#\` comments (which activity type
-# each figure becomes, how INTRO/INSTRUCTION are written, how clips/options are
-# attached). Convert the lesson you are actually given — do not copy this content.
+# WORKED EXAMPLE — a complete conversion of LLA Book 4 Lesson 1A, shown as the
+# INPUT you receive (BOOK + TAPE) and the correct OUTPUT (.module) it produces.
+# Study how each figure's book scaffold + tape content maps to an activity type,
+# how INTRO/INSTRUCTION are written, and how clips/images/options are attached.
+# Convert the lesson you are ACTUALLY given below — do not copy this content.
 ${example}
 
 ---
@@ -155,14 +194,13 @@ later downstream step; produce the English module only.
 
 # HEADER & VOICES (this run)
 
-Start the file exactly like this (each field on its own line):
-  $MODULE
+Start the file exactly like this (the title rides the $MODULE line):
+  $MODULE Lesson <NX>: <short descriptive topic>   (e.g. "$MODULE Lesson 1C: Past Tense Questions and Short Answers" — NEVER a bare "Lesson 1C")
   FORMAT: 2
-  TITLE: Lesson <NX>: <short descriptive topic>   (e.g. "Lesson 1C: Past Tense Questions and Short Answers" — NEVER a bare "Lesson 1C")
   DESCRIPTION: <one line>
   TARGET_LANG_G: en
   HOME_LANG_G: en
-Do NOT put the title on the $MODULE line. Then voice config:
+There is NO TITLE: field — the module title goes on the $MODULE line. Then voice config:
   VOICE_DEFAULT: aoede | Clear, friendly American English narrator
 Use ONLY these voice names: aoede, achernar, achird, schedar, gacrux. For dialog
 speakers, map a **no-spaces, not-ALL-CAPS** speaker id to a voice, e.g.:
@@ -184,9 +222,9 @@ Allowed on dialogue lines, PROMPT, RESPONSE ($PRODUCE model answer), and OPTION.
   OPTION: e | soccer {page_008_005.jpg}
   OPTION: b | John doesn't like football games. {bk04-l1a-f3-01-a.mp3@71.22-74.84}
   RESPONSE: The children like to play ball in the afternoon. {bk04-l1a-f4-01-a.mp3@8.10-11.40}
-There are NO OPTION_IMAGE / PROMPT_IMAGE fields. The IMAGE: field exists ONLY as
-an activity-level shared reference image in $SELECT (e.g. one map for all items)
-and as the module cover in the header.
+There are NO OPTION_IMAGE / PROMPT_IMAGE / IMAGE: fields. An activity-wide shared
+reference image (e.g. one map for all items in $SELECT) and the module cover ride
+the END of the marker title line: `$SELECT Title {page_XXX.jpg}` / `$MODULE … {cover.jpg}`.
 
 # CLIP RULES (this run)
 
@@ -234,6 +272,24 @@ async function main() {
   console.log(`tape: ${config.transcriptsDir}\n`);
 
   const book = splitBookByLesson(config.inputDir);
+
+  // Cross-check against the tape transcripts (the authoritative list of lessons
+  // that actually exist). A lesson with audio but no book text almost always
+  // means its OCR'd header lost the "LANGUAGE LABORATORY ACTIVITIES ... LESSON
+  // NX" banner. Flag loudly with the fix rather than silently dropping it.
+  try {
+    const tapeLessons = fs.readdirSync(config.transcriptsDir)
+      .map((d) => (d.match(/^Lesson (\d+[A-D])$/) || [])[1]).filter(Boolean);
+    const missing = tapeLessons.filter((c) => !book.has(c)).sort();
+    if (missing.length) {
+      console.warn(`\n⚠  Lessons with audio but NO book markdown: ${missing.join(', ')}`);
+      console.warn(`   Their lesson header was likely dropped/garbled by OCR. In each lesson's`);
+      console.warn(`   .md (in ${config.inputDir}), add a top line like:`);
+      console.warn(`     ## LANGUAGE LABORATORY ACTIVITIES — BOOK ${config.bookId || 'N'}, LESSON <NX>`);
+      console.warn(`   then re-run. (Back matter is auto-excluded; no need to move it.)\n`);
+    }
+  } catch { /* transcripts dir optional */ }
+
   let codes = [...book.keys()].sort();
   if (lessonFilter) codes = codes.filter((c) => c === lessonFilter.toUpperCase());
   if (!codes.length) { console.error('No lessons matched.'); process.exit(1); }

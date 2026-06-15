@@ -74,8 +74,8 @@ cue appears/ends.
   image height scaled by row count (2 rows → 185 px).
 - Images are the 512 px recomposed renders; the manifest just references
   whatever the module references.
-- Dialogue line images: per-line inline image, else the activity-wide
-  `IMAGE:` — no carry-over between lines (matches format semantics).
+- Dialogue line images: per-line inline image, else the activity-wide image on
+  the `$DIALOGUE` title line — no carry-over between lines (matches format semantics).
 
 ## Gotchas
 

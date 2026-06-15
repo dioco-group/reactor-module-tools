@@ -78,8 +78,8 @@ const assetsDir = path.join(STAGING, name);
 fs.rmSync(assetsDir, { recursive: true, force: true });
 fs.mkdirSync(assetsDir, { recursive: true });
 
+// Inline {file.ext} tokens — incl. the block image on a marker title line.
 const refs = new Set();
-for (const m of text.matchAll(/^IMAGE:\s*(\S+)\s*$/gm)) refs.add(m[1]);
 for (const m of text.matchAll(/\{\s*([^{}@\s]+\.[A-Za-z0-9]+)\s*\}/g)) refs.add(m[1]);
 
 const llaDirs = fs

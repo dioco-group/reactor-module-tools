@@ -195,8 +195,9 @@ function processLine(line: string, state: ParserState): void {
 function handleFlag(flag: string, state: ParserState): void {
   const a = state.currentActivity;
   if (!a) return;
-  if (flag === "REPEAT" && a.type === "DIALOGUE") (a as DialogueActivity).repeat = true;
-  else if (flag === "SHOW_PROMPT" && (a.type === "SELECT" || a.type === "PRODUCE")) (a as SelectActivity | ProduceActivity).showPrompt = true;
+  if (flag === "REPEAT" && (a.type === "DIALOGUE" || a.type === "SELECT" || a.type === "PRODUCE")) {
+    (a as DialogueActivity | SelectActivity | ProduceActivity).repeat = true;
+  } else if (flag === "SHOW_PROMPT" && (a.type === "SELECT" || a.type === "PRODUCE")) (a as SelectActivity | ProduceActivity).showPrompt = true;
   else if (flag === "MULTI" && a.type === "SELECT") (a as SelectActivity).multi = true;
   else if (flag === "EXAMPLE") state.buffer.push("EXAMPLE");
 }
@@ -204,10 +205,16 @@ function handleFlag(flag: string, state: ParserState): void {
 function handleSectionMarker(line: string, state: ParserState): void {
   const match = line.match(/^\$(\w+)(?:\s+(.*))?$/);
   if (!match) return;
-  const [, marker, title] = match;
+  const [, marker, rawTitle] = match;
+  // A trailing `{image}` on a marker's title line is the block-scoped image
+  // (the module cover, or an activity-wide reference image). Titles never carry
+  // audio, so only the image token is peeled off; the rest is the title text.
+  const { text: title, image } = extractInlineAssets(rawTitle ?? "", { audio: false });
 
   switch (marker) {
     case "MODULE":
+      if (title) state.module.title = title;
+      if (image) state.module.image = image;
       break;
     case "LESSON":
       finalizeActivity(state);
@@ -220,15 +227,18 @@ function handleSectionMarker(line: string, state: ParserState): void {
       break;
     case "DIALOGUE":
       startActivity(state, "DIALOGUE", title || "Dialogue");
+      if (image) (state.currentActivity as Partial<DialogueActivity>).image = image;
       break;
     case "GRAMMAR":
       startActivity(state, "GRAMMAR", title || "Grammar");
       break;
     case "SELECT":
       startActivity(state, "SELECT", title || "Select");
+      if (image) (state.currentActivity as Partial<SelectActivity>).image = image;
       break;
     case "PRODUCE":
       startActivity(state, "PRODUCE", title || "Produce");
+      if (image) (state.currentActivity as Partial<ProduceActivity>).image = image;
       break;
     case "CHAT":
       startActivity(state, "CHAT", title || "Chat");
@@ -253,14 +263,8 @@ function handleField(field: string, value: string, state: ParserState): void {
       case "DIOCO_DOC_ID":
         (state.module as any).diocoDocId = value;
         return;
-      case "TITLE":
-        state.module.title = value;
-        return;
       case "DESCRIPTION":
         state.module.description = value;
-        return;
-      case "IMAGE":
-        state.module.image = value;
         return;
       case "TARGET_LANG_G":
         state.module.targetLang_G = value as langCode_G_t;
@@ -342,7 +346,7 @@ function handleField(field: string, value: string, state: ParserState): void {
 
 function normalizeInput(v: string): ProduceInput {
   const x = v.trim().toLowerCase();
-  return x === "type" || x === "either" ? (x as ProduceInput) : "speak";
+  return x === "type" ? "type" : "speak";
 }
 function normalizeCheck(v: string): ProduceCheck {
   const x = v.trim().toLowerCase();
@@ -363,10 +367,10 @@ function startActivity(state: ParserState, type: Activity["type"], title: string
       state.currentActivity = { ...base, content: "", phrases: [] } as Partial<GrammarActivity>;
       break;
     case "SELECT":
-      state.currentActivity = { ...base, instruction: null, showPrompt: false, multi: false, image: null, options: [], items: [] } as Partial<SelectActivity>;
+      state.currentActivity = { ...base, instruction: null, showPrompt: false, multi: false, repeat: false, image: null, options: [], items: [] } as Partial<SelectActivity>;
       break;
     case "PRODUCE":
-      state.currentActivity = { ...base, instruction: null, ttsPrompt: null, input: "speak", check: "reveal", showPrompt: false, image: null, items: [] } as Partial<ProduceActivity>;
+      state.currentActivity = { ...base, instruction: null, ttsPrompt: null, input: "speak", check: "reveal", showPrompt: false, repeat: false, image: null, items: [] } as Partial<ProduceActivity>;
       break;
     case "CHAT":
       state.currentActivity = { ...base, scenario: "", initialPrompt: "" } as Partial<ChatActivity>;
@@ -453,7 +457,6 @@ function parseDialogueLines(buffer: string[]): { image: string | null; lines: Di
   const lines: DialogueLine[] = [];
   let cur: Partial<DialogueLine> = {};
   let pendingVocab: VocabItem[] = [];
-  let activityImage: string | null = null;
 
   const attachVocab = () => {
     if (pendingVocab.length) {
@@ -473,10 +476,6 @@ function parseDialogueLines(buffer: string[]): { image: string | null; lines: Di
   for (const item of buffer) {
     if (item.startsWith("VOCAB:")) {
       pendingVocab.push({ word: item.slice(6).trim(), definition: null, ttsDataURL: null });
-    } else if (item.startsWith("IMAGE:")) {
-      // Activity-level shared reference image (shown for all lines) only;
-      // per-line images ride the line text inline ({page.jpg}).
-      if (!lines.length && !cur.text) activityImage = item.slice(6).trim();
     } else if (item.startsWith("NOTES:")) {
       cur.notes = item.slice(6).trim();
     } else if (item.startsWith("LINE:")) {
@@ -499,7 +498,7 @@ function parseDialogueLines(buffer: string[]): { image: string | null; lines: Di
     }
   }
   pushDialogueLine(lines, cur);
-  return { image: activityImage, lines };
+  return { image: null, lines };
 }
 
 // "OPTION: a | text {page.jpg} {clip.mp3}" — text and/or inline image + audio.
@@ -547,7 +546,6 @@ function parseSelect(buffer: string[]): { image: string | null; options: SelectO
   const pool: SelectOption[] = [];
   const items: SelectItem[] = [];
   let cur: Partial<SelectItem> | null = null;
-  let activityImage: string | null = null;
   let isExample = false;
 
   for (const item of buffer) {
@@ -558,10 +556,6 @@ function parseSelect(buffer: string[]): { image: string | null; options: SelectO
       if (!opt) continue;
       if (!cur) upsertOption(pool, opt);
       else upsertOption((cur.options = cur.options || []), opt);
-    } else if (item.startsWith("IMAGE:")) {
-      // Activity-level shared reference image only; per-item images ride the
-      // PROMPT/TEMPLATE inline ({page.jpg}).
-      if (!cur) activityImage = item.slice(6).trim();
     } else if (item.startsWith("PROMPT:") || item.startsWith("TEMPLATE:")) {
       // A new stimulus starts a new item when the current one is closed (has
       // its ANSWER) or already has a stimulus of the same kind — this allows
@@ -594,7 +588,7 @@ function parseSelect(buffer: string[]): { image: string | null; options: SelectO
     }
   }
   if (cur) pushSelectItem(items, cur);
-  return { image: activityImage, options: pool, items };
+  return { image: null, options: pool, items };
 }
 
 function pushProduceItem(items: ProduceItem[], cur: Partial<ProduceItem>): void {
@@ -621,18 +615,11 @@ function pushProduceItem(items: ProduceItem[], cur: Partial<ProduceItem>): void 
 function parseProduce(buffer: string[]): { image: string | null; items: ProduceItem[] } {
   const items: ProduceItem[] = [];
   let cur: Partial<ProduceItem> | null = null;
-  let activityImage: string | null = null;
   let isExample = false;
 
   for (const item of buffer) {
     if (item === "EXAMPLE") {
       isExample = true;
-      continue;
-    }
-    if (item.startsWith("IMAGE:")) {
-      // Activity-level shared grounding image only; per-item images ride the
-      // PROMPT/TEMPLATE inline ({page.jpg}).
-      if (!cur) activityImage = item.slice(6).trim();
       continue;
     }
     // A new stimulus starts a new item when the current item is already
@@ -672,7 +659,7 @@ function parseProduce(buffer: string[]): { image: string | null; items: ProduceI
     else if (item.startsWith("RUBRIC:")) cur.rubric = item.slice(7).trim();
   }
   if (cur) pushProduceItem(items, cur);
-  return { image: activityImage, items };
+  return { image: null, items };
 }
 
 // =============================================================================

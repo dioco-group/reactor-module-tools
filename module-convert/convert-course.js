@@ -59,6 +59,20 @@ function loadConfig(configPath) {
   const configText = readTextFile(absoluteConfigPath);
   const config = JSON.parse(configText);
   
+  // Gold worked examples shown in the prompt. Each entry is either a string
+  // (path to a .module output) or { input?, output, note? }. Paths resolve
+  // relative to the config file. Pair an `input` (source markdown) with the
+  // `output` to teach the full transformation; output-only is a format/quality
+  // reference. Use curated, hand-checked modules — they steer every conversion.
+  const goldExamples = (config.goldExamples || []).map((g) => {
+    const e = typeof g === 'string' ? { output: g } : g;
+    return {
+      input: e.input ? path.resolve(configDir, e.input) : null,
+      output: path.resolve(configDir, e.output),
+      note: e.note || null,
+    };
+  });
+
   // Resolve paths relative to config file location
   return {
     courseName: config.courseName,
@@ -70,12 +84,42 @@ function loadConfig(configPath) {
     thinkingBudget: typeof config.thinkingBudget === 'number' ? config.thinkingBudget : 4096,
     delayBetweenRequests: config.delayBetweenRequests || 3000,
     configDir: configDir,
+    goldExamples,
   };
 }
 
 // ============================================================================
 // PROMPT BUILDING
 // ============================================================================
+
+function buildGoldSection(config) {
+  const examples = config.goldExamples || [];
+  if (!examples.length) return '';
+  const blocks = [];
+  for (const ex of examples) {
+    const output = fileExists(ex.output) ? readTextFile(ex.output) : '';
+    if (!output) continue;
+    const parts = [];
+    if (ex.note) parts.push(`(${ex.note})`);
+    if (ex.input && fileExists(ex.input)) {
+      parts.push(`## EXAMPLE INPUT — source markdown\n\n${readTextFile(ex.input)}`);
+      parts.push(`## EXAMPLE OUTPUT — the correct .module for the input above\n\n${output}`);
+    } else {
+      parts.push(`## EXAMPLE — a correct, hand-checked .module\n\n${output}`);
+    }
+    blocks.push(parts.join('\n\n'));
+  }
+  if (!blocks.length) return '';
+  return (
+    `---\n\n# GOLD REFERENCE\n\n` +
+    `Hand-checked worked example(s) of the target format and quality. Match this\n` +
+    `SHAPE and apply the same conventions (activity-type choices, INTRO/INSTRUCTION\n` +
+    `style, completeness, REPEAT/TEMPLATE usage). Convert the lesson you are ACTUALLY\n` +
+    `given below — do NOT copy this content, and follow the course rules above when\n` +
+    `they differ (e.g. omit audio clips for a TTS-only course).\n\n` +
+    blocks.join('\n\n---\n\n')
+  );
+}
 
 function buildSystemPrompt(config) {
   // Load shared module format spec
@@ -88,12 +132,14 @@ function buildSystemPrompt(config) {
   if (fileExists(coursePromptPath)) {
     coursePrompt = readTextFile(coursePromptPath);
   }
+
+  const goldSection = buildGoldSection(config);
   
   const systemPrompt = `You are converting ${config.courseName} language learning materials into a structured module format for educational software.
 
 ${moduleFormat}
 
-${coursePrompt ? '---\n\n# Course-Specific Instructions\n\n' + coursePrompt : ''}`;
+${coursePrompt ? '---\n\n# Course-Specific Instructions\n\n' + coursePrompt : ''}${goldSection ? '\n\n' + goldSection : ''}`;
 
   return systemPrompt;
 }
@@ -104,7 +150,7 @@ function validateModuleOutput(text) {
 
   if (!t.match(/^\s*\$MODULE/m)) warnings.push('Missing $MODULE header');
   if (!t.match(/^\s*DIOCO_DOC_ID:\s*\S+/m)) warnings.push('Missing DIOCO_DOC_ID in header (optional, moduleKey derived from filename)');
-  if (!t.match(/^\s*TITLE:\s*\S+/m)) warnings.push('Missing TITLE in header');
+  if (!t.match(/^\$MODULE\s+\S/m)) warnings.push('Missing module title on the $MODULE line');
   if (!t.match(/^\s*TARGET_LANG_G:\s*\S+/m)) warnings.push('Missing TARGET_LANG_G in header');
   if (!t.match(/^\s*HOME_LANG_G:\s*\S+/m)) warnings.push('Missing HOME_LANG_G in header');
 

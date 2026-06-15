@@ -83,8 +83,8 @@ base form"), so the learner never needs to swipe back.
 - INTRO tone: one warm, brief teacher voice everywhere; standalone sentences
   (no "look at the figure below"); statements, not questions.
 - INPUT/CHECK policy: mechanical cloze → `type`/`exact`; oral transformation →
-  `speak`/`reveal`; open comprehension → `either`/`llm` (+ `SHOW_PROMPT` when
-  the book prints the questions).
+  `speak`/`reveal`; open comprehension → `speak`/`llm` (or `type`/`llm` if the
+  book has the learner write) (+ `SHOW_PROMPT` when the book prints the questions).
 - Provenance: every activity gets a `# Source:` comment (e.g.
   `# Source: LLA 1B Figure 2`). The master is a fork — source edits don't
   auto-propagate, so provenance is how you find your way back.

@@ -234,6 +234,7 @@ export class ModulePreviewPanel {
     const flags: string[] = [];
     if (act.multi) flags.push("MULTI");
     if (act.showPrompt) flags.push("SHOW_PROMPT");
+    if (act.repeat) flags.push("REPEAT");
     if (flags.length) html += `<div class="flags">${flags.map((f) => `<span class="flag">${f}</span>`).join(" ")}</div>`;
     if (act.image) {
       const src = this.resolveAssetSrc(act.image);
@@ -289,6 +290,7 @@ export class ModulePreviewPanel {
       html += `<div class="instruction"><span class="field-label">INSTRUCTION</span> ${esc(act.instruction)}</div>`;
     const flags = [`INPUT: ${act.input}`, `CHECK: ${act.check}`];
     if (act.showPrompt) flags.push("SHOW_PROMPT");
+    if (act.repeat) flags.push("REPEAT");
     html += `<div class="flags">${flags.map((f) => `<span class="flag">${esc(f)}</span>`).join(" ")}</div>`;
     if (act.image) {
       const src = this.resolveAssetSrc(act.image);

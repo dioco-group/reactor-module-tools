@@ -96,9 +96,9 @@
     const a = state.currentActivity;
     if (!a)
       return;
-    if (flag === "REPEAT" && a.type === "DIALOGUE")
+    if (flag === "REPEAT" && (a.type === "DIALOGUE" || a.type === "SELECT" || a.type === "PRODUCE")) {
       a.repeat = true;
-    else if (flag === "SHOW_PROMPT" && (a.type === "SELECT" || a.type === "PRODUCE"))
+    } else if (flag === "SHOW_PROMPT" && (a.type === "SELECT" || a.type === "PRODUCE"))
       a.showPrompt = true;
     else if (flag === "MULTI" && a.type === "SELECT")
       a.multi = true;
@@ -109,9 +109,14 @@
     const match = line.match(/^\$(\w+)(?:\s+(.*))?$/);
     if (!match)
       return;
-    const [, marker, title] = match;
+    const [, marker, rawTitle] = match;
+    const { text: title, image } = extractInlineAssets(rawTitle ?? "", { audio: false });
     switch (marker) {
       case "MODULE":
+        if (title)
+          state.module.title = title;
+        if (image)
+          state.module.image = image;
         break;
       case "LESSON":
         finalizeActivity(state);
@@ -124,15 +129,21 @@
         break;
       case "DIALOGUE":
         startActivity(state, "DIALOGUE", title || "Dialogue");
+        if (image)
+          state.currentActivity.image = image;
         break;
       case "GRAMMAR":
         startActivity(state, "GRAMMAR", title || "Grammar");
         break;
       case "SELECT":
         startActivity(state, "SELECT", title || "Select");
+        if (image)
+          state.currentActivity.image = image;
         break;
       case "PRODUCE":
         startActivity(state, "PRODUCE", title || "Produce");
+        if (image)
+          state.currentActivity.image = image;
         break;
       case "CHAT":
         startActivity(state, "CHAT", title || "Chat");
@@ -153,14 +164,8 @@
         case "DIOCO_DOC_ID":
           state.module.diocoDocId = value;
           return;
-        case "TITLE":
-          state.module.title = value;
-          return;
         case "DESCRIPTION":
           state.module.description = value;
-          return;
-        case "IMAGE":
-          state.module.image = value;
           return;
         case "TARGET_LANG_G":
           state.module.targetLang_G = value;
@@ -245,7 +250,7 @@
   }
   function normalizeInput(v) {
     const x = v.trim().toLowerCase();
-    return x === "type" || x === "either" ? x : "speak";
+    return x === "type" ? "type" : "speak";
   }
   function normalizeCheck(v) {
     const x = v.trim().toLowerCase();
@@ -259,16 +264,16 @@
     const base = { type, id: generateId(`${type}-${title}`), title, intro: null, introTtsDataURL: null };
     switch (type) {
       case "DIALOGUE":
-        state.currentActivity = { ...base, instruction: null, ttsPrompt: null, repeat: false, lines: [] };
+        state.currentActivity = { ...base, instruction: null, ttsPrompt: null, repeat: false, image: null, lines: [] };
         break;
       case "GRAMMAR":
         state.currentActivity = { ...base, content: "", phrases: [] };
         break;
       case "SELECT":
-        state.currentActivity = { ...base, instruction: null, showPrompt: false, multi: false, image: null, options: [], items: [] };
+        state.currentActivity = { ...base, instruction: null, showPrompt: false, multi: false, repeat: false, image: null, options: [], items: [] };
         break;
       case "PRODUCE":
-        state.currentActivity = { ...base, instruction: null, ttsPrompt: null, input: "speak", check: "reveal", showPrompt: false, image: null, items: [] };
+        state.currentActivity = { ...base, instruction: null, ttsPrompt: null, input: "speak", check: "reveal", showPrompt: false, repeat: false, image: null, items: [] };
         break;
       case "CHAT":
         state.currentActivity = { ...base, scenario: "", initialPrompt: "" };
@@ -282,9 +287,14 @@
     const a = state.currentActivity;
     const buf = state.buffer;
     switch (a.type) {
-      case "DIALOGUE":
-        a.lines = parseDialogueLines(buf);
+      case "DIALOGUE": {
+        const { image, lines } = parseDialogueLines(buf);
+        const da = a;
+        if (image && !da.image)
+          da.image = image;
+        da.lines = lines;
         break;
+      }
       case "GRAMMAR":
         a.content = buf.join("\n").trim();
         break;
@@ -383,7 +393,7 @@
       }
     }
     pushDialogueLine(lines, cur);
-    return lines;
+    return { image: null, lines };
   }
   function parseOption(line) {
     const colon = line.indexOf(":");
@@ -430,7 +440,6 @@
     const pool = [];
     const items = [];
     let cur = null;
-    let activityImage = null;
     let isExample = false;
     for (const item of buffer) {
       if (item === "EXAMPLE") {
@@ -443,9 +452,6 @@
           upsertOption(pool, opt);
         else
           upsertOption(cur.options = cur.options || [], opt);
-      } else if (item.startsWith("IMAGE:")) {
-        if (!cur)
-          activityImage = item.slice(6).trim();
       } else if (item.startsWith("PROMPT:") || item.startsWith("TEMPLATE:")) {
         const kind = item.startsWith("PROMPT:") ? "prompt" : "template";
         const raw = item.slice(item.indexOf(":") + 1);
@@ -479,7 +485,7 @@
     }
     if (cur)
       pushSelectItem(items, cur);
-    return { image: activityImage, options: pool, items };
+    return { image: null, options: pool, items };
   }
   function pushProduceItem(items, cur) {
     if (cur.prompt == null && cur.template == null)
@@ -505,16 +511,10 @@
   function parseProduce(buffer) {
     const items = [];
     let cur = null;
-    let activityImage = null;
     let isExample = false;
     for (const item of buffer) {
       if (item === "EXAMPLE") {
         isExample = true;
-        continue;
-      }
-      if (item.startsWith("IMAGE:")) {
-        if (!cur)
-          activityImage = item.slice(6).trim();
         continue;
       }
       if (item.startsWith("PROMPT:") || item.startsWith("TEMPLATE:")) {
@@ -557,7 +557,7 @@
     }
     if (cur)
       pushProduceItem(items, cur);
-    return { image: activityImage, items };
+    return { image: null, items };
   }
   function generateId(s) {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -2607,14 +2607,14 @@ ${content}</tr>
   // src/module_spec.ts
   var ebnfSpec = {
     markers: ["CHAT", "DIALOGUE", "GRAMMAR", "LESSON", "MODULE", "PRODUCE", "SELECT"],
+    // NOTE: the module TITLE and cover IMAGE are NOT header fields — they ride the
+    // `$MODULE <title> {cover.jpg}` marker line (consistent with every other marker).
     headerFields: [
       "DESCRIPTION",
       "DIOCO_DOC_ID",
       "FORMAT",
       "HOME_LANG_G",
-      "IMAGE",
       "TARGET_LANG_G",
-      "TITLE",
       "TTS_PROMPT",
       "USER_LANG_G"
     ],
@@ -2626,8 +2626,9 @@ ${content}</tr>
       "VOICE_RESPONSE",
       "VOICE_SPEAKER"
     ],
-    // Speakers are screenplay-style (`Jim: text`), images/audio ride content
-    // lines inline ({page.jpg} / {clip.mp3}) — so no SPEAKER / *_IMAGE fields.
+    // Speakers are screenplay-style (`Jim: text`); images/audio ride content lines
+    // inline ({page.jpg} / {clip.mp3}); the activity-wide image rides the marker
+    // title line (`$DIALOGUE Title {page.jpg}`) — so no SPEAKER / IMAGE / *_IMAGE fields.
     dialogueFields: [
       "INSTRUCTION",
       "INTRO",
@@ -2639,8 +2640,6 @@ ${content}</tr>
     selectFields: [
       "ANSWER",
       "FEEDBACK",
-      "IMAGE",
-      // activity-level shared reference image only
       "INSTRUCTION",
       "INTRO",
       "OPTION",
@@ -2650,8 +2649,6 @@ ${content}</tr>
     produceFields: [
       "ACCEPT",
       "CHECK",
-      "IMAGE",
-      // activity-level shared grounding image only
       "INPUT",
       "INSTRUCTION",
       "INTRO",
@@ -2712,7 +2709,7 @@ ${content}</tr>
   var produceFields = new Set(ebnfSpec.produceFields);
   var chatFields = new Set(ebnfSpec.chatFields);
   var grammarFields = new Set(ebnfSpec.grammarFields);
-  var PRODUCE_INPUTS = /* @__PURE__ */ new Set(["type", "speak", "either"]);
+  var PRODUCE_INPUTS = /* @__PURE__ */ new Set(["type", "speak"]);
   var PRODUCE_CHECKS = /* @__PURE__ */ new Set(["reveal", "exact", "llm"]);
   var AUDIO_EXT_RE2 = /\.(?:mp3|wav|ogg|opus|m4a)$/i;
   var IMAGE_EXT_RE2 = /\.(?:jpe?g|png|gif|webp|svg)$/i;
@@ -2753,6 +2750,12 @@ ${content}</tr>
   function generateId2(s) {
     return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   }
+  function peelTitleImage(raw) {
+    const m = raw.trimEnd().match(/^(.*?)\s*\{\s*([^{}]+?)\s*\}$/);
+    if (m && isImageFile(m[2]))
+      return { title: m[1].trim(), image: m[2].split("@")[0].trim() };
+    return { title: raw.trim(), image: null };
+  }
   function lintModuleText(text) {
     const diags = [];
     const lines = String(text ?? "").split("\n");
@@ -2768,6 +2771,7 @@ ${content}</tr>
     let lessonActivityIds = /* @__PURE__ */ new Map();
     let selItem = null;
     let prodItem = null;
+    let moduleTitleLine = null;
     let pendingExample = null;
     let hadBlankBefore = true;
     const push = (severity, line, message, code) => {
@@ -2812,7 +2816,14 @@ ${content}</tr>
           continue;
         }
         const marker = m[1];
-        const title = (m[2] ?? "").trim();
+        const rawTitle = (m[2] ?? "").trim();
+        const { title, image: markerImage } = peelTitleImage(rawTitle);
+        if (/\}\s*$/.test(rawTitle) && !markerImage) {
+          push("warning", lineNo, "Only a single trailing {image} may ride a marker title line; clips/audio belong on content lines.", "title-asset-invalid");
+        }
+        if (markerImage && (marker === "LESSON" || marker === "GRAMMAR" || marker === "CHAT")) {
+          push("warning", lineNo, `$${marker} does not support a title image; it will be ignored.`, "title-image-unsupported");
+        }
         if (!sectionNames.has(marker)) {
           push("warning", lineNo, `Unknown section marker: $${marker}`, "section-unknown");
         }
@@ -2820,6 +2831,8 @@ ${content}</tr>
           sawModuleMarker = true;
           inHeader = true;
           currentActivity = null;
+          if (title)
+            moduleTitleLine = lineNo;
         } else if (marker === "LESSON") {
           closeItems();
           inHeader = false;
@@ -2845,8 +2858,8 @@ ${content}</tr>
         continue;
       }
       if (flagNames.has(trimmed)) {
-        if (trimmed === "REPEAT" && currentActivity !== "DIALOGUE") {
-          push("warning", lineNo, "REPEAT is only meaningful inside $DIALOGUE.", "repeat-outside-dialogue");
+        if (trimmed === "REPEAT" && currentActivity !== "DIALOGUE" && currentActivity !== "SELECT" && currentActivity !== "PRODUCE") {
+          push("warning", lineNo, "REPEAT is only meaningful inside $DIALOGUE, $SELECT, or $PRODUCE.", "repeat-outside-dialogue");
         }
         if (trimmed === "MULTI" && currentActivity !== "SELECT") {
           push("warning", lineNo, "MULTI is only meaningful inside $SELECT.", "flag-outside-select");
@@ -2894,7 +2907,11 @@ ${content}</tr>
           }
         }
         if (inHeader && !currentLessonLine && !currentActivity) {
-          if (!headerFields.has(field)) {
+          if (field === "TITLE") {
+            push("error", lineNo, "TITLE field was removed \u2014 put the title on the $MODULE line: `$MODULE Lesson 1: The Classroom`.", "legacy-title-field");
+          } else if (field === "IMAGE") {
+            push("error", lineNo, "IMAGE field was removed \u2014 put the cover image on the $MODULE line: `$MODULE <title> {page.jpg}`.", "legacy-image-field-header");
+          } else if (!headerFields.has(field)) {
             push("warning", lineNo, `Unknown header field: ${field}`, "unknown-header-field");
           } else if (field !== "VOICE_SPEAKER" && field !== "VOICE") {
             if (seenHeader[field])
@@ -2914,21 +2931,17 @@ ${content}</tr>
             push("error", lineNo, `${field} was removed \u2014 attach the image inline at the end of the ${field === "OPTION_IMAGE" ? "OPTION" : "PROMPT"} text: \`{page.jpg}\`.`, "legacy-image-field");
             continue;
           }
-          if (field === "IMAGE" && currentActivity === "DIALOGUE") {
-            push("error", lineNo, "IMAGE field was removed in $DIALOGUE \u2014 attach the image inline: `{page.jpg}` at the end of the line.", "legacy-image-field");
-            continue;
-          }
-          if (field === "IMAGE" && (currentActivity === "SELECT" && selItem || currentActivity === "PRODUCE" && prodItem)) {
-            push("warning", lineNo, `IMAGE inside a $${currentActivity} item is ignored \u2014 activity-level only. Attach per-item images inline on the PROMPT/TEMPLATE.`, "image-inside-item");
+          if (field === "IMAGE") {
+            if (currentActivity === "GRAMMAR") {
+              push("error", lineNo, "IMAGE field was removed \u2014 in $GRAMMAR use markdown image syntax `![alt](file.png)` in the content.", "legacy-image-field");
+            } else {
+              push("error", lineNo, `IMAGE field was removed \u2014 put the activity-wide image on the marker title line (\`$${currentActivity} <title> {page.jpg}\`); per-line/item images ride the content inline: \`{page.jpg}\`.`, "legacy-image-field");
+            }
             continue;
           }
           const allowed = currentActivity === "DIALOGUE" ? dialogueFields : currentActivity === "SELECT" ? selectFields : currentActivity === "PRODUCE" ? produceFields : currentActivity === "CHAT" ? chatFields : currentActivity === "GRAMMAR" ? grammarFields : null;
           if (allowed && !allowed.has(field)) {
-            if (currentActivity === "GRAMMAR" && field === "IMAGE") {
-              push("warning", lineNo, "IMAGE inside $GRAMMAR is not in the formal grammar and is ignored. Use markdown image syntax `![alt](file.png)`.", "grammar-image-ignored");
-            } else {
-              push("warning", lineNo, `Field ${field} is not expected inside $${currentActivity}.`, "field-unexpected");
-            }
+            push("warning", lineNo, `Field ${field} is not expected inside $${currentActivity}.`, "field-unexpected");
           }
           if (currentActivity === "GRAMMAR" && field !== "INTRO") {
             push("warning", lineNo, `Line looks like a field (${field}:) inside $GRAMMAR; it will NOT be included in markdown content.`, "grammar-field-swallowed");
@@ -2970,7 +2983,7 @@ ${content}</tr>
             }
           } else if (currentActivity === "PRODUCE") {
             if (field === "INPUT" && value && !PRODUCE_INPUTS.has(value.toLowerCase()))
-              push("warning", lineNo, `INPUT must be one of: type, speak, either.`, "input-invalid");
+              push("warning", lineNo, `INPUT must be one of: type, speak.`, "input-invalid");
             if (field === "CHECK" && value && !PRODUCE_CHECKS.has(value.toLowerCase()))
               push("warning", lineNo, `CHECK must be one of: reveal, exact, llm.`, "check-invalid");
             if (field === "PROMPT" || field === "TEMPLATE") {
@@ -3050,8 +3063,8 @@ ${content}</tr>
         push("warning", 1, "Missing header field: FORMAT: 2 (declares the module format version)", "missing-format");
       if (!seenHeader.DIOCO_DOC_ID)
         push("warning", 1, "Missing header field: DIOCO_DOC_ID (optional, moduleKey is derived from filename)", "missing-dioco-doc-id");
-      if (!seenHeader.TITLE)
-        push("error", 1, "Missing required header field: TITLE", "missing-title");
+      if (moduleTitleLine === null)
+        push("error", 1, "Missing module title \u2014 put it on the $MODULE line: `$MODULE <title>`.", "missing-title");
       if (!seenHeader.TARGET_LANG_G)
         push("error", 1, "Missing required header field: TARGET_LANG_G", "missing-target-lang");
       if (!seenHeader.HOME_LANG_G && !seenHeader.USER_LANG_G)
@@ -3462,6 +3475,8 @@ ${content}</tr>
       body.push(kvRow("INSTRUCTION", a.instruction));
       body.push(kvRow("TTS_PROMPT", a.ttsPrompt));
       body.push(el("div", { class: "pillRow" }, [flagPill("REPEAT", a.repeat)]));
+      if (a.image)
+        body.push(kvRow("IMAGE (activity-wide)", a.image));
       body.push(
         el("div", { class: "tableWrap" }, [
           el("table", { class: "table mono" }, [
@@ -3499,7 +3514,7 @@ ${content}</tr>
     } else if (activity.type === "SELECT") {
       const a = activity;
       body.push(kvRow("INSTRUCTION", a.instruction));
-      body.push(el("div", { class: "pillRow" }, [flagPill("MULTI", a.multi), flagPill("SHOW_PROMPT", a.showPrompt)]));
+      body.push(el("div", { class: "pillRow" }, [flagPill("MULTI", a.multi), flagPill("SHOW_PROMPT", a.showPrompt), flagPill("REPEAT", a.repeat)]));
       if (a.image)
         body.push(kvRow("IMAGE", a.image));
       if (a.options.length) {
@@ -3550,7 +3565,8 @@ ${content}</tr>
       body.push(el("div", { class: "pillRow" }, [
         el("span", { class: "pill" }, [`INPUT: ${a.input}`]),
         el("span", { class: "pill" }, [`CHECK: ${a.check}`]),
-        flagPill("SHOW_PROMPT", a.showPrompt)
+        flagPill("SHOW_PROMPT", a.showPrompt),
+        flagPill("REPEAT", a.repeat)
       ]));
       body.push(
         el("div", { class: "tableWrap" }, [
@@ -3676,10 +3692,9 @@ ${content}</tr>
     const demoBtn = document.querySelector("#demo");
     demoBtn?.addEventListener("click", async () => {
       const embeddedDemo = `
-$MODULE
+$MODULE Demo Module
 FORMAT: 2
 DIOCO_DOC_ID: lc_demo
-TITLE: Demo Module
 DESCRIPTION: Quick demo content for the preview UI
 TARGET_LANG_G: en
 HOME_LANG_G: en

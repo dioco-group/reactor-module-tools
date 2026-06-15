@@ -171,6 +171,12 @@ export interface SelectActivity extends ActivityBase {
     showPrompt: boolean;
     /** MULTI flag: more than one option may be correct. */
     multi: boolean;
+    /**
+     * REPEAT flag: after the answer is revealed, the learner repeats the model
+     * answer aloud (the tape's "Repeat." reinforcement beat). Player replays the
+     * answer audio and prompts a say-it-back; not assessed.
+     */
+    repeat: boolean;
     /** Activity-level shared reference image. */
     image: string | null;
     /** Shared option pool (used when items don't declare their own options). */
@@ -210,7 +216,7 @@ export interface SelectItem {
 
 // PRODUCE --------------------------------------------------------------------
 
-export type ProduceInput = 'type' | 'speak' | 'either';
+export type ProduceInput = 'type' | 'speak';
 export type ProduceCheck = 'reveal' | 'exact' | 'llm';
 
 export interface ProduceActivity extends ActivityBase {
@@ -225,6 +231,12 @@ export interface ProduceActivity extends ActivityBase {
      * revealed — the classic drill flow.
      */
     showPrompt: boolean;
+    /**
+     * REPEAT flag: after the answer is revealed, the learner repeats the model
+     * answer aloud (the tape's "Repeat." reinforcement beat). Player replays the
+     * answer audio and prompts a say-it-back; not assessed.
+     */
+    repeat: boolean;
     /** Activity-level shared grounding image (e.g. one picture for all items). */
     image: string | null;
     items: ProduceItem[];

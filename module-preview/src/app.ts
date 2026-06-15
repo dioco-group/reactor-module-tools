@@ -405,7 +405,7 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
     } else if (activity.type === 'SELECT') {
         const a = activity as SelectActivity;
         body.push(kvRow('INSTRUCTION', a.instruction));
-        body.push(el('div', { class: 'pillRow' }, [flagPill('MULTI', a.multi), flagPill('SHOW_PROMPT', a.showPrompt)]));
+        body.push(el('div', { class: 'pillRow' }, [flagPill('MULTI', a.multi), flagPill('SHOW_PROMPT', a.showPrompt), flagPill('REPEAT', a.repeat)]));
         if (a.image) body.push(kvRow('IMAGE', a.image));
         if (a.options.length) {
             body.push(kvRow('OPTIONS (shared)', a.options.map((o) => `${o.id} = ${o.text ?? o.image ?? ''}`).join('  •  ')));
@@ -455,6 +455,7 @@ function renderActivity(activity: Activity, id: string, rawIndex?: Record<string
             el('span', { class: 'pill' }, [`INPUT: ${a.input}`]),
             el('span', { class: 'pill' }, [`CHECK: ${a.check}`]),
             flagPill('SHOW_PROMPT', a.showPrompt),
+            flagPill('REPEAT', a.repeat),
         ]));
         body.push(
             el('div', { class: 'tableWrap' }, [
@@ -588,10 +589,9 @@ function setup(): void {
     demoBtn?.addEventListener('click', async () => {
         // Works even when opened as a local file (file://), where fetch() is blocked.
         const embeddedDemo = `
-$MODULE
+$MODULE Demo Module
 FORMAT: 2
 DIOCO_DOC_ID: lc_demo
-TITLE: Demo Module
 DESCRIPTION: Quick demo content for the preview UI
 TARGET_LANG_G: en
 HOME_LANG_G: en

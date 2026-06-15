@@ -3,6 +3,9 @@
 End-to-end knowledge for converting ALC books (PDF) into v2 `.module` files and
 then into the recreated **master lessons**. Companion docs:
 
+- `AGENT_GUIDE.md` — **start here if you just need to run the pipeline** on a
+  book: self-contained, storage-server-agnostic, the commands + the gotchas.
+
 - `shared/alc_conversion_notes.md` — WHAT to convert into WHAT (per-figure
   rules, with reasoning). Embedded in the LLA converter prompt.
 - `configs/alc-st-4/prompt.md` — Student Text conversion rules (no tape).
@@ -38,36 +41,68 @@ except its Listening-Skill blocks (stimuli live in the instructor manual → SKI
                           individual bad images the same way; check label text
                           like shop signs survived.)
 
-3. Transcripts           node module-convert/transcribe-figures.js --config configs/alc-lla-4/module-convert.json 2A
-                         (Gemini transcribes the figure mp3 — near-perfect on
-                          this corpus — then the Qwen FORCED ALIGNER produces
-                          word timings. Replaced whisper, which silently DROPPED
-                          quiet items ~5 times in lessons 1A-1D and makes
-                          homophone errors (son/sun, meet/meat). Output keeps
-                          the whisper JSON shape: segments[].words.)
+3. Transcripts           node module-convert/transcribe-soniox.js --config configs/alc-lla-4/module-convert.json 2A
+                         (PREFERRED: Soniox async STT returns transcript + word
+                          timings + per-word confidence in ONE call — no VPN hop
+                          to the aligner, ~$0.006/figure. On the corpus's hard
+                          cases it matched/beat the old path: nailed every /ʌ/
+                          minimal pair, got sun where gemini+qwen mis-spelled
+                          "son"; the only misses are TRUE homophones
+                          (week/weak, meat/meet) which no STT can spell from
+                          audio and which don't matter — word SPELLING always
+                          comes from the BOOK, the ASR is used only for TIMING.
+                          Needs SONIOX_API_KEY. Output keeps the whisper JSON
+                          shape: segments[].words, seconds, info.source=soniox.)
+
+                         FALLBACK: node module-convert/transcribe-figures.js ... 2A
+                         (Gemini text + Qwen FORCED ALIGNER word timings — the
+                          prior method. Both replaced whisper, which silently
+                          DROPPED quiet items ~5 times in 1A-1D and made
+                          homophone errors. info.source=gemini+qwen-align.)
 
 4. Convert               node module-convert/convert-alc.js --config configs/alc-lla-4/module-convert.json 2A
                          → lesson-2A.module.draft with {clip@start-end} timings
                           picked from SEGMENT-level transcript timings.
 
+                         LESSON HEADERS (2012+ editions): convert-alc splits the
+                          book md by lesson banner. OCR renders that banner
+                          inconsistently — the splitter now also accepts any
+                          markdown heading carrying "LESSON NX", and STOPS at the
+                          back-matter banner (SCRIPTS / AUDIO SCRIPT / ANSWERS)
+                          so tapescripts+answer keys don't bloat the last lesson.
+                          If a lesson page has NO banner at all (happens), the
+                          run prints "⚠ Lessons with audio but NO book markdown:
+                          <NX>" — add a line like
+                          "## LANGUAGE LABORATORY ACTIVITIES — BOOK N, LESSON NX"
+                          atop that lesson's .md and re-run. (The check compares
+                          book lessons against the transcript lesson dirs.)
+
 5. Refine timings        node module-convert/refine-clip-times.js --config ... 2A
                          (Deterministic, word-level: TRUSTS the LLM's rough
                           range and only TRIMS it — strips "Number N", "Repeat,",
-                          "The answer is...", "Listen..." cue words off the
-                          edges, then snaps to matched words. It also
-                          pre-compensates the slicer's ±0.2s padding so a pad
-                          can never bleed into a neighboring word.
-                          LOW-CONFIDENCE clips are FLAGGED, not auto-fixed —
-                          resolve each by hand using word timings, silence-burst
-                          analysis (ffmpeg silencedetect), or the Qwen aligner
-                          on a cut window. Homophones (sun/son) flag at score 0
-                          by design: do NOT add fuzzy matching — it would wreck
-                          the minimal-pair figures (cop/cup).)
+                          "Example", "The answer is...", "Listen..." cue words off
+                          the edges, then snaps to matched words. A single short
+                          item (letter/number) whose rough range spans neighbors
+                          snaps to its own transcript SEGMENT, isolating it.
+                          KEY: it emits the clip end as the LAST word's START, not
+                          its end — Soniox word STARTS are reliable but ENDS are
+                          not (point-like, or the next item's onset); slice-clips
+                          finds the true end. LOW-CONFIDENCE clips are FLAGGED, not
+                          auto-fixed. Homophones (sun/son) flag at score 0 by
+                          design: do NOT add fuzzy matching — it would wreck the
+                          minimal-pair figures (cop/cup).)
 
 6. Slice + finalize      node module-convert/slice-clips.js --config ... 2A
-                         (Cuts clips with ±0.2s pad, COMPRESSES internal
-                          silences >1s to ~0.4s (repeat-after-me gaps), copies
-                          images, rewrites draft → lesson-2A.module + asset
+                         (Cuts each clip with SILENCE-AWARE edges — `speechEdges`
+                          widens the window and uses ffmpeg silencedetect to find
+                          where speech resumes before the first word (recovering a
+                          dropped leading consonant: a tight "B" plays as "ee"→"E")
+                          and where it next stops after the last word (the real
+                          trailing gap). Anchored on word STARTS, so multi-part
+                          items ("Capital A. Small a.") keep every part while a
+                          single item ends at its own gap (no dead air / next-item
+                          bleed). Then COMPRESSES internal silences >1s to ~0.4s,
+                          copies images, rewrites draft → lesson-2A.module + asset
                           folder. NOTE: it regenerates the .module from the
                           .draft — keep ALL content edits in the DRAFT, and
                           keep draft/module in sync.)
@@ -96,7 +131,7 @@ except its Listening-Skill blocks (stimuli live in the instructor manual → SKI
   ~200-250Hz, male ~90-130Hz) and rename speakers/voices to match what the
   learner HEARS (book "Jim" became "Kim").
 - **Reference info on screen**: any table/map the items quiz must be IN the
-  module (TEMPLATE on every item, or activity-wide IMAGE).
+  module (TEMPLATE on every item, or an activity-wide image on the marker title line).
 - **Listen-and-fill vs cue-based cloze**: clip on the PROMPT (hidden) when the
   answer exists only on tape; clip on the RESPONSE when the book prints a cue.
 - **Lint**: bundle `module-parser/module_diagnostics.ts` with esbuild and run
@@ -137,7 +172,7 @@ enforces this); editing freedom exists only for TTS-only content.
 - **Asset URLs are commit-pinned** by the backend (`/raw/commit/<sha>/`), so
   pushed content updates are never browser-cache-stale. (Before this, reused
   filenames with changed content caused maddening "out of sync" bugs.)
-- **Backend coupling**: new format features (activity-wide dialogue IMAGE,
+- **Backend coupling**: new format features (activity-wide dialogue image,
   CHECK: llm grading, voice-aware TTS) need dioco-base/dioco-shared deployed on
   pg-2. If something renders/voices wrong in the app but the data looks right,
   check whether pg-2 has the latest backend first.
@@ -148,3 +183,8 @@ enforces this); editing freedom exists only for TTS-only content.
   disabled (aligner-only mode); use Gemini for transcription.
 - **Gemini models**: conversion `gemini-3.1-pro-preview` (3-pro is retired),
   extraction/transcription `gemini-3.5-flash`, images `gemini-3.1-flash-image`.
+- **Keep `temperature: 1.0` for the Gemini 3.x conversion model — do NOT lower it.**
+  Google's Gemini 3 docs warn that temperatures below the 1.0 default cause
+  looping, degraded reasoning, and even null structured outputs (its reasoning is
+  tuned for the default). Lowering temp does NOT improve list completeness — that
+  is governed by the conversion notes' "convert EVERY item" rule (A3), not temp.

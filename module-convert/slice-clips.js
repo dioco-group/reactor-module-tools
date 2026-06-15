@@ -5,9 +5,14 @@
  *     LINE: George plays baseball on weekends. {bk04-l3a-f1-03.mp3@118.0-120.1}
  *     OPTION: b | John doesn't like football games. {bk04-l1a-f3-02.mp3@71.2-74.8}
  * For each, it resolves the source figure mp3 from the filename pattern
- * (bk<book>-l<lesson>-f<fig>-NN.mp3), cuts [start,end] with ffmpeg into the
- * module's asset folder, and rewrites the clip to a plain `{<file>}`
- * (played in full). Writes the finalized `<name>.module`.
+ * (bk<book>-l<lesson>-f<fig>-NN.mp3), then cuts it into the module's asset folder
+ * and rewrites the clip to a plain `{<file>}` (played in full). Writes the
+ * finalized `<name>.module`.
+ *
+ * The cut is NOT the literal [start,end]: `speechEdges` first refines the edges
+ * by silence detection (the ASR start often drops a leading consonant; ends are
+ * unreliable — see refine-clip-times / transcribe-soniox), and a `silenceremove`
+ * pass then compresses long internal repeat-after-me gaps.
  *
  * Usage:
  *   node module-convert/slice-clips.js --config configs/alc-lla-4/module-convert.json [LESSON]
@@ -15,10 +20,43 @@
 
 import fs from 'fs';
 import path from 'path';
-import { execFileSync } from 'child_process';
+import { execFileSync, spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Refine a clip's OUTER edges by silence detection. The ASR word start often
+// lands a beat late and drops a leading consonant (a spoken "B" cut tight plays
+// as "ee" -> "E"); a too-tight end can clip the final sound. We widen the
+// window, find the silence gap just BEFORE `start` and just AFTER `end`, and
+// snap the edges to the speech there — anchored on [start,end] so a sentence's
+// INTERNAL pauses are never used as edges. Falls back to modest fixed pads.
+function speechEdges(src, start, end) {
+  const HEAD = 0.6, TAIL = 0.5, NEAR = 0.2, PAD = 0.04;
+  const ws = Math.max(0, start - HEAD), we = end + TAIL;
+  // d=0.3: only real boundary gaps register, not mid-word micro-pauses.
+  const r = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-ss', String(ws), '-to', String(we),
+    '-i', src, '-af', 'silencedetect=noise=-30dB:d=0.3', '-f', 'null', '-'], { encoding: 'utf8' });
+  const log = (r.stderr || '');
+  const starts = [...log.matchAll(/silence_start:\s*([\d.]+)/g)].map((m) => parseFloat(m[1]));
+  const ends = [...log.matchAll(/silence_end:\s*([\d.]+)/g)].map((m) => parseFloat(m[1]));
+  const aStart = start - ws, aEnd = end - ws;
+  // `end` is the LAST word's START (refine anchors it there; Soniox word ENDS
+  // are unreliable). So:
+  //  - onset = where speech resumes just before the first word (silence_end),
+  //    pulling the start back over a dropped leading consonant.
+  //  - offset = where speech next STOPS after the last word's start (silence_start),
+  //    i.e. the real trailing gap. Internal pauses (before aEnd) are inside the
+  //    span, so a multi-part item ("Capital A. Small a.") keeps every part, while
+  //    a single item ends at its own gap (no dead air / next-item bleed).
+  const leading = ends.filter((e) => e <= aStart + NEAR);
+  const onsetRel = leading.length ? Math.max(...leading) : Math.max(0, aStart - 0.35);
+  const trailing = starts.filter((s) => s > aEnd - 0.05);
+  const offsetRel = trailing.length ? Math.min(...trailing) : (we - ws);
+  let ns = ws + onsetRel - PAD, ne = ws + offsetRel + PAD;
+  if (!(ne > ns)) { ns = Math.max(0, start - 0.3); ne = end + 0.3; } // safety
+  return [Math.max(0, ns), ne];
+}
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -101,12 +139,14 @@ function sliceModule(draftPath, cfg) {
     const src = findFigureMp3(cfg.audioDir, info.lesson, info.fig);
     if (!src) { miss++; console.warn(`  ! source mp3 not found for ${file} (Lesson ${info.lesson} Fig ${info.fig})`); return; }
     try {
-      const ss = Math.max(0, start - 0.2);
+      // Silence-aware outer edges: recover a dropped leading consonant and trim
+      // dead air, without using a sentence's internal pauses as edges.
+      const [ss, ee] = speechEdges(src, start, end);
       // Compress internal pauses: the tape leaves long repeat-after-me gaps
       // mid-clip (e.g. 4s between two sentences of one line); shorten any
-      // silence over 1s down to ~0.4s. Edges are already tight (word-snapped).
+      // silence over 1s down to ~0.4s.
       const silence = 'silenceremove=stop_periods=-1:stop_duration=1.0:stop_silence=0.4:stop_threshold=-35dB';
-      execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(ss), '-to', String(end + 0.2),
+      execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-ss', String(ss), '-to', String(ee),
         '-i', src, '-af', silence, '-ac', '1', path.join(assetsDir, file)], { stdio: 'pipe' });
       cut++;
     } catch (e) {
@@ -122,11 +162,9 @@ function sliceModule(draftPath, cfg) {
   };
 
   const out = lines.map((line) => {
-    // Activity-level / header image field: `IMAGE: <ref>` -> copy + bare filename.
-    const im = line.match(/^IMAGE:\s*(\S.*?)\s*$/);
-    if (im) return `IMAGE: ${copyImage(im[1])}`;
-
-    // Inline images: "... {page_XXX_YYY.jpg} ..." -> copy + rewrite to bare basename.
+    // Inline images anywhere on the line — including the block image that rides a
+    // marker title line (`$DIALOGUE Title {page.jpg}` / `$MODULE … {cover.jpg}`):
+    // copy into the asset folder + rewrite to the bare basename.
     let res = line.replace(INLINE_IMAGE, (_, ref) => `{${copyImage(ref)}}`);
 
     // Inline timed clips: "... {<file>@<start>-<end>}" -> cut + "... {<file>}"
@@ -143,15 +181,16 @@ function sliceModule(draftPath, cfg) {
 
   // Lightweight v2 validation.
   const warn = [];
-  for (const f of ['TITLE:', 'TARGET_LANG_G:', 'HOME_LANG_G:']) {
+  if (!/^\$MODULE\s+\S/m.test(finalText)) warn.push('missing $MODULE title');
+  for (const f of ['TARGET_LANG_G:', 'HOME_LANG_G:']) {
     if (!new RegExp(`^${f}`, 'm').test(finalText)) warn.push(`missing ${f}`);
   }
   // Leftover timing = an inline {clip@...} that wasn't cut.
   if (/\{[^{}]*@[\d.]/.test(finalText)) warn.push('leftover timing annotation');
-  // Every referenced asset present in the folder: IMAGE fields + inline {file.ext}
-  // tokens (a dot+ext distinguishes an asset from a grammar {phrase}).
+  // Every referenced asset present in the folder: inline {file.ext} tokens
+  // (a dot+ext distinguishes an asset from a grammar {phrase}); this also covers
+  // the block image that rides a marker title line.
   const refs = [];
-  for (const m of finalText.matchAll(/^IMAGE:\s*(\S+)\s*$/gm)) refs.push(m[1]);
   for (const m of finalText.matchAll(/\{\s*([^{}@\s]+\.[A-Za-z0-9]+)\s*\}/g)) refs.push(m[1]);
   let assetMiss = 0;
   for (const fn of refs) {

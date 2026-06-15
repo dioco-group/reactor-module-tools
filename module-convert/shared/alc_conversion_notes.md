@@ -50,6 +50,20 @@ are scaffolds whose stimuli are only on the instructor tape — see SKIP.
 as a `$DIALOGUE` (the passage) followed by a `$SELECT`/`$PRODUCE` (the questions).
 Forcing one figure into one activity would either bloat a card or lose the task.
 
+### A3. Convert EVERY item — never sample or truncate a list
+**Rule:** emit one activity item (or `LINE`) for **every** item present in the
+tape/book. If the tape counts "Number 1 … Number 15", the activity has **15**
+items. If the alphabet section reads A–G, that's 7 letters. Do not stop early,
+summarize, or produce a "representative" subset.
+
+**Why:** these drills are long and repetitive, and an LLM's instinct is to show
+a few and imply the rest — but the learner needs all of them. The tape's spoken
+**"Number N" cues are the authoritative count**: the highest N is how many items
+there must be. Before finishing a `$SELECT`/`$PRODUCE`/`$DIALOGUE`, check the
+last "Number N" in its transcript and confirm your item count matches. (Concretely:
+Book 1 Lesson 1A Figure 3 "identify the letter" has Number 1–15 → 15 items, not 6;
+Figure 7 has 16; Figure 4 dictation has 10.)
+
 ---
 
 ## B. Why 5 types (and how to choose one)
@@ -72,11 +86,14 @@ collapses to five:
 text** / model). "Which option" and "the words you produce" are different things;
 distinct names keep them from blurring.
 
-**`$PRODUCE` is one type with two orthogonal axes** (`INPUT: type|speak|either`,
+**`$PRODUCE` is one type with two orthogonal axes** (`INPUT: type|speak`,
 `CHECK: reveal|exact|llm`) **because** imitation drills, cloze, dictation, and
 open answers are all "produce an answer" — they differ only in how you enter it
 and how it's judged. Defaults (`speak`/`reveal`) make the dominant ALC oral drill
 need *zero* attribute lines, so it reads as simply as the old `$EXERCISE`.
+`INPUT` must mirror the ALC original modality — **don't use `either`**: the tape
+has the learner *say* it → `INPUT: speak`; the book has them *write* it →
+`INPUT: type`.
 
 **`$MATCH` was dropped into `$SELECT`** because matching is just "tap from a
 shared set of options"; declaring the option pool once at the activity level gives
@@ -101,7 +118,7 @@ shared set of options"; declaring the option pool once at the activity level giv
 | Listen → **choose** the correct statement/answer (even if printed "answer the questions") | `$SELECT` |
 | Transformation / substitution drill | `$PRODUCE` (speak/reveal) |
 | "Write the word/verb form" / cloze (one answer) | `$PRODUCE` (type/exact, `TEMPLATE`) |
-| Ask & answer w/ example · picture Q&A · "what" Qs | `$PRODUCE` (either/llm; `IMAGE` if picture-cued) |
+| Ask & answer w/ example · picture Q&A · "what" Qs | `$PRODUCE` (speak/llm; title-line `{image}` if picture-cued) |
 
 ---
 
@@ -136,15 +153,32 @@ different things to play games with. Let's repeat the new words."). Mine it:
 - **One word per `VOCAB`** line (repeatable). *Why:* each is a dictionary unit;
   the app glosses/links them individually. (Monolingual — no `VOCAB_T`; the gloss
   is generated downstream.)
+- **Emit `VOCAB` ONLY when the source explicitly presents a word as new** — the
+  book **underlines/bolds** it, lists it on a preview/vocabulary page, or the tape
+  says "new word: …". Do NOT invent `VOCAB` for ordinary words just because they
+  appear in a sentence or seem new. *Why:* `VOCAB` means "this is a vocabulary
+  item being taught here"; tagging incidental words (please, classroom, name)
+  with no basis creates false dictionary units. When in doubt, omit `VOCAB`.
 - **One line = 1–2 sentences**; split long paragraphs; use `Narrator:` (then bare
   `LINE:`) for passages. *Why:* the inline `{clip}` is one clip per line — long
   lines make playback cumbersome and reading harder.
+- **Keep one speaker's consecutive short turn on a SINGLE line — don't split it.**
+  When the same speaker says two short things in a row (e.g. Aldo: "Hello." then
+  "How are you?"), write them on one line (`Aldo: Hello. How are you? {clip}`),
+  NOT a second bare `LINE:`. *Why:* each line is its own card; splitting a single
+  natural turn makes playback "bitty". Give the line ONE clip spanning the whole
+  turn (combine the slices if the tape cut them separately).
 - **Drop the "now read X's lines" role-play tail.** *Why:* learner-plays-a-role is
   real software complexity for marginal gain; listen+repeat captures the value.
 
 ### `$GRAMMAR`
 - Include explanations/tables verbatim; wrap target phrases in `{braces}` for
   tappable audio. *Why:* reference content shouldn't be lossy-summarized.
+- **Faithful only — reproduce, don't author.** Don't *add* explanatory prose the
+  source lacks (just as you don't summarize away what it has). Expanded teaching
+  is layered in later at the master-combination stage. (Note the asymmetry with
+  ST: the LLA **tape** narrates real intros, so mining them into `INTRO` is
+  faithful; the ST has no tape, so ST `INTRO` is omitted, not invented.)
 
 ### `$SELECT`
 - **Shared option pool** at activity level when options repeat (S/D, a/b, T/F, a
@@ -177,10 +211,10 @@ different things to play games with. Let's repeat the new words."). Mine it:
   `ACCEPT` for alternates), and (b) **context/reading text** the learner must read
   to form the answer when it isn't on the tape. Keep `PROMPT` = the spoken
   stimulus (with its inline `{clip}`); put the read-only sentence in `TEMPLATE`.
-- Open-ended: `CHECK: llm`, `INPUT: either`, `RESPONSE` = a **sample**, `RUBRIC`
-  optional, `IMAGE` if picture-grounded. *Why:* there's no single right answer;
-  the model judges, and the learner can switch to typing when speaking isn't
-  convenient.
+- Open-ended: `CHECK: llm`, `INPUT: speak` (the ALC drill is oral; use `type` only
+  when the book has the learner write), `RESPONSE` = a **sample**, `RUBRIC`
+  optional, title-line `{image}` if picture-grounded. *Why:* there's no single right answer; the
+  model judges against the rubric.
 - When the learner reads a context sentence (not on the tape) to answer a spoken
   question (ALC 1A Fig 4): `PROMPT` = the spoken question (with its inline `{clip}`),
   `TEMPLATE` = the context sentence to read, `RESPONSE` = the answer. Do NOT fold
@@ -221,12 +255,19 @@ different things to play games with. Let's repeat the new words."). Mine it:
 - **Per-line vs activity-wide images:** an inline `{page.jpg}` on a line/PROMPT shows
   the image only for THAT line/item. When the figure has **one reference visual that
   every line/item refers to** (a map, calendar, scene, or labeled diagram — e.g. the
-  Figure-5 Texas map), declare it once at the **activity level** instead:
-  `IMAGE: page_XXX_YYY.jpg` right after the INTRO/flags, before the first line/item.
-  Works in `$DIALOGUE`, `$SELECT`, and `$PRODUCE`; it stays on screen for all
-  lines/items, and an inline per-line `{page.jpg}` still overrides it for that line.
+  Figure-5 Texas map), declare it once on the **activity marker title line** instead:
+  `$DIALOGUE Texas Map {page_XXX_YYY.jpg}` (likewise `$SELECT …`, `$PRODUCE …`).
+  It stays on screen for all lines/items, and an inline per-line `{page.jpg}` still
+  overrides it for that line.
   *Why:* attaching the shared visual to only the first line makes it vanish for the
   rest of the activity, exactly when the learner needs it.
+- **A per-item picture must show for BOTH the question and the answer.** When one
+  item's picture is what the Q&A is about (e.g. "What's that?" → "It's a book."
+  over a book drawing), put the same inline `{page.jpg}` on BOTH cards: on the
+  question and the answer LINEs of a `$DIALOGUE`, and on both the `PROMPT` and the
+  `RESPONSE` of a `$PRODUCE` item. *Why:* the picture is the referent for the whole
+  exchange — it must stay visible while the learner hears the question, answers,
+  and sees the answer; on only one card it disappears at the wrong moment.
 - **No raw HTML**; flatten flex/side-by-side layouts to linear markdown.
 - **Don't** emit printed page numbers, tape/figure numbers as content, or
   "(recorded)/(not recorded)" notes.
@@ -262,7 +303,7 @@ cloze, and diagram MCQ are NOT deferred — they already map to `$SELECT`/`$PROD
 
 - One `$LESSON` per ALC sub-lesson/tape (1A, 1B…) or sub-topic; title from the
   source ("Lesson 3A: Clothes and Uniforms").
-- The module `TITLE:` is always descriptive — `Lesson <NX>: <short topic>`
+- The module title (on the `$MODULE` line) is always descriptive — `Lesson <NX>: <short topic>`
   ("Lesson 1B: Past Tense Verbs and Vowel Sounds"), never a bare "Lesson 1B".
 - A split figure keeps a shared title across its activities ("Figure 1: …").
 - Preserve pedagogical order; convert **all** content except the SKIP/DEFER lists.
@@ -282,6 +323,42 @@ cloze, and diagram MCQ are NOT deferred — they already map to `$SELECT`/`$PROD
   pool. Give each option an image **and** a short text caption on ONE line
   (`OPTION: a | ball {page_008_001.jpg}`) — captions help when words are new.
   Clips exclude "Number N".
+- **A figure with an "answer my questions" production pass → an ADDITIONAL `$PRODUCE`.**
+  Many tapes, after the identify pass + answer-check pass, have a third pass:
+  "Now answer the questions. Number 1. What's letter B? … (pause) … It's a pencil.
+  Repeat. It's a pencil." Don't drop it — emit it as a SECOND activity (`$PRODUCE`)
+  after the `$SELECT`: each item's `PROMPT` is the spoken question ("What's letter
+  B?", with its `{clip}` and the SINGLE relevant item's `{image}`), and `RESPONSE`
+  is the model answer ("It's a pencil.", with its `{clip}`). The picture goes on
+  the prompt so the learner can answer; CHECK defaults suit a guided answer. *Why:*
+  the identify pass tests recognition; this pass tests production — both are real
+  activities the figure provides (see A2/A3).
+- **`REPEAT` on `$SELECT`/`$PRODUCE` when the tape says "Repeat" after the model.**
+  ALC's drill loop is elicit → model → repeat: "What's letter B? … It's a pencil.
+  **Repeat.** It's a pencil." When that reinforcement beat is present, add the
+  bare `REPEAT` flag to the activity (just like `$DIALOGUE REPEAT`). It tells the
+  player to replay the model answer and prompt the learner to say it back (not
+  assessed). Activity-level: one flag covers all items. Omit it when the tape
+  doesn't ask the learner to repeat the answer.
+  Also applies to **word-recognition** `$SELECT` whose tape says "<word>.
+  **Repeat: <word>.** Circle <word>." (Fig 1 style) — the learner identifies the
+  word, then repeats it. Add `REPEAT` and put the spoken word on the PROMPT; the
+  correct option carries the spoken model inline so it plays on the tap.
+- **Letter/symbol legends → make the option TEXT the real answer, not the
+  letter.** When the book says "Circle letter A for the P sound (as in put),
+  letter B for the B sound (as in buy)", the A/B are just printed labels. Emit
+  the legend as the option text (`OPTION: a | P sound (as in put)`) and write a
+  learner-facing instruction that names the choices, NOT the letters — say "Tap
+  the sound you hear", never "Tap A … Tap B …". *Why:* the player shows the
+  answers as tappable choices; there are no A/B buttons, so letter references
+  are dead instructions. The `a`/`b` survive only as internal option ids.
+- **EXAMPLE-item clips must contain ONLY the example stimulus** — never the
+  spoken instruction/lead-in that precedes it. The tape's worked example is
+  introduced by apparatus ("Listen to the example.", "Number…", "Circle the
+  letter."); the `EXAMPLE` clip's `@start-end` must start at the stimulus word
+  itself, not at that framing. *Why:* otherwise the example plays a sentence of
+  instructions before the one sound/word the learner is meant to hear. (The
+  word-level refine pass trims lead cues, but pick the tightest range you can.)
 - **Hear a Q&A → choose the correct statement, then repeat (Fig 3).** `$SELECT`:
   `PROMPT` = the recorded question+short answer; options = the candidate statements
   ("John likes…" / "John doesn't like…"); attach the spoken model inline to the
@@ -290,9 +367,15 @@ cloze, and diagram MCQ are NOT deferred — they already map to `$SELECT`/`$PROD
 - **Read a cue/context, answer a spoken question (Fig 4).** `$PRODUCE`: `PROMPT` =
   spoken question (with its inline `{clip}`), `TEMPLATE` = the read-only cue/context,
   `RESPONSE` = the answer.
+- **Numbered-picture drills → put the referent in `TEMPLATE`.** When the question
+  uses a deictic ("What is **that**?" / "What's **it**?") that points at a numbered
+  item in the activity-wide picture, the learner can't tell which one it is. Put
+  the tape's pointer in `TEMPLATE` (`TEMPLATE: Number 3`) so the item is grounded.
+  *Why:* the activity-wide title-line image shows all the numbered objects; without
+  the number, "that" is ambiguous. Take the number from the tape's "Look at number N" cue.
 - **Sentences about one shared visual (Fig 5).** `$DIALOGUE REPEAT` with the map/scene
-  as an **activity-wide** `IMAGE:` (before the first line) so it stays visible for every
-  line — NOT inline on just the first line.
+  as an **activity-wide image on the title line** (`$DIALOGUE Texas Map {page_XXX.jpg}`)
+  so it stays visible for every line — NOT inline on just the first line.
 - **Listen to short sentences → answer a comprehension question by choosing (Fig 6).**
   `$SELECT` (not `$PRODUCE`): `PROMPT` = the spoken context+question; options = the
   candidate answers; the app can play the correct option's clip after the tap.
@@ -364,7 +447,7 @@ cloze, and diagram MCQ are NOT deferred — they already map to `$SELECT`/`$PROD
   that information exists ONLY in the book — never assume "the tape gives it".
   Put it in the module: a compact display-only `TEMPLATE` repeated on **every**
   item (`TEMPLATE: Margaret — soccer · Carl — soccer · …`), or the activity-wide
-  `IMAGE:` when it's a visual. Without it the items are unanswerable.
+  image on the marker title line when it's a visual. Without it the items are unanswerable.
 
 ## I. Worked references
 - `module-convert/format-comparison/1A.new.module` — LLA Lesson 1A
