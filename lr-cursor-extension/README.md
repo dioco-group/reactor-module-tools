@@ -46,6 +46,29 @@ npm run compile
 
 Press `F5` in Cursor to launch the extension in a development host window.
 
+### ⚠️ Testing local changes — read this first (for the next agent/dev)
+
+Cursor runs the **installed** copy of this extension, **not** this repo. On this
+WSL/remote setup the live extension lives at:
+
+```
+~/.cursor-server/extensions/language-reactor.lr-course-editor-<version>/out/
+```
+
+So editing source here + `npm run compile` updates the repo's `out/` but does **not**
+change what Cursor runs — "Reload Window" alone will look like nothing happened (this is
+exactly the trap that wasted time once). To test a change:
+
+```bash
+npm run dev-install     # compile, then copy out/ into the installed extension
+```
+
+then run **Developer: Reload Window** and reopen the preview. (Alternatively press `F5`
+for a separate Extension Development Host that loads this repo directly.)
+
+Canonical source is **`reactor-module-tools/lr-cursor-extension`** (the 0.1.5/0.1.6
+line). Do not edit other `lr-cursor-extension` checkouts.
+
 ## Releasing a new version
 
 1. Bump the version in `package.json`

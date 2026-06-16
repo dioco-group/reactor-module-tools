@@ -197,7 +197,8 @@
   "scripts": {
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package"
+    "package": "vsce package",
+    "dev-install": "tsc -p ./ && cp -r out/* \"$(ls -d ~/.cursor-server/extensions/language-reactor.lr-course-editor-* | tail -1)/out/\" && echo 'Copied build into installed extension — now run: Developer: Reload Window'"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
